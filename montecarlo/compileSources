@@ -1,0 +1,8 @@
+#!/bin/sh
+
+export MONTECARLO_PATH=${PWD}
+
+rm -f ${MONTECARLO_PATH}/libMontecarlo.so
+cd ${MONTECARLO_PATH}/Sources
+c++ -std=c++11 -Wall -fPIC -shared -I. `root-config --cflags` -o ${MONTECARLO_PATH}/libMontecarlo.so *.cc
+cd ..
