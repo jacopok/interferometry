@@ -1,0 +1,61 @@
+How to read: every function here starts with a `>` before its name
+
+===============================================================================================================================
+
+DataSimulator
+    >simulate_one(PDF* p): returns a single value out of a PDF with the statistical properties of that PDF
+    >simulate_sample(vector<PDF*>* vp): returns a vector of values as above
+
+
+ErrorPropagator
+    abstract class for propagating errors: derivate classes must reimplement function `f`
+
+    >ErrorPropagator(v): `v` is a vector<PDF*>*
+    >f(): it is the function of the variables whose PDFs are in the vector passed to the constructor
+    >propagation(n,seed,min,max,steps,name): builds a PDF by `n` iterations between `min` and `max` with `steps` steps and name `name`
+
+
+LinearFit
+    >fit(file_name,start_line,end_line): builds the PDFs of the parameters of the line y = a + b*x interpolating data in `filename`
+					 in lines [`start_line` : `end_line`]. To obtain those PDFs use functions `getA()` and `getB()`
+    >fit(xV,yVP): `xV` is a vector<double>* and `yVP` is a vector<PDF*>*
+					it does the same thing of the previous, but picking up data from the vectors
+
+    >intersec(file_name1,file_name2): returns the PDFs of the x and y coordinates of the intersection between the interpolating lines of `file_name1` and `file_name2`
+    >intersec(file_name,a,b): returns the PDFs of the x and y coordinates of the intersection between the interpolating line of `file_name` and 
+			      y = a + b*x
+    
+    File format:
+	x_value		yPDF_type	yPDF_a		yPDF_b
+	
+	    yPDF_type =
+		      "Uniform"	 	-> yPDF_a = min,	yPDF_b = max
+		      "Triangular"	-> yPDF_a = center,	yPDF_b = full width
+		      "Gauss"		-> yPDF_a = mean,	yPDF_b = sigma
+		      
+    Settings:
+	>setAB_steps(n)	-> set the number os steps of the `a`,`b`,`ix`,`iy` PDFs
+	>setPrecision(n)	-> set the number of steps of the PDFs of the simultaed sample
+	>setN(n)		-> set the number of iterations
+	
+    Further settings:
+	to use the function `fit`:
+	    >setA_range(m,M)	-> set min and max value for the `a` PDF
+	    >setB_range(m,M)	-> set min and max value for the `b` PDF
+	    
+	to use the function `intersec`:
+	    >setIX_range(m,M)	-> set min and max value for the `ix` PDF
+	    >setIY_range(m,M)	-> set min and max value for the `iy` PDF
+	
+
+PDFFactory
+    >create(min,max,steps,name): creates a PDF between `min` and `max` with `steps` steps and name `name`
+    
+
+PDFFactoryManager
+    >create(PDF_type,PDFa,PDFb): creates a PDFFactory with type `PDF_type` and parameters `PDF_a` and `PDF_b`
+				
+				see LinearFit -> File Format -> yPDF_type
+
+
+
