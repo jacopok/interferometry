@@ -1,0 +1,12 @@
+#!/bin/sh
+
+export ROOT_LIBS="-L/usr/lib/i386-linux-gnu -lCore -lCint -lRIO -lNet -lHist -lGraf -lGpad -lTree -lRint -lMatrix -lMathCore -lThread -pthread -lm -ldl -rdynamic"
+export MONTECARLO_PATH=${PWD}/..
+export LD_LIBRARY_PATH=${MONTECARLO_PATH}
+
+export EXEC_NAME=fit
+export MAIN_SOURCE=${EXEC_NAME}.cxx
+rm -f ${EXEC_NAME}
+
+c++ -std=c++11 -Wall -fPIC -I. -I ${MONTECARLO_PATH}/Sources -o ${EXEC_NAME} ${MAIN_SOURCE} -L ${MONTECARLO_PATH}       \
+-Wl,--no-as-needed -lMontecarlo ${ROOT_LIBS}

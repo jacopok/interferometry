@@ -1,10 +1,10 @@
 #!/bin/sh
 
 export ROOT_LIBS="-L/usr/lib/i386-linux-gnu -lCore -lCint -lRIO -lNet -lHist -lGraf -lGpad -lTree -lRint -lMatrix -lMathCore -lThread -pthread -lm -ldl -rdynamic"
-export MONTECARLO_PATH=${PWD}
+export MONTECARLO_PATH=${PWD}/..
 export LD_LIBRARY_PATH=${MONTECARLO_PATH}
 
-export EXEC_NAME=main
+export EXEC_NAME=test
 export MAIN_SOURCE=${EXEC_NAME}.cxx
 rm -f ${EXEC_NAME}
 

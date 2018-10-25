@@ -1,0 +1,8 @@
+n_l			1.4
+lambda [um]		0.65
+d [cm]			5
+theta max_th [rad]	0.0872665
+theta max_exp [rad]	0.0873557
+theta 0 [rad]		0.00174533
+Delta theta [rad]	0.0001
+N data			336
