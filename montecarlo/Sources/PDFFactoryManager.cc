@@ -4,6 +4,7 @@
 #include "GaussFactory.h"
 #include "TriangularFactory.h"
 #include "UniformFactory.h"
+#include "DigitalFactory.h"
 
 #include <iostream>
 
@@ -20,6 +21,9 @@ PDFFactory* PDFFactoryManager::create(const string& type, double a, double b){
     case 'U':
     case 'u':
       return new UniformFactory(a,b);
+    case 'O':
+    case 'o':
+      return new DigitalFactory(a,0.05*b,0.03);
     
     default:
       cout << "no PDF aveiable with name " << type << endl;

@@ -40,6 +40,9 @@ class PDF {
     double value(double x) const;
     double probability(double a, double b) const;
     double p_value(double x) const;
+    double compatibility(double x) const;
+    double compatibility(const PDF& p) const;
+    double overlap(const PDF& p) const; //returns the area beneath both *this and p
     double mean() const;
     double mode() const;
     double median() const;

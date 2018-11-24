@@ -14,6 +14,8 @@
 using namespace std;
 
 LinearFit::LinearFit():
+  data_x(new vector<double>),
+  data_y(new vector<PDF*>),
   seed(1),
   precision(0),
   ab_steps(0),
@@ -24,7 +26,17 @@ LinearFit::LinearFit():
   isIXset(false),
   isIYset(false),
   a(0),
-  b(0){
+  b(0),
+  r(0){
+}
+
+LinearFit::~LinearFit(){
+  if(a != 0) delete a;
+  if(b != 0) delete b;
+  data_x->clear();
+  delete data_x;
+  data_y->clear();
+  delete data_y;
 }
 
 void LinearFit::setSeed(unsigned int i) {
@@ -92,11 +104,6 @@ void LinearFit::checkSet() {
   return;
 }
 
-LinearFit::~LinearFit(){
-  if(a != 0) delete a;
-  if(b != 0) delete b;
-}
-
 PDF* LinearFit::getA() const{
   if(a == 0) return 0;
   PDF* A = new PDF(*a);
@@ -109,7 +116,7 @@ PDF* LinearFit::getB() const{
   return B;
 }
 
-bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) const {
+bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) {
   double x, PDF_a, PDF_b;
   string PDF_type, PDF_name;
   PDFFactory* F;
@@ -131,6 +138,21 @@ bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) const
   
   yVP->at(yVP->size() - 1)->normalize();
   return true;
+}
+
+bool LinearFit::add(ifstream* file) {
+  return add(file,data_x,data_y);
+}
+
+void LinearFit::setData(vector<double>* xV, vector<PDF*>* yVP) {
+  data_x = new vector<double>(*xV);
+  data_y = new vector<PDF*>(*yVP);
+}
+
+void LinearFit::clearData(){
+  data_x->clear();
+  data_y->clear();
+  return;
 }
 
     
@@ -240,6 +262,11 @@ void LinearFit::fit(vector<double>* xV,vector<PDF*>* yVP){
   a->normalize();
   b->normalize();
   
+  return;
+}
+
+void LinearFit::fit() {
+  fit(data_x,data_y);
   return;
 }
 
@@ -457,3 +484,59 @@ double* LinearFit::fit_sample(const vector<double>* xV, const vector<double>* yV
   return ab;
 }
 
+double LinearFit::chi2(vector<double>* xV,vector<PDF*>* yVP) const{
+  if(a == 0){
+    cout << "No fit has been done: cannot evaluate chi2" << endl;
+    return -1;
+  }
+  
+  double sum = 0;
+  double a_m = a->mean();
+  double b_m = b->mean();
+  
+  for(unsigned int i = 0; i < xV->size(); i++)
+    sum += pow(yVP->at(i)->mean() - a_m - b_m*xV->at(i), 2)/yVP->at(i)->var();
+  
+  return sum;
+}
+
+double LinearFit::chi2() const{
+  return chi2(data_x,data_y);
+}
+
+double LinearFit::rho(vector<double>* xV,vector<PDF*>* yVP) const{
+  double x_m = 0, y_m = 0;
+  unsigned int N = xV->size();
+  vector<double>* yV = new vector<double>(N,0);
+  
+  for(unsigned int i = 0; i < N; i++){
+    yV->at(i) = yVP->at(i)->mean();
+    x_m += xV->at(i);
+    y_m += yV->at(i);
+  }
+  x_m /= N;
+  y_m /= N;
+  
+  double sum_x = 0, sum_y = 0, sum_xy = 0;
+  for(unsigned int i = 0; i < N; i++){
+    sum_x += pow(xV->at(i) - x_m, 2);
+    sum_y += pow(yV->at(i) - y_m, 2);
+    sum_xy += (xV->at(i) - x_m)*(yV->at(i) - y_m);
+  }
+  
+  r = sum_xy/sqrt(sum_x*sum_y);
+  
+  return r;
+}
+
+double LinearFit::rho() const{
+  return rho(data_x,data_y);
+}
+
+double LinearFit::T_N() const{
+  return r*sqrt(degrees_of_freedom()/(1 - r*r));
+}
+
+int LinearFit::degrees_of_freedom() const{
+  return data_x->size() - 2;
+}

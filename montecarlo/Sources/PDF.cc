@@ -221,6 +221,40 @@ double PDF::p_value(double x) const{
   return (p1 > p2) ? p2 : p1;
 }
 
+double PDF::compatibility(double x) const{
+  double lambda = mean() - x;
+  lambda = (lambda > 0) ? lambda : -lambda;
+  
+  return lambda/sqrt(var());
+}
+
+double PDF::compatibility(const PDF& p) const{
+  double lambda = mean() - p.mean();
+  lambda = (lambda > 0) ? lambda : -lambda;
+  
+  return lambda/sqrt(var() + p.var());
+}
+
+double PDF::overlap(const PDF& p) const{
+  double m = (min > p.min) ? min : p.min;
+  double M = (max < p.max) ? max : p.max;
+  double D = (dx < p.dx) ? dx : p.dx;
+  double sum = 0.;
+  double x, v, vp;
+  unsigned int i = 0;
+  
+  while(m + i*D < M){
+    x = m + (i + 0.5)*D;
+    v = value(x);
+    vp = p.value(x);
+    
+    sum += (v < vp) ? v : vp;
+    i++;
+  }
+  
+  return sum*D;
+}
+
 double PDF::mean() const{
   double sum = 0.;
   for(unsigned int i = 0; i < steps; i++)

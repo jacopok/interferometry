@@ -12,7 +12,7 @@ class PDFFactory {
     PDFFactory();
     virtual ~PDFFactory();
     
-    PDF* create(double min, double max, unsigned int steps, const std::string& name) const;
+    virtual PDF* create(double min, double max, unsigned int steps, const std::string& name = "Untitled_PDF") const;
     virtual PDF* create_default(unsigned int steps) const = 0;
   
   protected:

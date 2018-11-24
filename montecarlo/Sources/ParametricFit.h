@@ -14,7 +14,7 @@ class ParametricFit {
   
   public:
     
-    enum mode {value, p_value, brute_force};
+    enum mode {value, p_value};
     
     class Func {
       public:
@@ -44,12 +44,10 @@ class ParametricFit {
     void add_data(double x, PDF* y_PDF);
     void set_data(vector<double>* xV, vector<PDF*>* yVP);
     void delete_data();
-    void clear();
     
     PDF* get_unknown_PDF(const string& name) const;
     
     bool isready() const;
-    void set_min_value(double m);
     
     void fit(unsigned int n_rep, unsigned int seed, mode q);
   
@@ -67,8 +65,6 @@ class ParametricFit {
     vector<unsigned int>* unknown_parameters_steps;
     vector<string>* unknown_parameters_name;
     
-    bool extern_data_vectors;
-    double min_value;
     vector<double>* data_x;
     vector<PDF*>* data_y_PDF;
      
