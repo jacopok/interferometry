@@ -3,6 +3,7 @@
 #include "PDF.h"
 #include "PDFFactory.h"
 #include "PDFFactoryManager.h"
+#include "DigitalFactory.h"
 #include "DataSimulator.h"
 #include "ProgressBar.h"
 
@@ -117,7 +118,7 @@ PDF* LinearFit::getB() const{
 }
 
 bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) {
-  double x, PDF_a, PDF_b;
+  double x, PDF_a, PDF_b, PDF_c;
   string PDF_type, PDF_name;
   PDFFactory* F;
   if(!(*file >> x >> PDF_type)) return false;
@@ -129,12 +130,22 @@ bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) {
     return true;
   }
   
-  if(!(*file >> PDF_a >> PDF_b)) return false;
+  if((PDF_type[0] == 'd')||(PDF_type[0] == 'D')){//DigitalFactory requires a special treatment
+    if(!(*file >> PDF_a >> PDF_b >> PDF_c)) return false;
+    F = new DigitalFactory(PDF_a,PDF_b,PDF_c);
+    xV->push_back(x);
+    yVP->push_back(F->create_default(precision));//create the PDF for the y data and store it
+    delete F;
+  }
   
-  F = PDFFactoryManager::create(PDF_type,PDF_a,PDF_b);//create the PDFFactory for the y data
-  xV->push_back(x);
-  yVP->push_back(F->create_default(precision));//create the PDF for the y data and store it
-  delete F;
+  else{
+    if(!(*file >> PDF_a >> PDF_b)) return false;
+    
+    F = PDFFactoryManager::create(PDF_type,PDF_a,PDF_b);//create the PDFFactory for the y data
+    xV->push_back(x);
+    yVP->push_back(F->create_default(precision));//create the PDF for the y data and store it
+    delete F;
+  }
   
   yVP->at(yVP->size() - 1)->normalize();
   return true;

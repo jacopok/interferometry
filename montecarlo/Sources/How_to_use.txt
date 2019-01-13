@@ -44,10 +44,11 @@ LinearFit
 	x_value		yPDF_type	yPDF_a		yPDF_b
 	
 	    yPDF_type =
-		      "Uniform"	 		-> yPDF_a = min,		yPDF_b = max
+		      "Uniform"	 		-> yPDF_a = min,	yPDF_b = max
 		      "Triangular"		-> yPDF_a = center,	yPDF_b = full width
-		      "Gauss"				-> yPDF_a = mean,	yPDF_b = sigma
-		      "Oscilloscope"		-> yPDF_a = V,			yPDF_b = Vdiv                 it considers a contribute of 3% gain + 0.05*Vdiv of digits
+		      "Gauss"			-> yPDF_a = mean,	yPDF_b = sigma
+		      "Digital"			-> yPDF_a = value	yPDF_b = digit		yPDF_c = gain
+		      "Oscilloscope"		-> yPDF_a = V,		yPDF_b = Vdiv                 it considers a contribute of 3% gain + 0.05*Vdiv of digits
  		      
     Settings:
 	>setAB_steps(n)	-> set the number of steps of the `a`,`b`,`ix`,`iy` PDFs

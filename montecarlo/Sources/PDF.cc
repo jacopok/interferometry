@@ -116,6 +116,34 @@ void PDF::normalize() {
   return;
 }
 
+void PDF::smoothen(unsigned int f){
+  unsigned int ff = f/2;
+  unsigned int t = 2*ff + 1;
+  vector<double> newValues(steps,0);
+  double nv = 0;
+  
+  for(unsigned int i = 0; i < t; i++)	//initialize nv
+    nv += values[i];
+  
+  for(unsigned int i = 0; i < steps; i++){
+    if(i < ff){
+      newValues[i] = values[i];
+      continue;
+    }
+    if(steps - i < ff){
+      newValues[i] = values[i];
+      continue;
+    }
+    newValues[i] = nv/t;
+    if(i + ff + 1 < steps)
+      nv += values[i + ff + 1] - values[i - ff]; // update nv
+  }
+  
+  values = newValues;
+  CDF->clear();
+  return;
+}
+
 void PDF::coarse(unsigned int f) {
   if((f == 0)||(f > steps)){
     cout << "Cannot coarse " << this << " with factor " << f << endl;
@@ -165,6 +193,42 @@ PDF* PDF::optimize() {//removes zeros from the front and the back of values
   CDF->clear();
   
   return this;
+}
+
+void PDF::modifying_routine(){
+  string ancora;
+  unsigned int f;
+  cout << name << endl;
+  
+  do{
+      cout << "Would you like to coarse (c) smoothen (s) or proceed (p)? ";
+      cin >> ancora;
+      
+      switch(ancora[0]){
+	case 'c':
+	  optimize();
+	  cout << "Insert coarsing factor: ";
+	  cin >> f;
+	  coarse(f);
+	  normalize();
+	  break;
+	  
+	case 's':
+	  optimize();
+	  cout << "Insert smooting factor: ";
+	  cin >> f;
+	  smoothen(f);
+	  normalize();
+	  break;
+      }
+      
+      print((name + "_G.txt").c_str());
+      
+      cout << "Would you like to do other modifications (y/n) ";
+      cin >> ancora;
+    }while(ancora[0] == 'y');
+    
+  return;
 }
 
 PDF* PDF::traslate(double l) {
