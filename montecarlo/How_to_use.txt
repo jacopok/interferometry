@@ -63,7 +63,41 @@ LinearFit
 	to use the function `intersec`:
 	    >setIX_range(m,M)	-> set min and max value for the `ix` PDF
 	    >setIY_range(m,M)	-> set min and max value for the `iy` PDF
+
+
+ParametricFit
+    this object provides three ways of performing a parametric fit with a function depending both on fixed parameters (known PDFs) and unknown parameters in order to find
+    to find the unknown parameters PDFs. As always data need to be in the format explained above.
+    To get the unknown PDF use >get_unknown_PDF(name)
+    In order to define the fitting function you need to define a class inheriting from ParametricFit::Func; for example the linear function should be defined as
+		
+		class linFunc: public ParametricFit::Func {
+ 			   public:
+				linFunc():
+			  	Func("linFunc"){}
+				~linFunc(){}
 	
+				virtual unsigned int n_fix(){return 0;}
+				virtual unsigned int n_unk(){return 2;}
+				virtual double f(double x, vector<double>* v_fix, vector<double>* v_unk){
+	  				return v_unk->at(0) + x * v_unk->at(1);
+				}
+		};
+   
+   There are functions to set and add fixed or unknown parameters: see ParametricFit.h
+   The three modes are:
+	- ParametricFit::value
+		the probability of a particular tuple of unkown parameters is proportional to the average value intersected from the function on the dataset
+	- ParametricFit::p_value
+		same but with p-values instead of values
+       If there are no fixed parameters doesn't matter: so use 1!
+       If the function does not intersect one of the data the probability for that particular tuple of unknown parameters will be 0. In order to change this behaviour set `min_value` 
+       to a small positive number. Be careful because the larger `min_value` is the wider the unknown PDFs will be.
+
+	- ParametricFit::brute_force
+		this method is pretty unefficient as it scans all the possible tuples in order to find the best with the minimum square method. In order to obtain a significant result many
+		repetitions: and it will take a LOT of time
+
 
 PDFFactory
     abstract class for building PDFs

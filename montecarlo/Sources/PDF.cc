@@ -135,8 +135,10 @@ void PDF::smoothen(unsigned int f){
       continue;
     }
     newValues[i] = nv/t;
-    if(i + ff + 1 < steps)
+    if(i + ff + 1 < steps){
       nv += values[i + ff + 1] - values[i - ff]; // update nv
+      if(nv < 0) nv = 0;
+    }
   }
   
   values = newValues;
