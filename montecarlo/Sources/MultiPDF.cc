@@ -133,7 +133,7 @@ void MultiPDF::add_PDF(PDF* p){
     zero();
   }
   size *= p->getSteps();
-  PDFs->push_back(p);
+  PDFs->push_back(new PDF(*p));
   dimension++;
   counters->push_back(0);
 
@@ -151,6 +151,8 @@ void MultiPDF::clear(){
   zero();
   dimension = 0;
   counters->clear();
+  for(unsigned int u = 0; u < dimension; u++)
+    delete PDFs->at(u);
   PDFs->clear();
   return;
 }

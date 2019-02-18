@@ -44,7 +44,7 @@ class MultiPDF {
     vector<unsigned int>* getCounters() const;
     vector<PDF*>* getPDFs() const;
     
-    double* access() const;
+    double* access() const;// = access(counters)
     double* access(vector<unsigned int>* indexs) const;
     unsigned int getAxis(const string& s) const;
     
