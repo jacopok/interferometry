@@ -25,6 +25,23 @@ PDF::PDF(double m, double M, const vector<double>& v, string s = "Untitled_PDF")
     
 }
 
+PDF::PDF(double m, double M, unsigned int st, string s = "empty_PDF"):
+   name(s),
+   steps(st),
+   min(m),
+   max(M),
+   dx((M-m)/st),
+   values(vector<double>(st,0)),
+   CDF(new vector<vector<double>>){
+     cout << "new PDF: " << s << ' ' << this << endl;
+     if(m > M)
+       cout << "WARNING: in " << this << " max < min" << endl << endl; 
+     if(dx <= 1E-7)
+       cout << "Too fine PDF: errors are to be expected" << this << endl << endl;
+    
+}
+
+
 PDF::~PDF(){
   values.clear();
   delete CDF;
@@ -78,6 +95,17 @@ double PDF::getMax() const{
 
 double PDF::getDx() const{
   return dx;
+}
+
+double PDF::getValue(unsigned int i) const{
+  return values[i];
+}
+
+int PDF::getIndex(double x) const{
+  if(x < min) return -1;
+  if(x > max + dx) return -1;
+  int j = (x - min)/dx;//i valori sono il bordo sinistro del bin
+  return j;
 }
 
 unsigned int PDF::getSteps() const{

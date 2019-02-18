@@ -7,6 +7,7 @@
 using namespace std;
 
 class PDF;
+class MultiPDF;
 
 class LinearFit {
   
@@ -17,6 +18,7 @@ class LinearFit {
     
     PDF* getA() const;
     PDF* getB() const;
+    MultiPDF* getAB() const;
     
     void setSeed(unsigned int i);
     void setPrecision(unsigned int i);
@@ -26,6 +28,7 @@ class LinearFit {
     void setB_range(double m, double M);
     void setIX_range(double m, double M);
     void setIY_range(double m, double M);
+    void enableMultiPDF(bool q);
     
     void reset();//resets only further settings
     
@@ -34,7 +37,7 @@ class LinearFit {
     void setData(vector<double>* xV, vector<PDF*>* yVP);
     void clearData();
     
-    static double* fit_sample(const vector<double>* xV, const vector<double>* yV);
+    static vector<double>* fit_sample(const vector<double>* xV, const vector<double>* yV);
     
     void fit(const string& fileName, unsigned int start_line = 0, unsigned int end_line = 0);//reads data from line start_line to end_line
     void fit(vector<double>* xV,vector<PDF*>* yVP);
@@ -81,9 +84,12 @@ class LinearFit {
     bool isIXset;
     bool isIYset;
     
+    bool enable_MultiPDF;
+    
     //PDFs of the coefficients of the fit function f = a + b*x
     PDF* a;
     PDF* b;
+    MultiPDF* ab;
     
     //correlation coefficients
     mutable double r;

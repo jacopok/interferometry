@@ -13,6 +13,7 @@ class PDF {
   
     //constructors & destructors
     PDF(double m, double M, const vector<double>& v, string s);
+    PDF(double m, double M, unsigned int st, string s); //empty PDF
     ~PDF();
     static PDF* load(const string& fileName);
     PDF(const PDF& p);
@@ -22,6 +23,8 @@ class PDF {
     double getMin() const;
     double getMax() const;
     double getDx() const;
+    double getValue(unsigned int i) const;
+    int getIndex(double x) const;
     unsigned int getSteps() const;
     string getName() const;
     void rename(const string& n);

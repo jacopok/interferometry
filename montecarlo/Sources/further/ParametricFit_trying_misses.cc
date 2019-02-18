@@ -19,6 +19,7 @@ ParametricFit::ParametricFit(Func* g):
   f(g),
   fixed_parameters(new vector<PDF*>),
   extern_data_vectors(false),
+  misses(0),
   min_value(0),
   data_x(new vector<double>),
   data_y_PDF(new vector<PDF*>),
@@ -136,11 +137,20 @@ bool ParametricFit::isready() const{
     cout << "Fit FAILED: no given data" << endl;
     return false;
   }
-  if(min_value >= 0.5){
-    cout << "WARNING: min_value >= 0.5: expect large PDFs (if you are using a brute_force fit ignore this warning)" << endl;
+  if(misses >= data_x->size() - 2){
+    cout << "WARNING: you are allowing the algorithm to miss almost all the data" << endl;
+  }
+  if((misses > 0) && (min_value == 0)){
+    cout << "WARNING: if min_value = 0 you are not allowing the algorithm to miss any data: setting misses to 0";
+    misses = 0;
   }
   
   return true;
+}
+
+void ParametricFit::set_misses(unsigned int m){
+  misses = m;
+  return;
 }
 
 void ParametricFit::set_min_value(double m){
@@ -173,7 +183,8 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
     case p_value:
       
       double y;
-      double offset;
+      unsigned int missed;
+      double v;
       //iterate over unknown_parameters
       unknown_MultiPDF->initialize_counters();
       do{
@@ -193,37 +204,31 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	  
 	  //iterate over data
 	  partial_sum = 1;
-	  
-	  if(min_value == 0){
-	    for(unsigned int h = 0; h < data_x->size(); h++){
-	      //get y
-	      y = f->f(data_x->at(h),&v_fix,&v_unk);
-	      
-	      //compare with y_PDF
+	  missed = 0;
+	  for(unsigned int h = 0; h < data_x->size(); h++){
+	    //get y
+	    y = f->f(data_x->at(h),&v_fix,&v_unk);
+	    
+	    //compare with y_PDF
+	    if(q == value)
+	      v = data_y_PDF->at(h)->value(y);
+	    else
+	      v = 10 * data_y_PDF->at(h)->p_value(y);//the 10 factor helps with precision
+	    
+	    if(v == 0){//check whether the data has been missed
+	      missed++;
 	      if(q == value)
-		partial_sum *= data_y_PDF->at(h)->value(y);
+		v = min_value / data_y_PDF->at(h)->getDx();
 	      else
-		partial_sum *= 10 * data_y_PDF->at(h)->p_value(y);//the 10 factor helps with precision
+		v = 10 * min_value;
 	    }
-	  }
-	  else{
-	    offset = 1;
-	    for(unsigned int h = 0; h < data_x->size(); h++){
-	      //get y
-	      y = f->f(data_x->at(h),&v_fix,&v_unk);
-	      
-	      //compare with y_PDF
-	      if(q == value){
-		partial_sum *= (min_value + data_y_PDF->at(h)->value(y));
-		offset *= min_value;
-	      }
-	      else{
-		partial_sum *= 10 * (min_value + data_y_PDF->at(h)->p_value(y));//the 10 factor helps with precision
-		offset *= 10 * min_value;
-	      }
+	    if(missed > misses){//too many missed data;
+	      partial_sum = 0;
+	      break;
 	    }
-	    partial_sum -= offset;
+	    partial_sum *= v;
 	  }
+	  
 	  //update sum with the average value (p_value)
 	  sum += partial_sum;//data_x->size();
 

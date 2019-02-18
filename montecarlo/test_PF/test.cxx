@@ -5,8 +5,10 @@
 #include <cmath>
 
 #include "PDF.h"
+#include "MultiPDF.h"
 #include "PDFFactoryManager.h"
 #include "PDFFactory.h"
+#include "DataSimulator.h"
 
 #include "LinearFit.h"
 #include "ParametricFit.h"
@@ -32,12 +34,24 @@ int main () {
   vector<double> xv;
   vector<PDF*> yvp;
   unsigned int n_data;
+  double noise_amplitude, pointwise_noise;
+  string type;
   
-  cout << "How many data do you want to simulate? ";
+  cout << "This programm compares LinearFit and ParametricFit\n\n";
+  cout << "How many data do you want to simulate? (Gaussians with sigma=1 along the line y = x) ";
   cin >> n_data;
   
+  cout << "Which type of noise do you want? (Gauss, Triangular) ";
+  cin >> type;
+  cout << "How much noise do you want to add to the data? ";
+  cin >> noise_amplitude;
+  F = PDFFactoryManager::create(type,0,noise_amplitude);
+  PDF* noise = F->create_default(100);
+  delete F;
+  
   for(unsigned int i = 0; i < n_data; i++){
-    F = PDFFactoryManager::create("Gauss",i,1);
+    pointwise_noise = DataSimulator::simulate_one(noise);
+    F = PDFFactoryManager::create("Gauss",i + pointwise_noise,1);
     xv.push_back(i);
     yvp.push_back(F->create_default(500));
     delete F;
@@ -61,6 +75,7 @@ int main () {
   double a_min = -4, a_max = 4, b_min = 0, b_max = 2;
   string ancora, vuota;
   PDF *Alf, *Blf, *Apf, *Bpf;
+  MultiPDF* ABlf;
   unsigned int n_rep = 0, seed = 0;
   
   do{
@@ -76,17 +91,23 @@ int main () {
     lf.setA_range(a_min,a_max);
     lf.setB_range(b_min,b_max);
     
+    lf.enableMultiPDF(true);
+    
     cout << "Fitting via LinearFit" << endl;
     lf.fit(&xv,&yvp);
     
     Alf = lf.getA();
     Blf = lf.getB();
+    ABlf = lf.getAB();
     
     cout << "a = " << Alf->mean() << " +- " << sqrt(Alf->var()) << endl;
     cout << "b = " << Blf->mean() << " +- " << sqrt(Blf->var()) << endl;
     
     Alf->print("Alf_G.txt");
     Blf->print("Blf_G.txt");
+    ABlf->print("ABlf_G.txt");
+    
+    cout << "correlation index = " << ABlf->correlation_index() << endl << endl;
     
     cout << "Do you want to fit again? [y/n]: ";
     cin >> ancora;
@@ -99,7 +120,7 @@ int main () {
   pf.add_unknown_parameter(b_min,b_max,100,"Bpf");
   pf.set_data(&xv,&yvp);
   double min_value = 0;
-  
+  MultiPDF* ABpf;
   
   do{
     ancora = vuota;
@@ -124,14 +145,18 @@ int main () {
     
     ancora = vuota;
     
-    Apf = pf.get_unknown_PDF("Apf");
-    Bpf = pf.get_unknown_PDF("Bpf");
+    ABpf = pf.get_unknown_MultiPDF();
+    Apf = ABpf->integrate_along("Bpf","Apf")->toPDF();
+    Bpf = ABpf->integrate_along("Apf","Bpf")->toPDF();
     
     cout << "a = " << Apf->mean() << " +- " << sqrt(Apf->var()) << endl;
     cout << "b = " << Bpf->mean() << " +- " << sqrt(Bpf->var()) << endl;
     
     Apf->print("Apf_G.txt");
     Bpf->print("Bpf_G.txt");
+    ABpf->print("ABpf_G.txt");
+    
+    cout << "correlation index = " << ABpf->correlation_index() << endl << endl;
     
     cout << "Do you want to fit again? [y/n]: ";
     cin >> ancora;

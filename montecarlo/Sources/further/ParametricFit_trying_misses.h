@@ -49,6 +49,7 @@ class ParametricFit {
     MultiPDF* get_unknown_MultiPDF() const;
         
     bool isready() const;
+    void set_misses(unsigned int m);
     void set_min_value(double m);
     
     void fit(unsigned int n_rep, unsigned int seed, mode q);
@@ -64,6 +65,7 @@ class ParametricFit {
     vector<PDF*>* fixed_parameters;
     
     bool extern_data_vectors;
+    mutable unsigned int misses;
     double min_value;
     vector<double>* data_x;
     vector<PDF*>* data_y_PDF;
