@@ -1,2 +1,2 @@
-0 Triangular 0.650 0.005
-1 Triangular 5 0.01
+0 Triangular 0.600 0.005
+1 Triangular 4 0.01

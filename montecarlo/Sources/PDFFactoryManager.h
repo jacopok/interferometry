@@ -10,9 +10,7 @@ class PDFFactoryManager {
   
   public:
      
-    static PDFFactory* create(const std::string& type, double a, double b);
-  
-  
+    static PDFFactory* create(const std::string& type, double a, double b); 
   
 };
 

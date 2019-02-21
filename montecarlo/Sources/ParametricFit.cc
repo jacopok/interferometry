@@ -1,6 +1,7 @@
 #include "ParametricFit.h"
 
 #include "PDF.h"
+#include "MultiPDF.h"
 #include "DataSimulator.h"
 #include "ProgressBar.h"
 
@@ -17,15 +18,11 @@ using namespace std;
 ParametricFit::ParametricFit(Func* g):
   f(g),
   fixed_parameters(new vector<PDF*>),
-  unknown_parameters_min(new vector<double>),
-  unknown_parameters_max(new vector<double>),
-  unknown_parameters_steps(new vector<unsigned int>),
-  unknown_parameters_name(new vector<string>),
   extern_data_vectors(false),
   min_value(0),
   data_x(new vector<double>),
   data_y_PDF(new vector<PDF*>),
-  unknown_parameters_PDFs(new map<string,PDF*>){
+  unknown_MultiPDF(new MultiPDF("unknownMP")){
   }
   
 ParametricFit::ParametricFit():
@@ -35,18 +32,15 @@ ParametricFit::ParametricFit():
 ParametricFit::~ParametricFit(){
   clear();
   delete fixed_parameters;
-  delete unknown_parameters_min;
-  delete unknown_parameters_max;
-  delete unknown_parameters_steps;
-  delete unknown_parameters_name;
   delete data_x;
   delete data_y_PDF;
-  delete unknown_parameters_PDFs;
+  delete unknown_MultiPDF;
 }
     
     
 void ParametricFit::set_func(Func* g){
   f = g;
+  return;
 }
 
 void ParametricFit::add_fixed_parameter(PDF* p){
@@ -60,18 +54,14 @@ void ParametricFit::delete_fixed_parameters(){
 }
 
 void ParametricFit::add_unknown_parameter(double min, double max, unsigned int steps, const string& name){
-  unknown_parameters_min->push_back(min);
-  unknown_parameters_max->push_back(max);
-  unknown_parameters_steps->push_back(steps);
-  unknown_parameters_name->push_back(name);
+  unknown_MultiPDF->add_PDF(new PDF(min,max,steps,name));
   return;
 }
 
 void ParametricFit::delete_unknown_parameters(){
-  unknown_parameters_min->clear();
-  unknown_parameters_max->clear();
-  unknown_parameters_steps->clear();
-  unknown_parameters_name->clear();
+  for(unsigned int u = 0; u < unknown_MultiPDF->getDimension(); u++)
+    delete unknown_MultiPDF->getPDFs()->at(u);
+  unknown_MultiPDF->clear();
   return;
 }
 
@@ -122,17 +112,12 @@ void ParametricFit::clear(){
   delete_fixed_parameters();
   delete_unknown_parameters();
   delete_data();
-  
-  for(map<string,PDF*>::iterator it = unknown_parameters_PDFs->begin(); it != unknown_parameters_PDFs->end(); ++it)
-    delete it->second;
-  unknown_parameters_PDFs->clear();
+  return;
 }
 
-
-PDF* ParametricFit::get_unknown_PDF(const string& name) const{
-  return new PDF(*(unknown_parameters_PDFs->at(name))); //return a COPY of the PDF
+MultiPDF* ParametricFit::get_unknown_MultiPDF() const{
+  return new MultiPDF(*unknown_MultiPDF);
 }
-
 
 bool ParametricFit::isready() const{
   if(f == 0){
@@ -143,7 +128,7 @@ bool ParametricFit::isready() const{
     cout << "Fit FAILED: number of fixed parameters doesn't match with the given function" << endl;
     return false;
   }
-  if(f->n_unk() != unknown_parameters_name->size()){
+  if(f->n_unk() != unknown_MultiPDF->getDimension()){
     cout << "Fit FAILED: number of unknown parameters doesn't match with the given function" << endl;
     return false;
   }
@@ -168,36 +153,18 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
   if(!isready()) return;
   
   //clean previous fit
-  for(map<string,PDF*>::iterator it = unknown_parameters_PDFs->begin(); it != unknown_parameters_PDFs->end(); ++it)
-    delete it->second;
-  unknown_parameters_PDFs->clear();
+  unknown_MultiPDF->zero();
   
   //useful variables
-  unsigned int n_unk = unknown_parameters_name->size();
+  unsigned int n_unk = unknown_MultiPDF->getDimension();
   double sum = 0;
   double partial_sum = 0;
-  vector<double>* unknown_parameters_dx = new vector<double>;
-  PDF* auxPDF = 0;
-  
-  //counter for iterations amongst unknown_parameters
-  vector<unsigned int> counters(n_unk,0);
-  unsigned int maxcount = 1;
-  unsigned int a_che_punto_siamo = 0;
+  unsigned int a_che_punto_siamo = 0, maxcount = unknown_MultiPDF->getSize();
   
   //vector of single values (to be plugged in f)
   vector<double> v_unk(n_unk,0);
   vector<double> v_fix(fixed_parameters->size(),0);
   
-  //create vector of values for the unknown unknown_parameters_PDFs
-  vector<vector<double>*> unk_values;
-  unk_values.reserve(n_unk);
-  for(unsigned int i = 0; i < n_unk; i++){
-    unk_values.push_back(new vector<double>(unknown_parameters_steps->at(i),0));
-    
-    unknown_parameters_dx->push_back((unknown_parameters_max->at(i) - unknown_parameters_min->at(i))/unknown_parameters_steps->at(i));
-    maxcount *= unknown_parameters_steps->at(i);
-  }
-  //set seed
   srandom(seed);
   
   //fit
@@ -206,13 +173,15 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
     case p_value:
       
       double y;
+      double offset;
       //iterate over unknown_parameters
-      while(counters[n_unk - 1] < unknown_parameters_steps->at(n_unk - 1)){
+      unknown_MultiPDF->initialize_counters();
+      do{
       //while(a_che_punto_siamo < maxcount){
 	
 	//initialize single values for unknown_parameters
-	for(unsigned int i = 0; i < n_unk; i++)
-	  v_unk[i] = unknown_parameters_min->at(i) + counters[i]*unknown_parameters_dx->at(i);
+	for(unsigned int u = 0; u < n_unk; u++)
+	  v_unk[u] = unknown_MultiPDF->getPDFs()->at(u)->getMin() + (0.5 + unknown_MultiPDF->getCounters()->at(u))*unknown_MultiPDF->getPDFs()->at(u)->getDx();
 	
 	//iterate over fixed parameters
 	sum = 0;
@@ -224,41 +193,50 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	  
 	  //iterate over data
 	  partial_sum = 1;
-	  for(unsigned int h = 0; h < data_x->size(); h++){
-	    //get y
-	    y = f->f(data_x->at(h),&v_fix,&v_unk);
-	    
-	    //compare with y_PDF
-	    if(q == value)
-	      partial_sum *= (min_value + data_y_PDF->at(h)->value(y));
-	    else
-	      partial_sum *= 10 * (min_value + data_y_PDF->at(h)->p_value(y));//the 10 factor helps with precision
-	  }
 	  
+	  if(min_value == 0){
+	    for(unsigned int h = 0; h < data_x->size(); h++){
+	      //get y
+	      y = f->f(data_x->at(h),&v_fix,&v_unk);
+	      
+	      //compare with y_PDF
+	      if(q == value)
+		partial_sum *= data_y_PDF->at(h)->value(y);
+	      else
+		partial_sum *= 10 * data_y_PDF->at(h)->p_value(y);//the 10 factor helps with precision
+	    }
+	  }
+	  else{
+	    offset = 1;
+	    for(unsigned int h = 0; h < data_x->size(); h++){
+	      //get y
+	      y = f->f(data_x->at(h),&v_fix,&v_unk);
+	      
+	      //compare with y_PDF
+	      if(q == value){
+		partial_sum *= (min_value + data_y_PDF->at(h)->value(y));
+		offset *= min_value;
+	      }
+	      else{
+		partial_sum *= 10 * (min_value + data_y_PDF->at(h)->p_value(y));//the 10 factor helps with precision
+		offset *= 10 * min_value;
+	      }
+	    }
+	    partial_sum -= offset;
+	  }
 	  //update sum with the average value (p_value)
 	  sum += partial_sum;//data_x->size();
 
 	}
 	
-	//update unk_values
-	for(unsigned int i = 0; i < n_unk; i++)
-	  unk_values[i]->at(counters[i]) += sum/n_rep;
-	
-	
-	//update counters
-	for(unsigned int i = 0; i < n_unk; i++){
-	  counters[i]++;
-	  if((counters[i] < unknown_parameters_steps->at(i))||(i == n_unk - 1))
-	    break;
-	  else
-	    counters[i] = 0;
-	}
+	//update the MultiPDF
+	*(unknown_MultiPDF->access()) += sum/n_rep;
 	
 	//ProgressBar
 	a_che_punto_siamo++;
 	ProgressBar::percentages(a_che_punto_siamo,maxcount);
 	
-      }
+      }while(unknown_MultiPDF->update_counters());
       
       break;
     
@@ -280,18 +258,14 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	  yPoints[h] = DataSimulator::simulate_one(data_y_PDF->at(h));
 	
 	//initialize counters for scanning
-	for(unsigned int &l : counters)
-	  l = 0;
-	partial_sum = 0;
-	first_over_unk = true;
-	
+	unknown_MultiPDF->initialize_counters();	
 	//scan over unknown parameter to find the best n-uple with the mininum squares method
-	while(counters[n_unk - 1] < unknown_parameters_steps->at(n_unk - 1)){
+	do{
 	//while(a_che_punto_siamo < maxcount){
 	  
 	  //initialize single values for unknown_parameters
-	  for(unsigned int i = 0; i < n_unk; i++)
-	    v_unk[i] = unknown_parameters_min->at(i) + counters[i]*unknown_parameters_dx->at(i);
+	  for(unsigned int u = 0; u < n_unk; u++)
+	    v_unk[u] = unknown_MultiPDF->getPDFs()->at(u)->getMin() + (0.5 + unknown_MultiPDF->getCounters()->at(u))*unknown_MultiPDF->getPDFs()->at(u)->getDx();
 	  
 	  //evaluate the sum of squares
 	  sum = 0;
@@ -304,38 +278,21 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	  //update best_counters
 	  if(sum < partial_sum){
 	    partial_sum = sum;
-	    best_counters = counters;
-	  }
-	  
-	  //update counters
-	  for(unsigned int i = 0; i < n_unk; i++){
-	    counters[i]++;
-	    if((counters[i] < unknown_parameters_steps->at(i))||(i == n_unk - 1))
-	      break;
-	    else
-	      counters[i] = 0;
+	    best_counters = *(unknown_MultiPDF->getCounters());
 	  }
 	  
 	  first_over_unk = false;
-	}
+	}while(unknown_MultiPDF->update_counters());
 	
-	//update unk_values
-	for(unsigned int i = 0; i < n_unk; i++)
-	  unk_values[i]->at(best_counters[i]) += 1;
+	//update the MultiPDF
+	*(unknown_MultiPDF->access(&best_counters)) += 1.0;
 	
 	//ProgressBar
 	ProgressBar::percentages(j,n_rep);
       }
   }
       
-  //create the unknown PDFs 
-  for(unsigned int i = 0; i < n_unk; i++){
-    auxPDF = new PDF(unknown_parameters_min->at(i),unknown_parameters_max->at(i),*(unk_values[i]),unknown_parameters_name->at(i));
-    auxPDF->normalize();
-    unknown_parameters_PDFs->insert(make_pair(unknown_parameters_name->at(i),new PDF(*auxPDF)));
-    delete auxPDF;
-  }
+  unknown_MultiPDF->normalize();
 
   return;
 }
-

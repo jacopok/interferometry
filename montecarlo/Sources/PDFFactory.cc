@@ -14,7 +14,7 @@ PDFFactory::~PDFFactory(){
 }
 
 
-PDF* PDFFactory::create(double min, double max, unsigned int steps, const std::string& name = "Untitled_PDF") const{
+PDF* PDFFactory::create(double min, double max, unsigned int steps, const std::string& name) const{
   double dx = (max - min)/steps;
   vector<double> v;
   v.reserve(steps);

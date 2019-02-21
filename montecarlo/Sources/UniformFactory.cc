@@ -8,6 +8,10 @@ using namespace std;
 UniformFactory::UniformFactory(double a, double b):
   inf(a),
   sup(b){
+    if(a > b){
+      inf = b;
+      sup = a;
+    }
 }
 
 UniformFactory::~UniformFactory(){

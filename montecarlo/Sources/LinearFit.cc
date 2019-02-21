@@ -1,8 +1,10 @@
 #include "LinearFit.h"
 
 #include "PDF.h"
+#include "MultiPDF.h"
 #include "PDFFactory.h"
 #include "PDFFactoryManager.h"
+#include "DigitalFactory.h"
 #include "DataSimulator.h"
 #include "ProgressBar.h"
 
@@ -14,6 +16,8 @@
 using namespace std;
 
 LinearFit::LinearFit():
+  data_x(new vector<double>),
+  data_y(new vector<PDF*>),
   seed(1),
   precision(0),
   ab_steps(0),
@@ -23,8 +27,21 @@ LinearFit::LinearFit():
   isBset(false),
   isIXset(false),
   isIYset(false),
+  enable_MultiPDF(false),
   a(0),
-  b(0){
+  b(0),
+  ab(0),
+  r(0){
+}
+
+LinearFit::~LinearFit(){
+  if(a != 0) delete a;
+  if(b != 0) delete b;
+  if(ab != 0) delete ab;
+  data_x->clear();
+  delete data_x;
+  data_y->clear();
+  delete data_y;
 }
 
 void LinearFit::setSeed(unsigned int i) {
@@ -79,9 +96,14 @@ void LinearFit::setIY_range(double m, double M) {
   return;
 }
 
+void LinearFit::enableMultiPDF(bool q){
+  enable_MultiPDF = q;
+  return;
+}
+
 
 void LinearFit::reset() {//reset only further settings
-  isAset = isBset = isIXset = isIYset = false;
+  isAset = isBset = isIXset = isIYset = enable_MultiPDF = false;
   return;
 }
 
@@ -90,11 +112,6 @@ void LinearFit::checkSet() {
   if(precision*ab_steps*n == 0) isSet = false;
   else isSet = true;
   return;
-}
-
-LinearFit::~LinearFit(){
-  if(a != 0) delete a;
-  if(b != 0) delete b;
 }
 
 PDF* LinearFit::getA() const{
@@ -109,8 +126,14 @@ PDF* LinearFit::getB() const{
   return B;
 }
 
-bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) const {
-  double x, PDF_a, PDF_b;
+MultiPDF* LinearFit::getAB() const{
+  if(ab == 0) return 0;
+  MultiPDF* AB = new MultiPDF(*ab);
+  return AB;
+}
+
+bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) {
+  double x, PDF_a, PDF_b, PDF_c;
   string PDF_type, PDF_name;
   PDFFactory* F;
   if(!(*file >> x >> PDF_type)) return false;
@@ -122,15 +145,40 @@ bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) const
     return true;
   }
   
-  if(!(*file >> PDF_a >> PDF_b)) return false;
+  if((PDF_type[0] == 'd')||(PDF_type[0] == 'D')){//DigitalFactory requires a special treatment
+    if(!(*file >> PDF_a >> PDF_b >> PDF_c)) return false;
+    F = new DigitalFactory(PDF_a,PDF_b,PDF_c);
+    xV->push_back(x);
+    yVP->push_back(F->create_default(precision));//create the PDF for the y data and store it
+    delete F;
+  }
   
-  F = PDFFactoryManager::create(PDF_type,PDF_a,PDF_b);//create the PDFFactory for the y data
-  xV->push_back(x);
-  yVP->push_back(F->create_default(precision));//create the PDF for the y data and store it
-  delete F;
+  else{
+    if(!(*file >> PDF_a >> PDF_b)) return false;
+    
+    F = PDFFactoryManager::create(PDF_type,PDF_a,PDF_b);//create the PDFFactory for the y data
+    xV->push_back(x);
+    yVP->push_back(F->create_default(precision));//create the PDF for the y data and store it
+    delete F;
+  }
   
   yVP->at(yVP->size() - 1)->normalize();
   return true;
+}
+
+bool LinearFit::add(ifstream* file) {
+  return add(file,data_x,data_y);
+}
+
+void LinearFit::setData(vector<double>* xV, vector<PDF*>* yVP) {
+  data_x = new vector<double>(*xV);
+  data_y = new vector<PDF*>(*yVP);
+}
+
+void LinearFit::clearData(){
+  data_x->clear();
+  data_y->clear();
+  return;
 }
 
     
@@ -212,7 +260,7 @@ void LinearFit::fit(vector<double>* xV,vector<PDF*>* yVP){
   //starting simulating data and fit
   srandom(seed);
   vector<double>* yV;
-  double* ab;
+  vector<double>* abv;
   vector<double> values_a(ab_steps,0.);
   vector<double> values_b(ab_steps,0.);
   double dx_a = (max_a - min_a)/ab_steps;
@@ -221,25 +269,47 @@ void LinearFit::fit(vector<double>* xV,vector<PDF*>* yVP){
   a = new PDF(min_a,max_a,values_a,"a");
   b = new PDF(min_b,max_b,values_b,"b");
   
+  if(enable_MultiPDF){
+    ab = new MultiPDF("ab");
+    ab->add_PDF(a);
+    ab->add_PDF(b);
+  }
+  
   //fill vectors of values for a and b
+  unsigned int count = 0;
   for(unsigned int i = 0; i < n; i++){
     yV = DataSimulator::simulate_sample(yVP);
-    ab = fit_sample(xV,yV);
+    abv = fit_sample(xV,yV);
     //cout << ab[0] << '\t' << ab[1] << endl;
-    if((ab[0] <= max_a + dx_a)&&(ab[0] >= min_a)&&(ab[1] <= max_b + dx_b)&&(ab[1] >= min_b)){
-      a->add(ab[0]);
-      b->add(ab[1]);
+    if((abv->at(0) <= max_a + dx_a)&&(abv->at(0) >= min_a)&&(abv->at(1) <= max_b + dx_b)&&(abv->at(1) >= min_b)){
+      a->add(abv->at(0));
+      b->add(abv->at(1));
+      if(enable_MultiPDF)
+	ab->add(abv);
+      count++;
     }
-    delete[] ab;
+    delete abv;
     delete yV;
     
     ProgressBar::percentages(i,n);
   }
   
+  double perc = count;
+  perc = perc * 100 / n;
+  
+  cout << perc << "% of simulated samples are valid" << endl << endl;
+  
 
   a->normalize();
   b->normalize();
+  if(enable_MultiPDF)
+    ab->normalize();
   
+  return;
+}
+
+void LinearFit::fit() {
+  fit(data_x,data_y);
   return;
 }
 
@@ -296,8 +366,8 @@ PDF** LinearFit::intersec(const string& fileN1, const string& fileN2) {
   cout << "Starting simulation (" << n << ')' << endl << endl;
   //starting simulating data and fit
   srandom(seed);
-  double* ab;
-  double* cd;
+  vector<double>* abv;
+  vector<double>* cdv;
   double* xy = new double [2];
   vector<double> values_ix(ab_steps,0.);
   vector<double> values_iy(ab_steps,0.);
@@ -311,19 +381,19 @@ PDF** LinearFit::intersec(const string& fileN1, const string& fileN2) {
   //fill vectors of values for ix and iy
   for(unsigned int i = 0; i < n; i++){
     yV1 = DataSimulator::simulate_sample(yVP1);
-    ab = fit_sample(xV1,yV1);
+    abv = fit_sample(xV1,yV1);
     yV2 = DataSimulator::simulate_sample(yVP2);
-    cd = fit_sample(xV2,yV2);
+    cdv = fit_sample(xV2,yV2);
     //cout << ab[0] << '\t' << ab[1] << '\t' << cd[0] << '\t' << cd[1] << endl;
-    xy[0] = (ab[0] - cd[0])/(cd[1] - ab[1]);
-    xy[1] = ab[0] + ab[1]*xy[0];
+    xy[0] = (abv->at(0) - cdv->at(0))/(cdv->at(1) - abv->at(1));
+    xy[1] = abv->at(0) + abv->at(1)*xy[0];
     //cout << xy[0] << '\t' << xy[1] << endl;
     if((xy[0] <= max_ix + dx_ix)&&(xy[0] >= min_ix)&&(xy[1] <= max_iy + dx_iy)&&(xy[1] >= min_iy)){
       I[0]->add(xy[0]);
       I[1]->add(xy[1]);
     }
-    delete[] ab;
-    delete[] cd;
+    delete abv;
+    delete cdv;
     delete yV1;
     delete yV2;
     
@@ -387,7 +457,7 @@ PDF** LinearFit::intersec(const string& fileName, double retta_a, double retta_b
   cout << "Starting simulation (" << n << ')' << endl << endl;
   //starting simulating data and fit
   srandom(seed);
-  double* ab;
+  vector<double>* abv;
   double* xy = new double [2];
   vector<double> values_ix(ab_steps,0.);
   vector<double> values_iy(ab_steps,0.);
@@ -402,19 +472,19 @@ PDF** LinearFit::intersec(const string& fileName, double retta_a, double retta_b
   //fill vectors of values for a and b
   for(unsigned int i = 0; i < n; i++){
     yV = DataSimulator::simulate_sample(yVP);
-    ab = fit_sample(xV,yV);
+    abv = fit_sample(xV,yV);
     //cout << ab[0] << '\t' << ab[1] << endl;
-    if(isAset && isBset && !((ab[0] <= max_a)&&(ab[0] >= min_a)&&(ab[1] <= max_b)&&(ab[1] >= min_b)))
+    if(isAset && isBset && !((abv->at(0) <= max_a)&&(abv->at(0) >= min_a)&&(abv->at(1) <= max_b)&&(abv->at(1) >= min_b)))
       continue;
     
-    xy[0] = (ab[0] - retta_a)/(retta_b - ab[1]);
-    xy[1] = ab[0] + ab[1]*xy[0];
+    xy[0] = (abv->at(0) - retta_a)/(retta_b - abv->at(1));
+    xy[1] = abv->at(0) + abv->at(1)*xy[0];
     //cout << xy[0] << '\t' << xy[1] << endl;
     if((xy[0] <= max_ix + dx_ix)&&(xy[0] >= min_ix)&&(xy[1] <= max_iy + dx_iy)&&(xy[1] >= min_iy)){
       I[0]->add(xy[0]);
       I[1]->add(xy[1]);
     }
-    delete[] ab;
+    delete abv;
     delete yV;
     
     ProgressBar::percentages(i,n);
@@ -434,12 +504,12 @@ PDF** LinearFit::intersec(const string& fileName, double retta_a, double retta_b
   return I;
 }
 
-double* LinearFit::fit_sample(const vector<double>* xV, const vector<double>* yV) {
+vector<double>* LinearFit::fit_sample(const vector<double>* xV, const vector<double>* yV) {
   if(xV->size() != yV->size()){
     cout << "fit_sample: ERROR" << endl;
     return 0;
   }
-  double* ab = new double[2];
+  vector<double>* abv = new vector<double>(2,0);
   double Ex = 0, Ex2 = 0, Exy = 0, Ey = 0;//"E" stands for "sum"
   unsigned int N = xV->size();
   
@@ -451,9 +521,65 @@ double* LinearFit::fit_sample(const vector<double>* xV, const vector<double>* yV
   }
   
   double Delta = N*Ex2 - Ex*Ex;
-  ab[0] = (Ex2*Ey - Ex*Exy)/Delta;
-  ab[1] = (N*Exy - Ex*Ey)/Delta;
+  abv->at(0) = (Ex2*Ey - Ex*Exy)/Delta;
+  abv->at(1) = (N*Exy - Ex*Ey)/Delta;
   
-  return ab;
+  return abv;
 }
 
+double LinearFit::chi2(vector<double>* xV,vector<PDF*>* yVP) const{
+  if(a == 0){
+    cout << "No fit has been done: cannot evaluate chi2" << endl;
+    return -1;
+  }
+  
+  double sum = 0;
+  double a_m = a->mean();
+  double b_m = b->mean();
+  
+  for(unsigned int i = 0; i < xV->size(); i++)
+    sum += pow(yVP->at(i)->mean() - a_m - b_m*xV->at(i), 2)/yVP->at(i)->var();
+  
+  return sum;
+}
+
+double LinearFit::chi2() const{
+  return chi2(data_x,data_y);
+}
+
+double LinearFit::rho(vector<double>* xV,vector<PDF*>* yVP) const{
+  double x_m = 0, y_m = 0;
+  unsigned int N = xV->size();
+  vector<double>* yV = new vector<double>(N,0);
+  
+  for(unsigned int i = 0; i < N; i++){
+    yV->at(i) = yVP->at(i)->mean();
+    x_m += xV->at(i);
+    y_m += yV->at(i);
+  }
+  x_m /= N;
+  y_m /= N;
+  
+  double sum_x = 0, sum_y = 0, sum_xy = 0;
+  for(unsigned int i = 0; i < N; i++){
+    sum_x += pow(xV->at(i) - x_m, 2);
+    sum_y += pow(yV->at(i) - y_m, 2);
+    sum_xy += (xV->at(i) - x_m)*(yV->at(i) - y_m);
+  }
+  
+  r = sum_xy/sqrt(sum_x*sum_y);
+  
+  return r;
+}
+
+double LinearFit::rho() const{
+  return rho(data_x,data_y);
+}
+
+double LinearFit::T_N() const{
+  return r*sqrt(degrees_of_freedom()/(1 - r*r));
+}
+
+int LinearFit::degrees_of_freedom() const{
+  return data_x->size() - 2;
+}

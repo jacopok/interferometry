@@ -13,6 +13,7 @@ class PDF {
   
     //constructors & destructors
     PDF(double m, double M, const vector<double>& v, string s);
+    PDF(double m, double M, unsigned int st, string s); //empty PDF
     ~PDF();
     static PDF* load(const string& fileName);
     PDF(const PDF& p);
@@ -22,6 +23,8 @@ class PDF {
     double getMin() const;
     double getMax() const;
     double getDx() const;
+    double getValue(unsigned int i) const;
+    int getIndex(double x) const;
     unsigned int getSteps() const;
     string getName() const;
     void rename(const string& n);
@@ -31,8 +34,10 @@ class PDF {
     //functions to slightly modify the PDF
     bool isnormalized() const;
     void normalize();
+    void smoothen(unsigned int f); //each value is replaced with the mean of the nearest f values
     void coarse(unsigned int f); //the number of values is divided by f
     PDF* optimize(); //removes zeros from the front and the back of values
+    void modifying_routine(); //interactive usage of normalize, smoothen, coarse, optimize
     PDF* traslate(double l); //traslate the whole PDF along the x-axis
     bool add(double x); //if x is fuond in values, values[i]++: it will be used for building simulated PDFs
     
@@ -40,6 +45,9 @@ class PDF {
     double value(double x) const;
     double probability(double a, double b) const;
     double p_value(double x) const;
+    double compatibility(double x) const;
+    double compatibility(const PDF& p) const;
+    double overlap(const PDF& p) const; //returns the area beneath both *this and p
     double mean() const;
     double mode() const;
     double median() const;

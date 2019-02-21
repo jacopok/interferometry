@@ -25,6 +25,23 @@ PDF::PDF(double m, double M, const vector<double>& v, string s = "Untitled_PDF")
     
 }
 
+PDF::PDF(double m, double M, unsigned int st, string s = "empty_PDF"):
+   name(s),
+   steps(st),
+   min(m),
+   max(M),
+   dx((M-m)/st),
+   values(vector<double>(st,0)),
+   CDF(new vector<vector<double>>){
+     cout << "new PDF: " << s << ' ' << this << endl;
+     if(m > M)
+       cout << "WARNING: in " << this << " max < min" << endl << endl; 
+     if(dx <= 1E-7)
+       cout << "Too fine PDF: errors are to be expected" << this << endl << endl;
+    
+}
+
+
 PDF::~PDF(){
   values.clear();
   delete CDF;
@@ -80,6 +97,17 @@ double PDF::getDx() const{
   return dx;
 }
 
+double PDF::getValue(unsigned int i) const{
+  return values[i];
+}
+
+int PDF::getIndex(double x) const{
+  if(x < min) return -1;
+  if(x > max + dx) return -1;
+  int j = (x - min)/dx;//i valori sono il bordo sinistro del bin
+  return j;
+}
+
 unsigned int PDF::getSteps() const{
   return steps;
 }
@@ -112,6 +140,36 @@ void PDF::normalize() {
   double s = somma();
   for(double& v : values)
     v /= s;
+  CDF->clear();
+  return;
+}
+
+void PDF::smoothen(unsigned int f){
+  unsigned int ff = f/2;
+  unsigned int t = 2*ff + 1;
+  vector<double> newValues(steps,0);
+  double nv = 0;
+  
+  for(unsigned int i = 0; i < t; i++)	//initialize nv
+    nv += values[i];
+  
+  for(unsigned int i = 0; i < steps; i++){
+    if(i < ff){
+      newValues[i] = values[i];
+      continue;
+    }
+    if(steps - i < ff){
+      newValues[i] = values[i];
+      continue;
+    }
+    newValues[i] = nv/t;
+    if(i + ff + 1 < steps){
+      nv += values[i + ff + 1] - values[i - ff]; // update nv
+      if(nv < 0) nv = 0;
+    }
+  }
+  
+  values = newValues;
   CDF->clear();
   return;
 }
@@ -167,6 +225,42 @@ PDF* PDF::optimize() {//removes zeros from the front and the back of values
   return this;
 }
 
+void PDF::modifying_routine(){
+  string ancora;
+  unsigned int f;
+  cout << name << endl;
+  
+  do{
+      cout << "Would you like to coarse (c) smoothen (s) or proceed (p)? ";
+      cin >> ancora;
+      
+      switch(ancora[0]){
+	case 'c':
+	  optimize();
+	  cout << "Insert coarsing factor: ";
+	  cin >> f;
+	  coarse(f);
+	  normalize();
+	  break;
+	  
+	case 's':
+	  optimize();
+	  cout << "Insert smooting factor: ";
+	  cin >> f;
+	  smoothen(f);
+	  normalize();
+	  break;
+      }
+      
+      print((name + "_G.txt").c_str());
+      
+      cout << "Would you like to do other modifications (y/n) ";
+      cin >> ancora;
+    }while(ancora[0] == 'y');
+    
+  return;
+}
+
 PDF* PDF::traslate(double l) {
   min += l;
   max += l;
@@ -219,6 +313,40 @@ double PDF::p_value(double x) const{
   double p2 = probability(x,max);
   
   return (p1 > p2) ? p2 : p1;
+}
+
+double PDF::compatibility(double x) const{
+  double lambda = mean() - x;
+  lambda = (lambda > 0) ? lambda : -lambda;
+  
+  return lambda/sqrt(var());
+}
+
+double PDF::compatibility(const PDF& p) const{
+  double lambda = mean() - p.mean();
+  lambda = (lambda > 0) ? lambda : -lambda;
+  
+  return lambda/sqrt(var() + p.var());
+}
+
+double PDF::overlap(const PDF& p) const{
+  double m = (min > p.min) ? min : p.min;
+  double M = (max < p.max) ? max : p.max;
+  double D = (dx < p.dx) ? dx : p.dx;
+  double sum = 0.;
+  double x, v, vp;
+  unsigned int i = 0;
+  
+  while(m + i*D < M){
+    x = m + (i + 0.5)*D;
+    v = value(x);
+    vp = p.value(x);
+    
+    sum += (v < vp) ? v : vp;
+    i++;
+  }
+  
+  return sum*D;
 }
 
 double PDF::mean() const{

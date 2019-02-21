@@ -1,6 +1,7 @@
 #include "DataSimulator.h"
 
 #include "PDF.h"
+#include "MultiPDF.h"
 
 #include <stdlib.h>
 #include <iostream>
@@ -33,6 +34,13 @@ vector<double>* DataSimulator::simulate_sample(const vector<PDF*>* vp){
   for(unsigned int i = 0; i < vp->size(); i++)
     vData->push_back(simulate_one(vp->at(i)));
   return vData;
+}
+
+vector<double>* DataSimulator::multi_simulate_one(const MultiPDF* p){
+  double maxValue = p->somma();
+  double r = random()*maxValue/RAND_MAX;
+  //cout << r << endl;
+  return p->inverted_CDF_value(r);
 }
 
 

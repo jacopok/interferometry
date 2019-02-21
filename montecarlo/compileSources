@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export MONTECARLO_PATH=${PWD}
+export MONTECARLO_PATH=${HOME}/Ale/C++adv/montecarlo
 
 rm -f ${MONTECARLO_PATH}/libMontecarlo.so
 cd ${MONTECARLO_PATH}/Sources
