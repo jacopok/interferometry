@@ -21,12 +21,15 @@ PDFFactory* PDFFactoryManager::create(const string& type, double a, double b){
     case 'U':
     case 'u':
       return new UniformFactory(a,b);
+    case 'B':
+    case 'b':
+      return new UniformFactory(a - b/2,a + b/2);
     case 'O':
     case 'o':
       return new DigitalFactory(a,0.05*b,0.03);
     
     default:
-      cout << "no PDF aveiable with name " << type << endl;
+      cout << "no PDF avaiable with name " << type << endl;
       return 0;
   }
 }
