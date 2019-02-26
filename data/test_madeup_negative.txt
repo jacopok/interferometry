@@ -1,0 +1,7 @@
+Negative step number, negative fringe number
+20,1
+30,2
+35,3
+38,4
+39,5
+40,6

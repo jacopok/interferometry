@@ -1,0 +1,5 @@
+#Step number, fringe number
+671, 0
+694, 1
+827, 2
+851, 3
