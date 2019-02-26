@@ -25,6 +25,8 @@ class MultiPDF {
     void initialize_counters() const;
     bool update_counters() const;
     
+    void rename(const string& s);
+    
     void add_PDF(PDF* p);//adds only the domain of the PDF: i.e. the MultiPDF remains empty 
     void zero();
     void clear();
@@ -50,6 +52,10 @@ class MultiPDF {
     
     MultiPDF* integrate_along(const string& PDFname, const string& newname) const;
     MultiPDF* integrate_along(unsigned int i, const string& newname) const;
+    
+    MultiPDF* subMultiPDF(vector<string>* PDFnames, const string& newname) const;
+    MultiPDF* subMultiPDF(vector<unsigned int>* indexs, const string& newname) const;
+    
     
     void print(const string& filename) const;
     void save(const string& filename) const;

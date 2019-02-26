@@ -126,6 +126,11 @@ bool MultiPDF::update_counters() const{
   }
   return true;
 }
+
+void MultiPDF::rename(const string& s){
+  name = s;
+  return;
+}
     
 void MultiPDF::add_PDF(PDF* p){
   if(!empty){
@@ -361,6 +366,77 @@ MultiPDF* MultiPDF::integrate_along(unsigned int i, const string& newname) const
   
   p->normalize();
   return p;
+}
+
+MultiPDF* MultiPDF::subMultiPDF(vector<string>* PDFnames, const string& newname) const{
+  vector<unsigned int> indexs;
+  for(string s : *PDFnames)
+    indexs.push_back(getAxis(s));
+  
+  return subMultiPDF(&indexs,newname);
+}
+
+MultiPDF* MultiPDF::subMultiPDF(vector<unsigned int>* indexs, const string& newname) const{
+  if(indexs->size() >= dimension){
+    cout << "Cannot obtain subMultiPDF" << endl;
+    return 0;
+  }
+  
+  double dx;
+  
+  for(unsigned int j = 0; j < indexs->size(); j++){
+    if(indexs->at(j) >= dimension)
+      return 0;
+    dx *= PDFs->at(indexs->at(j))->getDx();
+  }
+  
+  MultiPDF* p = new MultiPDF(newname);
+  
+  bool exit;
+  //initialize new MultiPDF
+  for(unsigned int u = 0; u < dimension; u++){
+    exit = false;
+    for(unsigned int j = 0; j < indexs->size(); j++){
+      if(u == indexs->at(j)){
+	exit = true;
+	break;
+      }
+    }
+    if(exit)
+      p->add_PDF(PDFs->at(u));
+  }
+  
+  initialize_counters();
+  p->initialize_counters();
+  
+  unsigned int i = 0;
+  
+  //iterate over counters
+  do{
+    
+    //synchronize p->counters
+    i = 0;
+    for(unsigned int u = 0; u < dimension; u++){
+      exit = false;
+      for(unsigned int j = 0; j < indexs->size(); j++){
+	if(u == indexs->at(j)){
+	  exit = true;
+	  break;
+	}
+      }
+      if(exit){
+	p->counters->at(i) = counters->at(u);
+	i++;
+      }
+    }
+    
+    *(p->access()) += *(access())*dx;
+    
+  }while(update_counters());
+  
+  p->normalize();
+  return p;
+  
 }
 
 
