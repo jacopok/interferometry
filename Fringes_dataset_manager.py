@@ -5,6 +5,7 @@ import csv
 import numpy as np
 #import itertools
 import matplotlib.pyplot as plt
+import scipy.optimize
 
 def output(out_filename, step_array, fringes_array,
            firstline = "Step number, fringe number\n"):
@@ -59,6 +60,15 @@ class dataset():
         self.fringes_array = self.uncentered_fringes_array - zero_fringe
         self.step_array = self.uncentered_step_array - zero_step
     
+    def set_zero_fine(self, zero_fringe, zero_step = None):
+        """
+        The zero_fringe must belong to the uncentered_fringes_array
+        """
+        if(zero_step==None):
+            zero_step = self.uncentered_step_array[self.uncentered_fringes_array == zero_fringe]
+        self.fringes_array = self.fringes_array - zero_fringe
+        self.step_array = self.step_array - zero_step
+    
     def plot(self, uncentered=False):
         if(uncentered==True):
             plt.scatter(self.uncentered_step_array, self.uncentered_fringes_array)
@@ -72,9 +82,12 @@ class dataset():
         f = self.fringes_array
         s = self.step_array
         self.positive_fringes_array = f[f>0]
-        self.negative_fringes_array = np.flipud(-f[f<0])
+        self.negative_fringes_array = f[f<0]
         self.positive_step_array = s[s>0]
-        self.negative_step_array = np.flipud(-s[s<0])
+        self.negative_step_array = s[s<0]
+        
+    def output_centered(self, out_filename):
+        output(out_filename, self.step_array, self.fringes_array)
         
     def output_split(self, out_filenames):
         """
@@ -85,27 +98,22 @@ class dataset():
         output(out_filenames[1], self.negative_step_array, self.negative_fringes_array,
            firstline="Negative step number, negative fringe number\n")
     
+    def find_zero_fringe(self, fringes_radius):
+        """
+        Performs a parabolic fit of the data in a fringes_radius large radius
+        around the origin, in order to find the precise position of the
+        origin.
+        """
+        condition_radius = np.abs(self.fringes_array) <= fringes_radius
+        condition_nonzero = self.fringes_array != 0
+        condition = condition_radius & condition_nonzero
+        f = self.fringes_array[condition]
+        s = self.step_array[condition]
+        f = np.abs(f)
         
-
-    """
-    def find_zero_fringe(self):
+        parabola = lambda x, a, b, c: a*x**2 + b*x + c
         
-        This is not needed right now. It might be 
-        
-        
-        for f in self.fringes_array[1:-1]:
-            over_mask = self.fringes_array>f
-            under_mask = self.fringes_array<f
-            s_over = self.step_array[over_mask] 
-            s_under = self.step_array[under_mask]
-            f_over = self.fringes_array[over_mask] - f
-            f_under = f - self.fringes_array[under_mask]
-            print(f)
-            error = 0
-            counter = 0
-            for f1, f2 in itertools.product(f_over, f_under):
-                if(f1==f2):
-                    error += np.abs(s_over[f_over==f1] - s_under[f_under==f1])
-                    counter +=1
-            print(error/counter)
-    """
+        p, pcov = scipy.optimize.curve_fit(parabola, s, f)
+        zero_fringe = p[2] - p[1]**2 / (4 * p[0])
+        zero_step = - p[1] / (2 * p[0])
+        return(zero_fringe, zero_step)

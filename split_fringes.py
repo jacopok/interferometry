@@ -14,9 +14,11 @@ zero_fringe = sys.argv[2]
 
 data = fdm.dataset(filename, flipped=True)
 data.set_zero(zero_fringe)
-data.split()
+
+zero_fringe, zero_step = data.find_zero_fringe(20)
+data.set_zero_fine(zero_fringe, zero_step)
 
 name = os.path.splitext(filename)[0]
-out_names = [name + "_positive.txt", name + "_negative.txt"]
+out_name = name + "_centered.txt"
 
-data.output_split(out_names)
+data.output_centered(out_name)
