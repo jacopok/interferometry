@@ -172,7 +172,7 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
     case value:
     case p_value:
       
-      double y;
+      double y, yv;
       double offset;
       //iterate over unknown_parameters
       unknown_MultiPDF->initialize_counters();
@@ -201,9 +201,13 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	      
 	      //compare with y_PDF
 	      if(q == value)
-		partial_sum *= data_y_PDF->at(h)->value(y);
-	      else
-		partial_sum *= 10 * data_y_PDF->at(h)->p_value(y);//the 10 factor helps with precision
+		yv = data_y_PDF->at(h)->value(y); 
+	      else{
+		yv = 10 * data_y_PDF->at(h)->p_value(y);//the 10 factor helps with precision
+	      }
+	      
+	      partial_sum *= yv;
+	      if(yv == 0) break;
 	    }
 	  }
 	  else{
