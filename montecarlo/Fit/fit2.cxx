@@ -63,6 +63,17 @@ int main (){
     n_data++;
   delete pattume;
   
+  //plot rough data
+  ofstream rough("rough_data.txt");
+  if(!rough){
+    cout << "Cannot open rough" << endl;
+    return -1;
+  }
+  
+  for(unsigned int i = 0; i < xV->size(); i++)
+    rough << xV->at(i) << '\t' << yVP->at(i)->mean() << '\t' << sqrt(yVP->at(i)->var()) << endl;
+  
+  
   //prepare ParametricFit
   nu funz;
   ParametricFit pf(&funz);
