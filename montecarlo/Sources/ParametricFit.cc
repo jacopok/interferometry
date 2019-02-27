@@ -59,8 +59,6 @@ void ParametricFit::add_unknown_parameter(double min, double max, unsigned int s
 }
 
 void ParametricFit::delete_unknown_parameters(){
-  for(unsigned int u = 0; u < unknown_MultiPDF->getDimension(); u++)
-    delete unknown_MultiPDF->getPDFs()->at(u);
   unknown_MultiPDF->clear();
   return;
 }
@@ -192,7 +190,7 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	    v_fix[k] = DataSimulator::simulate_one(fixed_parameters->at(k));
 	  
 	  //iterate over data
-	  partial_sum = 1;
+	  partial_sum = 0;
 	  
 	  if(min_value == 0){
 	    for(unsigned int h = 0; h < data_x->size(); h++){
@@ -201,36 +199,35 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	      
 	      //compare with y_PDF
 	      if(q == value)
-		yv = data_y_PDF->at(h)->value(y); 
+		yv = data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps(); 
 	      else{
-		yv = 10 * data_y_PDF->at(h)->p_value(y);//the 10 factor helps with precision
+		yv = data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps();
 	      }
 	      
-	      partial_sum *= yv;
+	      partial_sum += log(yv);
 	      if(yv == 0) break;
 	    }
 	  }
 	  else{
-	    offset = 1;
+	    offset = 0;
 	    for(unsigned int h = 0; h < data_x->size(); h++){
 	      //get y
 	      y = f->f(data_x->at(h),&v_fix,&v_unk);
 	      
 	      //compare with y_PDF
 	      if(q == value){
-		partial_sum *= (min_value + data_y_PDF->at(h)->value(y));
-		offset *= min_value;
+		partial_sum += log(min_value + data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps());
 	      }
 	      else{
-		partial_sum *= 10 * (min_value + data_y_PDF->at(h)->p_value(y));//the 10 factor helps with precision
-		offset *= 10 * min_value;
+		partial_sum +=  log(min_value + data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps());
 	      }
+	      offset += log(min_value);
 	    }
 	    partial_sum -= offset;
 	  }
 	  //update sum with the average value (p_value)
-	  sum += partial_sum;//data_x->size();
-
+	  sum += exp(partial_sum);//data_x->size();
+	  //cout << sum << endl;
 	}
 	
 	//update the MultiPDF
