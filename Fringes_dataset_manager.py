@@ -18,7 +18,7 @@ def output(out_filename, step_array, fringes_array,
     
     with open(out_filename, "w") as csv_file:
         csv_file.write(firstline)
-        csv_writer = csv.writer(csv_file, delimiter = ',')
+        csv_writer = csv.writer(csv_file, delimiter = '\t')
         csv_writer.writerows(data)
 
 class dataset():
