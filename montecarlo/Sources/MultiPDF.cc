@@ -154,11 +154,11 @@ void MultiPDF::zero(){
 
 void MultiPDF::clear(){
   zero();
-  dimension = 0;
   counters->clear();
   for(unsigned int u = 0; u < dimension; u++)
     delete PDFs->at(u);
   PDFs->clear();
+  dimension = 0;
   return;
 }
 

@@ -137,7 +137,7 @@ int main (){
     offsets = total->subMultiPDF(&names,"offsets");
     
     n_l = result->integrate_along("gamma","n_l")->toPDF();
-    gamma = result->integrate_along("gamma","n_l")->toPDF();
+    gamma = result->integrate_along("n_l","gamma")->toPDF();
     theta_0 = offsets->integrate_along("N_0","theta_0")->toPDF();
     N_0 = offsets->integrate_along("theta_0","N_0")->toPDF();
     
