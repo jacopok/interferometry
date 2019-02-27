@@ -172,6 +172,7 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
       
       double y, yv;
       double offset;
+      bool missed;
       //iterate over unknown_parameters
       unknown_MultiPDF->initialize_counters();
       do{
@@ -192,6 +193,7 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	  //iterate over data
 	  partial_sum = 0;
 	  
+	  missed = false;
 	  if(min_value == 0){
 	    for(unsigned int h = 0; h < data_x->size(); h++){
 	      //get y
@@ -204,8 +206,11 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 		yv = data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps();
 	      }
 	      
+	      if(yv == 0){ 
+		missed = true;
+		break;
+	      }
 	      partial_sum += log(yv);
-	      if(yv == 0) break;
 	    }
 	  }
 	  else{
@@ -226,7 +231,8 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	    partial_sum -= offset;
 	  }
 	  //update sum with the average value (p_value)
-	  sum += exp(partial_sum);//data_x->size();
+	  if(!missed)
+	    sum += exp(partial_sum);//data_x->size();
 	  //cout << sum << endl;
 	}
 	

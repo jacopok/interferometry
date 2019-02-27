@@ -37,17 +37,17 @@ class nu: public ParametricFit::Func {
 
 
 
-int main (){
-  string input_name, ancora;
+int main (int argc, char* argv[]){
+  string ancora;
+  PDF *n_l, *theta_0, *gamma, *N_0;
+  MultiPDF *result, *offsets;
   unsigned int n_data = 0, datastep = 50;
   vector<double>* xV = new vector<double>;
   vector<PDF*>* yVP = new vector<PDF*>;
   vector<double>* pattume = new vector<double>;
   vector<string> names;
   
-  cout << "Where are the data? ";
-  cin >> input_name;
-  ifstream in(input_name.c_str());
+  ifstream in(argv[1]);
   if(!in){
     cout << "ERROR opening input file" << endl;
     return -1;
@@ -82,8 +82,7 @@ int main (){
   unsigned int n_rep, seed;
   double min_value = 0;
   double param_min, param_max;
-  PDF *n_l, *theta_0, *gamma, *N_0;
-  MultiPDF *total, *result, *offsets;
+  MultiPDF *total;
   
   do{
     cout << "Do you want to reset unknown paramters? [y/n] ";
@@ -145,22 +144,24 @@ int main (){
     cout << "gamma = " << gamma->mean() << " +- " << sqrt(gamma->var()) << endl;
     cout << "theta_0 = " << theta_0->mean() << " +- " << sqrt(theta_0->var()) << endl;
     cout << "N_0 = " << N_0->mean() << " +- " << sqrt(N_0->var()) << endl << endl;
-    
-    cout << "Correlation coefficient between n_l and gamma = " << result->correlation_index() << endl;
-    cout << "Correlation coefficient between N_0 and theta_0 = " << offsets->correlation_index() << endl << endl;
-    
     n_l->print("n_l_G.txt");
     gamma->print("gamma_G.txt");
     theta_0->print("theta_0_G.txt");
     N_0->print("N_0_G.txt");
+    
+    cout << "Correlation coefficient between n_l and gamma = " << result->correlation_index() << endl;
+    cout << "Correlation coefficient between N_0 and theta_0 = " << offsets->correlation_index() << endl << endl;
+    
+    cout << "printing result" << endl;
     result->print("result_G.txt");
-    offsets->print("offsets.txt");
+    cout << "printing offsets" << endl;
+    offsets->print("offsets_G.txt");
+    cout << "saving total" << endl;
+    total->save("total_MPDF.txt");
     
     cout << "Do you want to fit again? [y/n]: ";
     cin >> ancora;
   }while(ancora[0] == 'y');
-  
-  total->save("total_MPDF.txt");
   
   cout << endl << endl;
   return 0;

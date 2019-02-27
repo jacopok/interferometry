@@ -50,8 +50,8 @@ class MultiPDF {
     double* access(vector<unsigned int>* indexs) const;
     unsigned int getAxis(const string& s) const;
     
-    MultiPDF* integrate_along(const string& PDFname, const string& newname) const;
-    MultiPDF* integrate_along(unsigned int i, const string& newname) const;
+    MultiPDF* integrate_along(const string& PDFname, const string& newname, double min = 0, double max = -1) const;
+    MultiPDF* integrate_along(unsigned int i, const string& newname, double min = 0, double max = -1) const;
     
     MultiPDF* subMultiPDF(vector<string>* PDFnames, const string& newname) const;
     MultiPDF* subMultiPDF(vector<unsigned int>* indexs, const string& newname) const;

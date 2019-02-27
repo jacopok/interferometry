@@ -4,7 +4,7 @@ export ROOT_LIBS="-L/usr/lib/i386-linux-gnu -lCore -lCint -lRIO -lNet -lHist -lG
 export MONTECARLO_PATH=${PWD}/..
 export LD_LIBRARY_PATH=${MONTECARLO_PATH}
 
-export EXEC_NAME=MultiPDFManager
+export EXEC_NAME=fit2
 export MAIN_SOURCE=${EXEC_NAME}.cxx
 rm -f ${EXEC_NAME}
 
