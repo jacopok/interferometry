@@ -23,7 +23,7 @@ def output(out_filename, step_array, fringes_array,
         
 def output_montecarlo(out_filename, step_array, fringes_array, angle_array,
                       step_error, gain_error,
-           firstline = "Step number, Digital, angle, step error, gain error\n"):
+           firstline = "Fringe number, Digital, angle, step error, gain error\n"):
     
     step_error_array = np.ones(len(step_array)) * step_error
     gain_error_array = np.ones(len(step_array)) * gain_error
@@ -85,7 +85,8 @@ class dataset():
         """
         if(zero_step==None):
             zero_step = self.uncentered_step_array[self.uncentered_fringes_array == zero_fringe]
-        self.fringes_array = self.fringes_array - zero_fringe
+        self.fringes_array = np.sign(self.fringes_array) * \
+            (np.abs(self.fringes_array) - zero_fringe)
         self.step_array = self.step_array - zero_step
     
     def plot(self, uncentered=False):
@@ -128,7 +129,7 @@ class dataset():
         origin.
         """
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
-        condition_nonzero = self.fringes_array != 0
+        condition_nonzero = np.abs(self.fringes_array) > 1.5
         condition = condition_radius & condition_nonzero
         f = self.fringes_array[condition]
         s = self.step_array[condition]

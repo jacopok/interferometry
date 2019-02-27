@@ -10,3 +10,5 @@ corresponding to the order of the fringe which is manually identified
 to be of order 0.
 
 This creates a file named `filename_centered.txt` with the same formatting.
+
+Also, the tab-separated file `filename_centered_mc.txt` is created, which is ready for MonteCarlo simulations.
