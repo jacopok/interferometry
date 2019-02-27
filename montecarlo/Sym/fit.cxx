@@ -4,6 +4,7 @@
 #include <string>
 
 #include "PDF.h"
+#include "MultiPDF.h"
 #include "ParametricFit.h"
 #include "LinearFit.h"
 
@@ -113,14 +114,19 @@ int main (){
     
     ancora = vuota;
     
-    n_l = pf.get_unknown_PDF("n_l");
-    theta_0 = pf.get_unknown_PDF("theta_0");
+    MultiPDF* result = pf.get_unknown_MultiPDF();
+    
+    n_l = result->integrate_along("tehta_0","n_l")->toPDF();
+    theta_0 = result->integrate_along("n_l","theta_0")->toPDF();
     
     cout << "n_l = " << n_l->mean() << " +- " << sqrt(n_l->var()) << endl;
     cout << "theta_0 = " << theta_0->mean() << " +- " << sqrt(theta_0->var()) << endl;
     
+    cout << "Correlation coefficient = " << result->correlation_index() << endl <<endl;
+    
     n_l->print("n_l_G.txt");
     theta_0->print("theta_0_G.txt");
+    result->print("result_G.txt");
     
     cout << "Do you want to fit again? [y/n]: ";
     cin >> ancora;

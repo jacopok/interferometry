@@ -1,0 +1,252 @@
+
+This document is a summary of each class in the montecarlo library
+
+How to read: every function here starts with a `>` before its name
+
+===============================================================================================================================
+
+PDF: it is the main object of the class and it is well explained in "PDF.h"
+
+----------------------------------------------------------------------------------------------------------------------
+
+MultiPDF: multidimensional PDF used to handle correlated aleatory variables
+    Usually a MultiPDF is built by object such as LinearFit, ParametricFit or MultiErrorPropagator: an example is provided below (MultiErrorPropagator)
+    You can also create a MultiPDF via the static function
+    >merge(vector<PDF*>* vp, string name): the PDFs in `vp` will be merged into a MultiPDF* with name `name` considering them independent
+
+   In order to initialize a MultiPDF you can use the function >add(PDF* p) which adds another dimension to the MultiPDF in which the domain of the `p` is put
+   (A deep copy of p is saved inside the MultiPDF, so modifying p after the call to add won't affect the MultiPDF)
+
+   Each MultiPDF contains a `counters` and functions >initialize_counters and >update_counters to easily scan it. `counters` is a vector<unsigned int>* where counters->at(i)
+   resembles the step of the i-th PDF in the MultiPDF. Note that the 0-th PDF is the first you added to the MultiPDF and so on
+
+    >integrate_along(name,newname,min,max): returns a (d - 1)-dimensional MultiPDF* with name `newname` by integrating along the PDF with name `name` between `min` and `max`
+    >integrate_along(i,newname,min,max): returns a (d - 1)-dimensional MultiPDF* with name `newname` by integrating along the i-th PDF between `min` and `max`
+         to integrate along all the PDF omitt min and maxs
+
+    >subMultiPDF(vector<string>* names, newname): returns a MultiPDF* with name `newname`  containing only the PDFs in `names`, i.e. it integrates along the other PDFs
+    >subMultiPDF(vector<unsigned int>* indexs, newname): same as the previous but accessing the PDFs via indexs instead of names (the first PDF is the 0-th)
+    
+    If the MultiPDF is 1-dimensional you can use >toPDF() to convert it to a regular PDF
+    If the MultiPDF is 2-dimensional you can use >correlation_index() to obtain the Bravais-Pearson correlation coefficient between the two PDFs of the MultiPDF
+
+----------------------------------------------------------------------------------------------------------------------
+
+DataSimulator
+    >simulate_one(PDF* p): returns a single value out of a PDF with the statistical properties of that PDF
+    >simulate_sample(vector<PDF*>* vp): returns a vector of values as above
+    >multi_simulate_one(MultiPDF* p): returns a vector<double>* of values for the MultiPDF according with its statistical properties (correlation too)
+
+----------------------------------------------------------------------------------------------------------------------
+
+ErrorPropagator
+    abstract class for propagating errors: derivate classes must reimplement function `f`
+
+    constructor: ErrorPropagator(v): `v` is a vector<PDF*>*
+    >f(): it is the function of the variables whose PDFs are in the vector passed to the constructor
+    >propagation(n,seed,min,max,steps,name): returns a PDF by `n` iterations between `min` and `max` with `steps` steps and name `name`
+
+     example of usage of a derived class for projecting the error of the x coordinates of a dataset onto the y coordinate
+
+		class ErrorPropagatorE: public ErrorPropagator {//transports the error from x to y
+		    public:
+		        ErrorPropagatorE(const vector<PDF*>* vp, double b):
+		            ErrorPropagator(vp),
+		            m(b),
+		            mean(vp->at(0)->mean()){}
+		        ~ErrorPropagatorE(){}
+		    
+		        double f() const {
+		            double x = DataSimulator::simulate_one(vP->at(0));
+		            double y = DataSimulator::simulate_one(vP->at(1));
+		            return y + m*(x - mean);
+		        }
+		    
+		    private:
+		        double m;
+		        double mean;
+		};
+
+                ....
+                int main(){
+		  PDF *x, *y;
+		  double b, min, max;
+		  ...
+		  vector<PDF*> v{x,y};
+                  ErrorPropagatorE e(&v,b);
+                  PDF* newy = e.propagation(100000,1,min,max,1000,"newy");
+		  ...
+		}
+
+----------------------------------------------------------------------------------------------------------------------
+
+MultiErrorPropagator
+    abstract class for propagating errors starting from both PDFs and MultiPDFs: derivate classes must reimplement function `f`
+    
+    constructor: ErrorPropagator(vmp,vp,name): `vmp` is a vector<MultiPDF*>* , `vp` is a vector<PDF*>*
+    >getResult(): returns the MultiPDF* `result` of the propagation. Use this function before the propagation to initialize the MultiPDF (via MultiPDF::add(PDF* p))
+    >propagation(n,seed): fills the MultiPDF `result`
+    >f(): access simulated data via the map `sim_sample` and combine them in a vector<double>* that will be added to `result`
+
+     example of usage of a derived class that given the MultiPDF ab of parameters of a linear fit computes b/a and b^2
+
+     		class MultiErrorPropagatorC : public MultiErrorPropagator{
+		  public:
+		      MultiErrorPropagatorC(MultiPDF* ab, const string& name):
+		          MultiErrorPropagator(new vector<MultiPDF*>{ab},new vector<PDF*>,name){}
+		      ~MultiErrorPropagatorC(){}
+		    
+		      vector<double>* f() const{
+		          double b_su_a = sim_sample->at("b")/sim_sample->at("a");
+		          double b2 = sim_sample->at("b")*sim_sample->at("b");
+		          return new vector<double>{b_su_a,b2};
+		      }
+		};
+
+                ....
+                int main(){
+		  ...
+		  MultiPDF *ab;
+		  PDF *b_su_a, *b2;
+		  ...
+		  // create b_su_a and b2 as empty PDFs
+		  ...
+       		  MultiErrorPropagatorC c(ab,"c");
+		  c.getResult()->add(b_su_a);
+		  c.getResult()->add(b2); 
+		  c.propagation(10000,1);
+		  MultiPDF* c_copy = new MultiPDF(*(c.getResult()));
+		  ...
+		  //get b_su_a and b2
+		  b_su_a = c_copy->integrate_along(1,"b_su_a")->toPDF();
+		  b2 = c_copy->integrate_along(0,"b2")->toPDF();
+		  double rho = c_copy->correlation_index();
+		  ...
+		}
+
+----------------------------------------------------------------------------------------------------------------------
+
+LinearFit
+    this object can both work with internal or external vectors. To work with internal vector just omitt the data vectors in every function.
+    To fill the internal vectors you can use both the `>add` function or `>set_data`
+
+    >enableMultiPDF(bool q): if q = false when fitting only the PDFs of a and b will be computed, otherwise the MultiPDF of a and b will also be computed
+
+    >fit(file_name,start_line,end_line): builds the PDFs of the parameters of the line y = a + b*x interpolating data in `filename`
+					 in lines [`start_line` : `end_line`]. To obtain those PDFs use functions `>getA()` and `>getB()`; for the MultiPDF use `>getAB()` 
+    >fit(xV,yVP): `xV` is a vector<double>* and `yVP` is a vector<PDF*>*
+					it does the same thing of the previous, but picking up data from the vectors
+
+    >intersec(file_name1,file_name2): returns a PDF** containing the PDFs (`ix` and `iy`) of the x and y coordinates of the intersection between the interpolating lines of `file_name1` and `file_name2`
+    >intersec(file_name,a,b): returns a PDF** containing the PDFs of the x and y coordinates of the intersection between the interpolating line of `file_name` and 
+			      y = a + b*x
+
+    >add(input,xV,yVP): this is a VERY USEFUL routine of the LinearFit object: `input` is an ifstream*, `xV` is a vector<double>*
+			and `yVP` is a vector<PDF*>*. This functions adds data `xV` `yVP` reading from a file that has to be in the following
+			file format.
+			To use this function you will only need to setPrecision, so you can use it also for initializing data in a ParametricFit
+
+   >chi2(xV,yVP): returns the chi square
+   >rho(xV,yVP): returns Bravais-Pearson correlation coefficient
+   >T_N(): returns the value for the T_student associated with rho
+    
+    File format:
+	x_value		yPDF_type	yPDF_a		yPDF_b
+	
+	    yPDF_type =
+		      "Uniform"	 		-> yPDF_a = min,	yPDF_b = max
+		      "Box"				-> yPDF_a = center, yPDF_b = full width
+		      "Triangular"		-> yPDF_a = center,	yPDF_b = full width
+		      "Gauss"				-> yPDF_a = mean,	yPDF_b = sigma
+		      "Digital"			-> yPDF_a = value	yPDF_b = digit		yPDF_c = gain
+		      "Oscilloscope"		-> yPDF_a = V,		yPDF_b = Vdiv                 it considers a contribute of 3% gain + 0.05*Vdiv of digits
+ 		      
+    Settings:
+	>setAB_steps(n)	-> set the number of steps of the `a`,`b`,`ix`,`iy` PDFs
+	>setPrecision(n)	-> set the number of steps of the PDFs of the simulated sample
+	>setN(n)		-> set the number of iterations
+	
+    Further settings:
+	to use the function `fit`:
+	    >setA_range(m,M)	-> set min and max value for the `a` PDF
+	    >setB_range(m,M)	-> set min and max value for the `b` PDF
+	    
+	to use the function `intersec`:
+	    >setIX_range(m,M)	-> set min and max value for the `ix` PDF
+	    >setIY_range(m,M)	-> set min and max value for the `iy` PDF
+
+----------------------------------------------------------------------------------------------------------------------
+
+ParametricFit
+    this object provides three ways of performing a parametric fit with a function depending both on fixed parameters (known PDFs) and unknown parameters in order to find
+    to find the unknown parameters MultiPDF. As always data need to be in the format explained above.
+    To get the unknown MultiPDF use `>get_unknown_MultiPDF()`
+    In order to define the fitting function you need to define a class inheriting from ParametricFit::Func; for example the linear function should be defined as
+		
+		class linFunc: public ParametricFit::Func {
+ 			   public:
+				linFunc():
+			  	Func("linFunc"){}
+				~linFunc(){}
+	
+				virtual unsigned int n_fix(){return 0;}
+				virtual unsigned int n_unk(){return 2;}
+				virtual double f(double x, vector<double>* v_fix, vector<double>* v_unk){
+	  				return v_unk->at(0) + x * v_unk->at(1);
+				}
+		};
+   
+   There are functions to set and add fixed or unknown parameters: see "ParametricFit.h"
+
+    >fit(repetitions,seed,mode): builds the unknown MultiPDF
+
+   The three modes are:
+	- ParametricFit::value
+		the probability of a particular tuple of unkown parameters is proportional to the average value intersected from the function on the dataset
+	- ParametricFit::p_value
+		same but with p-values instead of values
+       If there are no fixed parameters the number of repetitions doesn't matter: so use 1!
+       If the function does not intersect one of the data the probability for that particular tuple of unknown parameters will be 0. In order to change this behaviour set `min_value` 
+       to a small positive number. Be careful because the larger `min_value` is the wider the unknown PDFs will be.
+
+	- ParametricFit::brute_force
+		this method is pretty unefficient as it scans all the possible tuples in order to find the best with the minimum square method. In order to obtain a significant result many
+		repetitions: and it will take a LOT of time
+
+----------------------------------------------------------------------------------------------------------------------
+
+PDFFactory
+    abstract class for building PDFs
+
+    >create(min,max,steps,name): creates a PDF between `min` and `max` with `steps` steps and name `name` using a generic function `f` that is reimplemented in derived classes
+    >create_default(steps): create a PDF with `steps` steps, this function is reimplemented in every derived class
+    
+    derived classes
+	GaussFactory(mean,sigma): builds gaussians
+		default gaussian are created in [mean - 5*sigma : mean + 5*sigma]
+	UniformFactory(a,b): builds a uniform distribution between `a` and `b`
+		default uniforms are created in [a,b]
+	TriangularFactory(center,fullwidth): builds triangular distributions
+		default triangulars are created in [`center` - `fullwidth`/2 : center + `fullwidth`/2]
+	DigitalFactory(center,digit,gain): builds a PDF resulting from a measurement with a digital instrument
+		with errors due to `digit` and `gain` (this one is a percentage, e.g.: 0.03)
+		default digitals are created where they are non 0
+		This PDFs are created via a propagation of two uniform distributions
+		
+----------------------------------------------------------------------------------------------------------------------
+
+PDFFactoryManager
+    >create(PDF_type,PDFa,PDFb): creates a PDFFactory with type `PDF_type` and parameters `PDF_a` and `PDF_b`
+				
+				see LinearFit -> File Format -> yPDF_type
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+STANDARD  WAY OF BUILDING PDFs via a PDFFactory
+
+PDFFactory* F = PDFFactoryManager::create(PDF_type,PDFa,PDFb);
+PDF* pdf = F->create(min,max,steps,name);
+delete F;
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+

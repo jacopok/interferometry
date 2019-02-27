@@ -8,13 +8,13 @@
 using namespace std;
 
 class PDF;
-
+class MultiPDF;
 
 class ParametricFit {
   
   public:
     
-    enum mode {value, p_value};
+    enum mode {value, p_value, brute_force};
     
     class Func {
       public:
@@ -44,10 +44,12 @@ class ParametricFit {
     void add_data(double x, PDF* y_PDF);
     void set_data(vector<double>* xV, vector<PDF*>* yVP);
     void delete_data();
+    void clear();
     
-    PDF* get_unknown_PDF(const string& name) const;
-    
+    MultiPDF* get_unknown_MultiPDF() const;
+        
     bool isready() const;
+    void set_min_value(double m);
     
     void fit(unsigned int n_rep, unsigned int seed, mode q);
   
@@ -60,15 +62,15 @@ class ParametricFit {
     Func* f;
     
     vector<PDF*>* fixed_parameters;
-    vector<double>* unknown_parameters_min;
-    vector<double>* unknown_parameters_max;
-    vector<unsigned int>* unknown_parameters_steps;
-    vector<string>* unknown_parameters_name;
     
+    bool extern_data_vectors;
+    double min_value;
     vector<double>* data_x;
     vector<PDF*>* data_y_PDF;
      
-    map<string,PDF*>* unknown_parameters_PDFs;
+    //map<string,PDF*>* unknown_parameters_PDFs;
+    
+    MultiPDF* unknown_MultiPDF;
     
   
 };
