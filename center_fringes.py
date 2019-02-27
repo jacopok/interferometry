@@ -26,4 +26,4 @@ data.output_centered(out_name)
 
 out_name_mc = name + "_centered_mc.txt"
 
-data.output_centered_mc(out_name_mc)
+data.output_centered_mc(out_name_mc, 1)

@@ -22,8 +22,7 @@ def output(out_filename, step_array, fringes_array,
         csv_writer.writerows(data)
         
 def output_montecarlo(out_filename, step_array, fringes_array, angle_array,
-                      step_error, gain_error,
-           firstline = "Fringe number, Digital, angle, step error, gain error\n"):
+                      step_error, gain_error):
     
     step_error_array = np.ones(len(step_array)) * step_error
     gain_error_array = np.ones(len(step_array)) * gain_error
@@ -33,13 +32,18 @@ def output_montecarlo(out_filename, step_array, fringes_array, angle_array,
                      angle_array, step_error_array, gain_error_array), axis=-1)
 
     with open(out_filename, "w") as csv_file:
-        csv_file.write(firstline)
         csv_writer = csv.writer(csv_file, delimiter = '\t')
         csv_writer.writerows(data)
     
 class dataset():
     
     def __init__(self, filename, flipped=False):
+        """
+        Initialization of the data set.
+        The conversion_factor, step_error and gain_error are hardcoded
+        for now, since they just have to be 
+        """
+        
         self.filename = filename
         self.read_file(flipped)
         self.conversion_factor = 42.6 * 10**(-6)
@@ -144,3 +148,39 @@ class dataset():
         
     def calculate_angles(self):
         self.angle_array = self.conversion_factor * self.step_array
+
+    def fringe_linearized_step(self, step):
+        """
+        Finds the fringe number which would correspond to
+        the selected step, using a linear approximation.
+        """
+        
+        if(step<np.min(self.step_array)):
+            before_step = after_step = np.min(self.step_array)
+        elif(step>np.max(self.step_array)):
+            before_step = after_step = np.max(self.step_array)
+        else:        
+            before_step = np.max(self.step_array[self.step_array<=step])
+            after_step = np.min(self.step_array[self.step_array>=step])
+        
+        diff = after_step-before_step
+        f1 = self.fringes_array[self.step_array==before_step]
+        f2 = self.fringes_array[self.step_array==after_step]
+        if(f1==f2):
+            fringe = f2
+        else:
+            fringe = (f1*(step-before_step) + f2*(after_step-step))/diff
+        print(before_step)
+        print(after_step)
+        return(fringe)
+        
+class measure():
+    
+    def __init__(self, background, signal):
+        self.background = background
+        self.signal = signal
+    
+    def subtract_background(self):
+        for step in self.signal.step_array:
+            bkg_fringe = self.background.fringe_linearized_step(step)
+            self.signal.fringes_array[self.signal.step_array==step] -= bkg_fringe
