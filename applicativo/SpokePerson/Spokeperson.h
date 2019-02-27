@@ -23,6 +23,7 @@ private:
 	Mat readed;
 	Mat green;
 	int channels[2];
+	bool motorOnline;
 
 	enum command : char {
 		sUp = '+',
@@ -37,7 +38,7 @@ public:
 	bool step(int delta);
 	bool stepto(int abs);
 	bool zero();
-	double* read(ofstream* out = NULL);
+	double* read(ofstream* out = NULL, bool debug = false);
 	int cstep();
 	int cols();
 	int rows();

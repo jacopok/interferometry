@@ -120,6 +120,7 @@
 #endif
 #include "Riostream.h"
 #include "Observer.h"
+#include <iostream>
 #include <cstring>
 
 class MyGUI : public TGMainFrame {

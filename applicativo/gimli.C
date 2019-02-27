@@ -2,30 +2,31 @@
 #include <cstring>
 #include <mutex>
 #include <ctime>
-#include "ANALISI/Analisis.h"
-#include "ANALISI/MinsReceiver.h"
+#include "ANALISI/Analizer.h"
+#include "ANALISI/PointReceiver.h"
+#include "ANALISI/CenterManager.h"
 #include "GUI/MyGUI.h"
 #include "GUI/Observer.h"
 #include "BIGGRAPH/BigGraph.h"
 #include <TGMsgBox.h>
 
-class Interface : public Observer, public MinsReceiver, public SpokerInterface {
+class Interface : public Observer, public PointReceiver, public SpokerInterface {
 	ofstream* massout=NULL,*out=NULL;
 	MyGUI* mg=NULL;
-	Analisis* a=NULL;
+	CenterManager* cm=NULL;
 	BigGraph* bg=NULL;
 	Spokeperson* spk=NULL;
 	mutex mbg;
 	mutex mout;
-	AnalizerThread* athr=NULL;
-	bool grad = false;
+	Analizer* anal=NULL;
 	void rubbishClear();
 public:
 	Interface();
 	~Interface();
 	void click(const char* s);
-	void mins(int id, vector<double>* mins);
-//	void stepto(int a,bool relative=true);
+	void addPoint(int nfrange, int passo);
+	void drawSmall(TGraph* tg);
+	void working(bool status);
 	void setCStep(int cstep);
 	void noSerPort();
 };
@@ -35,11 +36,11 @@ Interface::Interface() {
 	mg->attach(this);
 	mg->setFolder("fold"+to_string(time(NULL)));
 	bg = new BigGraph();
-	spk=new Spokeperson(this);
-	athr=new AnalizerThread(5);
-	a = new Analisis(0);
+	spk= new Spokeperson(this);
+	anal = new Analizer(this);
+	cm = new CenterManager();
 	spk->read();
-	a->take(spk->cols(),spk->rows(),spk->read());
+	cm->updateData(spk->rows(),spk->cols(),spk->read());
 }
 
 void Interface::noSerPort() {
@@ -55,30 +56,31 @@ void Interface::rubbishClear() {
 	if(out) out->flush();
 	cout<<"Data flushed\n";
 	if(out) delete out;
-	if(a) delete a;
+	if(cm) delete cm;
 	if(bg) delete bg;
-	if(athr) delete athr;
+	if(anal) delete anal;
 }
 
 void Interface::setCStep(int cstep) {
 	mg->setStepInfo(to_string(cstep).c_str());
+	mg->canvUpdate();	
 }
 
 void Interface::click(const char* s) {
-	if(strcmp(s,"grad")==0) {
-		a->findGrad();
-		string str = "Grad: "+to_string(a->getGrad(0))+";"+to_string(a->getGrad(1))+")";
-		mg->setGradInfo(str.c_str());
-		grad = true;
+	if(strcmp(s,"info")==0) {
+		cm->updateData(spk->rows(),spk->cols(),spk->read());
+		char temp[100];
+		sprintf(temp,"Center: %d,%d",cm->getCenter(0),cm->getCenter(1));
+		mg->setGradInfo(temp);
 	}
 	if(strcmp(s,"plot1")==0) {
 		mg->goToCanv(0);
-		a->drawR();
+		cm->draw();
 		mg->canvUpdate();
 	}
 	if(strcmp(s,"plot2")==0) {
 		mg->goToCanv(0);
-		a->drawP();
+		anal->draw();
 		mg->canvUpdate();
 	}
 	if(strcmp(s,"zero")==0) {
@@ -102,42 +104,49 @@ void Interface::click(const char* s) {
 	if(strcmp(s,"anal")==0) {
 		if(out) delete out;
 		out = new ofstream(string("data/")+mg->getFolder()+"_mins.gimli");
-		if(!grad) click("grad");
 		int start = mg->getStart(), end = mg->getEnd(), step = mg->getStep();
+		anal->reset(mg->getFolder());
 		if( (start < end && step > 0) || (start > end && step < 0)) {
 			spk->stepto(start);
 			while( (spk->cstep() <= end && step > 0) || (spk->cstep() >= end && step < 0) ) {
-				Analisis *t = new Analisis(spk->cstep(),this,a->getGrad(0),a->getGrad(1));
 				if(mg->massiveSaving()) {
 					string filename = string("data/")+mg->getFolder()+"_"+to_string(spk->cstep())+".gimli";
 					massout = new ofstream(filename);
-					t->take(spk->cols(),spk->rows(),spk->read(massout));
+					anal->take(spk->cstep(),cm->getCenter(0),cm->getCenter(1),spk->cols(),spk->read(massout));
 				}
 				else
-					t->take(spk->cols(),spk->rows(),spk->read());
-				athr->addAnalisis(t);
+					anal->take(spk->cstep(),cm->getCenter(0),cm->getCenter(1),spk->cols(),spk->read() );
 				delete massout;
+				massout=NULL;
+
 				spk->step(step);
 			}
 		}
+		mg->setFolder("fold"+to_string(time(NULL)));
 	}	
 }
 
-void Interface::mins(int id, vector<double>* mins) {
+void Interface::addPoint(int nfrange, int passo) {
 	mout.lock();
-	for(vector<double>::iterator d = mins->begin();d< mins->end();d++) *out<<id<<"\t"<<*d<<"\n";
+	*out<<nfrange<<"\t"<<passo<<"\n";
 	mout.unlock();
 	mbg.lock();
-	bg->addPoint(id,mins);
+	bg->addPoint(nfrange,passo);
 	mg->goToCanv(1);
 	bg->draw();
 	mg->canvUpdate();
 	mbg.unlock();
 }
 
+void Interface::drawSmall(TGraph* tg) {
+	mg->goToCanv(0);
+	tg->Draw();
+	mg->canvUpdate();
+}
+
 void gimli() {
 	//THREAD SAFETY
-	ROOT::EnableThreadSafety();
+//	ROOT::EnableThreadSafety();
 	ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
 
 	new Interface();

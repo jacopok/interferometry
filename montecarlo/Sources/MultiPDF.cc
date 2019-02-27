@@ -320,14 +320,27 @@ unsigned int MultiPDF::getAxis(const string& s) const{
   return -1;
 }
 
-MultiPDF* MultiPDF::integrate_along(const string& PDFname, const string& newname) const{
-  return integrate_along(getAxis(PDFname),newname);
+MultiPDF* MultiPDF::integrate_along(const string& PDFname, const string& newname, double min, double max) const{
+  return integrate_along(getAxis(PDFname),newname,min,max);
 }
 
-MultiPDF* MultiPDF::integrate_along(unsigned int i, const string& newname) const{
+MultiPDF* MultiPDF::integrate_along(unsigned int i, const string& newname, double min, double max) const{
   if(empty){
     cout << "ERROR: MultiPDF " << name << " is empty: cannot integrate_along " << PDFs->at(i)->getName() << endl;
     return 0;
+  }
+  
+  //set extremals of integration
+  unsigned int startj, endj;
+  
+  if((min > max)||(min < PDFs->at(i)->getMin())||(max > PDFs->at(i)->getMax())){
+    cout << "MultiPDF " << name << ": integrating along all of " << PDFs->at(i)->getName() << " for MultiPDF "<< newname << endl;
+    startj = 0;
+    endj = PDFs->at(i)->getSteps() - 1;
+  }
+  else{
+    startj = PDFs->at(i)->getIndex(min);
+    endj = PDFs->at(i)->getIndex(max);
   }
   
   double dx = PDFs->at(i)->getDx();
@@ -355,10 +368,9 @@ MultiPDF* MultiPDF::integrate_along(unsigned int i, const string& newname) const
     }
     
     //integrate
-    counters->at(i) = 0;
-    for(unsigned int j = 0; j < PDFs->at(i)->getSteps(); j++){
+    for(unsigned int j = startj; j <= endj; j++){
+      counters->at(i) = j;
       *(p->access()) += *access();
-      counters->at(i)++;
     }
     *(p->access()) *= dx;
     
@@ -475,9 +487,12 @@ void MultiPDF::save(const string& filename) const{
   for(unsigned int u = 0; u < dimension; u++)
     out << PDFs->at(u)->getName() << '\t' << PDFs->at(u)->getMin() << '\t' << PDFs->at(u)->getMax() << '\t' << PDFs->at(u)->getSteps() << endl;
   out << endl;
-  for(unsigned int b = 0; b < size; b++)
-    out << values->at(b) << endl;
-  
+  for(unsigned int b = 0; b < size; b++){
+    out << values->at(b) << '\t';
+    if(b%20 == 0)
+      out << endl;
+  }
+  out << endl;
   return;
 }
 

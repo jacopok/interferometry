@@ -11,7 +11,6 @@ public:
 	BigGraph();
 	void draw();
 	void addPoint(double x, double y);
-	void addPoint(double x,vector<double>* y);
 	int getN();
 
 	ClassDef(BigGraph,0);

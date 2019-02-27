@@ -20,8 +20,9 @@ MultiPDF: multidimensional PDF used to handle correlated aleatory variables
    Each MultiPDF contains a `counters` and functions >initialize_counters and >update_counters to easily scan it. `counters` is a vector<unsigned int>* where counters->at(i)
    resembles the step of the i-th PDF in the MultiPDF. Note that the 0-th PDF is the first you added to the MultiPDF and so on
 
-    >integrate_along(name,newname): returns a (d - 1)-dimensional MultiPDF* with name `newname` by integrating along the PDF with name `name`
-    >integrate_along(i,newname): returns a (d - 1)-dimensional MultiPDF* with name `newname` by integrating along the i-th PDF
+    >integrate_along(name,newname,min,max): returns a (d - 1)-dimensional MultiPDF* with name `newname` by integrating along the PDF with name `name` between `min` and `max`
+    >integrate_along(i,newname,min,max): returns a (d - 1)-dimensional MultiPDF* with name `newname` by integrating along the i-th PDF between `min` and `max`
+         to integrate along all the PDF omitt min and maxs
 
     >subMultiPDF(vector<string>* names, newname): returns a MultiPDF* with name `newname`  containing only the PDFs in `names`, i.e. it integrates along the other PDFs
     >subMultiPDF(vector<unsigned int>* indexs, newname): same as the previous but accessing the PDFs via indexs instead of names (the first PDF is the 0-th)

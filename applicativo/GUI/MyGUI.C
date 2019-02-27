@@ -30,7 +30,7 @@ MyGUI::MyGUI() : TGMainFrame(gClient->GetRoot(),10,10,kMainFrame | kVerticalFram
    smallCanv->AdoptCanvas(c124);
    fMainFrame1322->AddFrame(smallCanv, new TGLayoutHints(kLHintsLeft | kLHintsTop,2,2,2,2));
    smallCanv->MoveResize(632,0,280,176);
-   TGTextButton *gradBtn = new TGTextButton(fMainFrame1322,"Find Grad",-1,TGTextButton::GetDefaultGC()(),TGTextButton::GetDefaultFontStruct(),kRaisedFrame);
+   TGTextButton *gradBtn = new TGTextButton(fMainFrame1322,"Find Properties",-1,TGTextButton::GetDefaultGC()(),TGTextButton::GetDefaultFontStruct(),kRaisedFrame);
    gradBtn->SetTextJustify(36);
    gradBtn->SetMargins(0,0,0,0);
    gradBtn->SetWrapLength(-1);
@@ -144,7 +144,7 @@ MyGUI::MyGUI() : TGMainFrame(gClient->GetRoot(),10,10,kMainFrame | kVerticalFram
    plot2Btn->Resize(64,35);
    fMainFrame1322->AddFrame(plot2Btn, new TGLayoutHints(kLHintsLeft | kLHintsTop,2,2,2,2));
    plot2Btn->MoveResize(544,93,64,35);
-   TGLabel *gradLab = new TGLabel(fMainFrame1322,"(Gradiente)");
+   TGLabel *gradLab = new TGLabel(fMainFrame1322,"(...)");
    gradLab->SetTextJustify(36);
    gradLab->SetMargins(0,0,0,0);
    gradLab->SetWrapLength(-1);
@@ -196,7 +196,7 @@ MyGUI::MyGUI() : TGMainFrame(gClient->GetRoot(),10,10,kMainFrame | kVerticalFram
 	this->bigCanv = bigCanv;   
 	this->smallCanv = smallCanv;
 
-	gradBtn->Connect("Clicked()","MyGUI",this,"click(=\"grad\")");
+	gradBtn->Connect("Clicked()","MyGUI",this,"click(=\"info\")");
 	analBtn->Connect("Clicked()","MyGUI",this,"click(=\"anal\")");
 	nextBtn->Connect("Clicked()","MyGUI",this,"click(=\"next\")");
 	prevBtn->Connect("Clicked()","MyGUI",this,"click(=\"prev\")");
@@ -217,6 +217,8 @@ MyGUI::MyGUI() : TGMainFrame(gClient->GetRoot(),10,10,kMainFrame | kVerticalFram
 
 	this->currLbl = currLbl;
 	this->gradLab = gradLab;
+
+	savCheck->SetState(kButtonDown);
 }
 
 void MyGUI::attach(Observer* obs) { this->obs = obs; }
@@ -231,6 +233,7 @@ void MyGUI::canvUpdate() {
 	smallCanv->GetCanvas()->Update();
 	bigCanv->GetCanvas()->Draw();
 	smallCanv->GetCanvas()->Draw();
+	gSystem->ProcessEvents();
 }
 
 void MyGUI::setGradInfo(const char* c) {
@@ -240,7 +243,6 @@ void MyGUI::setGradInfo(const char* c) {
 void MyGUI::setStepInfo(const char* c) {
 	currLbl->SetText(c);
 }
-
 int MyGUI::getStart() {
 	return startNE->GetNumber();
 }

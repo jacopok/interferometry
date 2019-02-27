@@ -13,36 +13,43 @@ Spokeperson::Spokeperson(SpokerInterface* interface) {
 	serPortNames.push_back("/dev/ttyACM0");
 	serPortNames.push_back("/dev/ttyUSB0");
 	serPortNames.push_back("/dev/ttyUSB1");
-	bool conn = false;
-	for(int i=0;i<serPortNames.size() && conn == false;i++) {
+	for(int i=0;i<serPortNames.size() && motorOnline == false;i++) {
 		system((string("stty -F ")+serPortNames[i]+" -hupcl").c_str()); //PREVENT RESET
 		system((string("stty -F ")+serPortNames[i]+" 9600").c_str()); //SET BAUDRATE
 		serPort = fopen(serPortNames[i].c_str(), "r+");
 		if (serPort == NULL)
 			cout<<"NOT ABLE TO OPEN SERIAL PORT AT "<<serPortNames[i]<<endl;
+		else motorOnline = true;
 	}
-	if (!conn)
+	if (!motorOnline)
 		inter->noSerPort();
 
 	// Cam loading
 	channels[0] = 1;
 	channels[1] = 0;
-	cap = new VideoCapture(0);
+	cap = new VideoCapture(2);
+	if(!cap || !(cap->isOpened())) cap = new VideoCapture(0);
 	*cap >> readed; // Load a sample image
 	green.create(readed.rows,readed.cols,CV_8U);
 	mixChannels(&readed, 1, &green, 1, channels, 1);
 }
 
 Spokeperson::~Spokeperson() {
-	fclose(serPort);
+	if(motorOnline) fclose(serPort);
 }
 
 
 bool Spokeperson::step(int delta) {
-	for(int i=0;i<delta;i++) write(sUp);
-	for(int i=0;i>delta;i--) write(sDown);
-	currstep += delta;
-	inter->setCStep(currstep);
+	for(int i=0;i<delta;i++) {
+		write(sUp);
+		currstep++;
+		inter->setCStep(currstep);
+	}
+	for(int i=0;i>delta;i--) {
+		write(sDown);
+		currstep--;
+		inter->setCStep(currstep);
+	}
 	return true;
 }
 
@@ -60,7 +67,7 @@ int Spokeperson::cstep() {
 	return currstep;
 }
 
-double* Spokeperson::read(ofstream* out) {
+double* Spokeperson::read(ofstream* out, bool debug) {
 /*
 	ifstream in("data.dat");
 	double* data = new double[row*col];
@@ -77,13 +84,16 @@ double* Spokeperson::read(ofstream* out) {
 	*cap >> readed;
 //	cvtColor(readed, green, COLOR_RGB2GRAY);
 	mixChannels(&readed,  1, &green, 1, channels, 1);
-	uchar* p = green.data;
 	for(int i=0;i<green.rows;i++)
 		for(int j=0;j<green.cols;j++) {
-			t = (double)p[j+i*green.cols];
+			t = green.at<uchar>(i,j);
 			if(out) *out<<t<<"\t";
 			data[j+green.cols*i] = t;
 		}
+       	if(debug) {
+		imshow("Data", green);
+		waitKey();
+	}
 	return data;
 }
 
@@ -95,9 +105,11 @@ int Spokeperson::cols() {
 }
 
 void Spokeperson::write(char c) {
-	fwrite(&c, sizeof(char), 1, serPort);
-	fflush(serPort);
-	usleep(200);
+	if(motorOnline) {
+		fwrite(&c, sizeof(char), 1, serPort);
+		fflush(serPort);
+	}
+	usleep(250000);
 	/*char r='0';
 	do {
 		while(fread(&r, sizeof(char), 1, serPort)) clearerr(serPort); // READ OLD DATA
@@ -120,7 +132,5 @@ void Spokeperson::showCam() {
 	        if(waitKey(30) >= 0) break;
 	}
 	destroyWindow("Camera");
-	int k = readed.type();
-	cout<<k;
 }
 
