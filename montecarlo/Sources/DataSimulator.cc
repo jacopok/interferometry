@@ -9,8 +9,10 @@
 #include <sstream>
 #include <string>
 
+/*
 #include <TH1F.h>
 #include <TFile.h>
+*/
 
 using namespace std;
 
@@ -43,7 +45,7 @@ vector<double>* DataSimulator::multi_simulate_one(const MultiPDF* p){
   return p->inverted_CDF_value(r);
 }
 
-
+/*
 void DataSimulator::root_one(const PDF* p, unsigned int n, const string& fileName){
   unsigned int nBin = p->getSteps();
   const char* hName = p->getName().c_str();
@@ -92,3 +94,4 @@ void DataSimulator::root_one(const PDF* p, unsigned int n, const string& fileNam
   
   return;
 }
+*/

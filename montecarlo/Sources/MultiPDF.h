@@ -35,6 +35,7 @@ class MultiPDF {
     double somma() const;
     bool isnormalized() const;
     void normalize();
+    vector<double>* mean() const;
     
     void build_CDF() const;
     unsigned int CDF_bigindex(double x) const;

@@ -74,9 +74,10 @@ class PDF {
     void print(const string& fileName) const;
     void save(const string& fileName) const;
     
+    /*
     //builds a root TH1F to plot the PDF
     void root(const string& fileName) const;
-    
+    */
     
     
   private:

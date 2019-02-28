@@ -47,6 +47,9 @@ class ParametricFit {
     void clear();
     
     MultiPDF* get_unknown_MultiPDF() const;
+    
+    double chi2(vector<double>* fix_par_values, vector<double>* unk_par_values) const;
+    double chi2() const;
         
     bool isready() const;
     void set_min_value(double m);

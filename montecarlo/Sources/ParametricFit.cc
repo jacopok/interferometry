@@ -117,6 +117,34 @@ MultiPDF* ParametricFit::get_unknown_MultiPDF() const{
   return new MultiPDF(*unknown_MultiPDF);
 }
 
+double ParametricFit::chi2(vector<double>* fix_par_values, vector<double>* unk_par_values) const{
+  if(fix_par_values->size() != f->n_fix()){
+    cout << "Cannot evaluate chi2: wrong number of fixed parameters";
+    return -1;
+  }
+  if(unk_par_values->size() != f->n_unk()){
+    cout << "Cannot evaluate chi2: wrong number of unknown parameters";
+    return -1;
+  }
+  
+  double sum = 0, y =0;
+  
+  for(unsigned int h = 0; h < data_x->size(); h++){
+    //get y
+    y = f->f(data_x->at(h),fix_par_values,unk_par_values);
+    sum += pow(data_y_PDF->at(h)->mean() - y,2)/data_y_PDF->at(h)->var();
+  }
+  return sum;
+}
+
+double ParametricFit::chi2() const{
+  vector<double>* fix_par_values = new vector<double>;
+  for(unsigned int k = 0; k < fixed_parameters->size(); k++)
+    fix_par_values->push_back(fixed_parameters->at(k)->mean());
+  vector<double>* unk_par_values = unknown_MultiPDF->mean();
+  return chi2(fix_par_values,unk_par_values);
+}
+
 bool ParametricFit::isready() const{
   if(f == 0){
     cout << "Fit FAILED: no given function" << endl;

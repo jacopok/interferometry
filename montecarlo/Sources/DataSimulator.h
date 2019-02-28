@@ -22,8 +22,10 @@ class DataSimulator {
     
     static vector<double>* multi_simulate_one(const MultiPDF* p);
     
+    /*
     static void root_one(const PDF* p, unsigned int n, const string& fileName);
     static void root_one(const PDF* p, unsigned int n, const string& fileName, unsigned int nBin, double min, double max);
+    */
     
   private:
     

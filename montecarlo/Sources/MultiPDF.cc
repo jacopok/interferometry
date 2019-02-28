@@ -207,6 +207,22 @@ void MultiPDF::normalize(){
   return;
 }
 
+vector<double>* MultiPDF::mean() const{
+  initialize_counters();
+  double val;
+  vector<double>* m = new vector<double>(dimension,0);
+  do{
+    val = *(access());
+    for(unsigned int u = 0; u < dimension; u++)
+      m->at(u) += val*(PDFs->at(u)->getMin() + (0.5 + counters->at(u))*PDFs->at(u)->getDx());
+  }while(update_counters());
+  
+  double s = somma();
+  for(unsigned int u = 0; u < dimension; u++)
+      m->at(u) /= s;
+  return m;
+}
+
 void MultiPDF::build_CDF() const{
   if(empty){
     cout << "MultiPDF " << name << " is empty: cannot build CDF" << endl;

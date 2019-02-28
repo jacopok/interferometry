@@ -151,6 +151,7 @@ int main (int argc, char* argv[]){
     
     cout << "Correlation coefficient between n_l and gamma = " << result->correlation_index() << endl;
     cout << "Correlation coefficient between N_0 and theta_0 = " << offsets->correlation_index() << endl << endl;
+    cout << "Chi2 = " << pf.chi2() << endl;
     
     cout << "printing result" << endl;
     result->print("result_G.txt");

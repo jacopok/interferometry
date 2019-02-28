@@ -20,6 +20,12 @@ int main(int argc, char* argv[]){
   cout << nt->correlation_index();
   nt->print("nt_G.txt");
   
+  names = vector<string>{"n_l","gamma"};
+  
+  MultiPDF* r = total->subMultiPDF(&names,"r");
+  PDF* n_l_1 = r->integrate_along("gamma","n_l_1",0.000041,0.000045)->toPDF();
+  n_l_1->print("n_l_1_G.txt");
+  
   cout << endl;
   return 0;
 }

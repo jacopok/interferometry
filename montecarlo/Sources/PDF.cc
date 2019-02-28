@@ -4,8 +4,10 @@
 #include <iostream>
 #include <fstream>
 
+/*
 #include <TFile.h>
 #include <TH1F.h>
+*/
 
 using namespace std;
 
@@ -575,6 +577,7 @@ void PDF::save(const string& fileName) const{
   return;
 }
 
+/*
 void PDF::root(const string& fileName) const{
   unsigned int nBin = steps;
   const char* hName = name.c_str();
@@ -601,3 +604,4 @@ void PDF::root(const string& fileName) const{
   return;
 }
 
+*/
