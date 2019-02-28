@@ -169,18 +169,28 @@ class dataset():
         if(f1==f2):
             fringe = f2
         else:
-            fringe = (f1*(step-before_step) + f2*(after_step-step))/diff
-        print(before_step)
-        print(after_step)
+            fringe = (f2*(step-before_step) + f1*(after_step-step))/diff
         return(fringe)
+        
+    def analyze_fine(self, fringes_radius=20):
+        zero_fringe, zero_step = self.find_zero_fringe(fringes_radius)
+        self.set_zero_fine(zero_fringe, zero_step)
+        self.calculate_angles()
         
 class measure():
     
-    def __init__(self, background, signal):
+    def __init__(self, background, gross_signal):
         self.background = background
-        self.signal = signal
-    
+        self.gross_signal = gross_signal
+        
     def subtract_background(self):
-        for step in self.signal.step_array:
+        import copy
+        self.signal = copy.deepcopy(self.gross_signal)
+        for step in self.gross_signal.step_array:
             bkg_fringe = self.background.fringe_linearized_step(step)
-            self.signal.fringes_array[self.signal.step_array==step] -= bkg_fringe
+            self.signal.fringes_array[self.gross_signal.step_array==step] -= bkg_fringe
+
+    def process(self, zero_fringe_bkg, zero_fringe_sgn):
+        self.background.analyze(zero_fringe_bkg)
+        self.gross_signal.analyze(zero_fringe_sgn)
+        self.subtract_background()
