@@ -16,7 +16,7 @@ class Interface : public Observer, public PointReceiver, public SpokerInterface 
 	CenterManager* cm=NULL;
 	BigGraph* bg=NULL;
 	Spokeperson* spk=NULL;
-	mutex mbg;
+	mutex gui;
 	mutex mout;
 	Analizer* anal=NULL;
 	void rubbishClear();
@@ -63,7 +63,9 @@ void Interface::rubbishClear() {
 
 void Interface::setCStep(int cstep) {
 	mg->setStepInfo(to_string(cstep).c_str());
+	gui.lock();
 	mg->canvUpdate();	
+	gui.unlock();
 }
 
 void Interface::click(const char* s) {
@@ -74,14 +76,18 @@ void Interface::click(const char* s) {
 		mg->setGradInfo(temp);
 	}
 	if(strcmp(s,"plot1")==0) {
+		gui.lock();
 		mg->goToCanv(0);
 		cm->draw();
 		mg->canvUpdate();
+		gui.unlock();
 	}
 	if(strcmp(s,"plot2")==0) {
+		gui.lock();
 		mg->goToCanv(0);
 		anal->draw();
 		mg->canvUpdate();
+		gui.unlock();
 	}
 	if(strcmp(s,"zero")==0) {
 		spk->zero();
@@ -116,7 +122,7 @@ void Interface::click(const char* s) {
 				}
 				else
 					anal->take(spk->cstep(),cm->getCenter(0),cm->getCenter(1),spk->cols(),spk->read() );
-				delete massout;
+				if(massout) delete massout;
 				massout=NULL;
 
 				spk->step(step);
@@ -128,20 +134,26 @@ void Interface::click(const char* s) {
 
 void Interface::addPoint(int nfrange, int passo) {
 	mout.lock();
+	cout<<"Mout"<<endl;
 	*out<<nfrange<<"\t"<<passo<<"\n";
+	out->flush();
 	mout.unlock();
-	mbg.lock();
+	gui.lock();
+	cout<<"Mbg"<<endl;
 	bg->addPoint(nfrange,passo);
 	mg->goToCanv(1);
 	bg->draw();
 	mg->canvUpdate();
-	mbg.unlock();
+	gui.unlock();
+	cout<<"Bye"<<endl;
 }
 
 void Interface::drawSmall(TGraph* tg) {
+	gui.lock();
 	mg->goToCanv(0);
 	tg->Draw();
 	mg->canvUpdate();
+	gui.unlock();
 }
 
 void gimli() {

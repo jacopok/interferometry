@@ -44,7 +44,7 @@ Analizer::~Analizer() {
 }
 
 void Analizer::minimize() {
-	pair<int,double>* t;
+	pair<int,double> t;
 	while(1) {
 		unique_lock<mutex> ul(m_data);
 		if(data.size() == 0) {
@@ -78,34 +78,49 @@ void Analizer::take(double step, int cx, int cy, int cols, double* d) {
 			+d[cx-1 + (cy-1)*cols] ) / 9 ;
 	if(out) *out<<step<<" "<<sum<<endl;
 	m_data.lock();
-	data.push( new pair<int,double>( step, sum ) );
+	data.push( pair<int,double>{ step, sum } );
+	cout<<"Pushed "<<step<<endl;
 	m_data.unlock();
 	cv_data.notify_all();
+	delete[] d;
+	cout<<"Cleaned "<<step<<endl;
 }
 
-void Analizer::analizeData( pair<int,double>* p ) {
+void Analizer::analizeData( pair<int,double> p ) {
 // 	add data in graph
-	tg->SetPoint(tg->GetN(),p->first,p->second);
-//	cout<<"Added point "<<p->first<<" "<<p->second<<endl;
-	if(painted) tg->GetXaxis()->SetLimits(p->first-100,p->first+100);
+	cout<<"Starting "<<p.first<<endl;
+	tg->SetPoint(tg->GetN(),p.first,p.second);
+	cout<<"Added "<<p.first<<endl;
+//	cout<<"Added point "<<p.first<<" "<<p.second<<endl;
+	if(painted) tg->GetXaxis()->SetLimits(p.first-100,p.first+100);
 	receiver->drawSmall(tg);
 	painted = true;
-	if(p->second > 30) {
-		if(cc > 5) fit(start,end);
+	if(p.second > 75) {
+		if(cc > 4) fit(start,end);
+		start = p.first;
 		cc = 0;
 	}
-	else if(p->second < 15) {
-		if(cc == 0) start = p->first;
-		end = p->first;
+	else if(p.second < 70) {
+		if(cc == 0) start = p.first;
+		end = p.first;
 		cc++;	
 	}
+	cout<<"Done "<<p.first<<endl;
 }
 
 void Analizer::fit(int start, int end) {
-	func->SetParameters(1,0,-1);
-	tg->Fit(func,"Q","",start,end);
-	start = -(func->GetParameter(1))/2/(func->GetParameter(0));
-	receiver->addPoint(cont,start);
+	cout<<"Fitting "<<start<<endl;
+	if(start > end) swap(start,end);
+	func->SetParameters(1,1,-1);
+	Int_t fitStatus = tg->Fit(func,"Q","",start,end);
+	cout<<fitStatus<<endl;
+	if( fitStatus == 0 || fitStatus == 1 ) {
+		start = -(func->GetParameter(1))/2.0/(func->GetParameter(0));
+		cout<<"Fitting "<<start<<endl;
+		receiver->addPoint(cont,start);
+	}
+	cout<<"Fitting "<<start<<endl;
+	cout<<start<<" "<<end<<endl;
 	cont++;
 }
 
