@@ -19,6 +19,7 @@ ParametricFit::ParametricFit(Func* g):
   f(g),
   fixed_parameters(new vector<PDF*>),
   extern_data_vectors(false),
+  missed(false),
   min_value(0),
   data_x(new vector<double>),
   data_y_PDF(new vector<PDF*>),
@@ -129,11 +130,18 @@ double ParametricFit::chi2(vector<double>* fix_par_values, vector<double>* unk_p
     return -1;
   }
   
+  cout << "chi2: ";
+  for(unsigned int k = 0; k < fixed_parameters->size(); k++)
+    cout << fix_par_values->at(k) << endl;
+  for(unsigned int u = 0; u < unk_par_values->size(); u++)
+    cout << unk_par_values->at(u) << endl;
+  
   double sum = 0, y =0;
   
   for(unsigned int h = 0; h < data_x->size(); h++){
     //get y
     y = f->f(data_x->at(h),fix_par_values,unk_par_values);
+    cout << "chi2: " << y << endl;
     sum += pow(data_y_PDF->at(h)->mean() - y,2)/data_y_PDF->at(h)->var();
   }
   return sum;
@@ -186,8 +194,9 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
   //useful variables
   unsigned int n_unk = unknown_MultiPDF->getDimension();
   double sum = 0;
-  double partial_sum = 0;
+  double partial_sum = 0, coeff = 1;
   unsigned int a_che_punto_siamo = 0, maxcount = unknown_MultiPDF->getSize();
+  MultiPDF* fixed_MultiPDF;
   
   //vector of single values (to be plugged in f)
   vector<double> v_unk(n_unk,0);
@@ -200,9 +209,12 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
     case value:
     case p_value:
       
-      double y, yv;
-      double offset;
-      bool missed;
+      if(n_rep == 0){
+	fixed_MultiPDF = MultiPDF::merge(fixed_parameters,"fixed_MultiPDF");
+	for(unsigned int k = 0; k < fixed_parameters->size(); k++)
+	  coeff *= fixed_parameters->at(k)->getDx();
+      }
+    
       //iterate over unknown_parameters
       unknown_MultiPDF->initialize_counters();
       do{
@@ -214,56 +226,30 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	
 	//iterate over fixed parameters
 	sum = 0;
-	for(unsigned int j = 0; j < n_rep; j++){
-	  
-	  //initialize fixed parameters
-	  for(unsigned int k = 0; k < fixed_parameters->size(); k++)
-	    v_fix[k] = DataSimulator::simulate_one(fixed_parameters->at(k));
-	  
-	  //iterate over data
-	  partial_sum = 0;
-	  
-	  missed = false;
-	  if(min_value == 0){
-	    for(unsigned int h = 0; h < data_x->size(); h++){
-	      //get y
-	      y = f->f(data_x->at(h),&v_fix,&v_unk);
-	      
-	      //compare with y_PDF
-	      if(q == value)
-		yv = data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps(); 
-	      else{
-		yv = data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps();
-	      }
-	      
-	      if(yv == 0){ 
-		missed = true;
-		break;
-	      }
-	      partial_sum += log(yv);
-	    }
+	if(n_rep > 0){
+	  for(unsigned int j = 0; j < n_rep; j++){
+	    
+	    //initialize fixed parameters
+	    for(unsigned int k = 0; k < fixed_parameters->size(); k++)
+	      v_fix[k] = DataSimulator::simulate_one(fixed_parameters->at(k));
+	    
+	    //iterate over data
+	      sum += data_iterator(&v_fix,&v_unk,q);//data_x->size();
+	    //cout << sum << endl;
 	  }
-	  else{
-	    offset = 0;
-	    for(unsigned int h = 0; h < data_x->size(); h++){
-	      //get y
-	      y = f->f(data_x->at(h),&v_fix,&v_unk);
+	}
+	else{
+	  fixed_MultiPDF->initialize_counters();
+	  do{
+	    //initialize fixed parameters
+	    for(unsigned int k = 0; k < fixed_parameters->size(); k++)
+	      v_fix[k] = fixed_parameters->at(k)->getMin() + (0.5 + fixed_MultiPDF->getCounters()->at(k))*fixed_parameters->at(k)->getDx();
 	      
-	      //compare with y_PDF
-	      if(q == value){
-		partial_sum += log(min_value + data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps());
-	      }
-	      else{
-		partial_sum +=  log(min_value + data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps());
-	      }
-	      offset += log(min_value);
-	    }
-	    partial_sum -= offset;
-	  }
-	  //update sum with the average value (p_value)
-	  if(!missed)
-	    sum += exp(partial_sum);//data_x->size();
-	  //cout << sum << endl;
+	    //iterate over data
+	    if(*(fixed_MultiPDF->access()) != 0)
+	      sum += *(fixed_MultiPDF->access()) * coeff * data_iterator(&v_fix,&v_unk,q);//data_x->size();
+	      
+	  }while(fixed_MultiPDF->update_counters());
 	}
 	
 	//update the MultiPDF
@@ -274,6 +260,9 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	ProgressBar::percentages(a_che_punto_siamo,maxcount);
 	
       }while(unknown_MultiPDF->update_counters());
+      
+      if(n_rep == 0)
+	delete fixed_MultiPDF;
       
       break;
     
@@ -328,8 +317,50 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	ProgressBar::percentages(j,n_rep);
       }
   }
-      
+  
   unknown_MultiPDF->normalize();
 
   return;
+}
+
+double ParametricFit::data_iterator(vector<double>* v_fix, vector<double>* v_unk, mode q) const{
+  double partial_sum = 0, offset = 0, y = 0, yv = 0;
+  
+  if(min_value == 0){
+    for(unsigned int h = 0; h < data_x->size(); h++){
+      //get y
+      y = f->f(data_x->at(h),v_fix,v_unk);
+      
+      //compare with y_PDF
+      if(q == value)
+	yv = data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps(); 
+      else{
+	yv = data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps();
+      }
+      
+      if(yv == 0){ 
+	return 0;
+      }
+      partial_sum += log(yv);
+    }
+  }
+  else{
+    offset = 0;
+    for(unsigned int h = 0; h < data_x->size(); h++){
+      //get y
+      y = f->f(data_x->at(h),v_fix,v_unk);
+      
+      //compare with y_PDF
+      if(q == value){
+	partial_sum += log(min_value + data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps());
+      }
+      else{
+	partial_sum +=  log(min_value + data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps());
+      }
+      offset += log(min_value);
+    }
+    partial_sum -= offset;
+  }
+  
+  return exp(partial_sum);
 }
