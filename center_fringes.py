@@ -15,9 +15,7 @@ zero_fringe = sys.argv[2]
 data = fdm.dataset(filename, flipped=True)
 data.set_zero(zero_fringe)
 
-zero_fringe, zero_step = data.find_zero_fringe(20)
-data.set_zero_fine(zero_fringe, zero_step)
-data.calculate_angles()
+data.analyze_fine(fringes_radius=20)
 
 name = os.path.splitext(filename)[0]
 out_name = name + "_centered.txt"
@@ -26,4 +24,4 @@ data.output_centered(out_name)
 
 out_name_mc = name + "_centered_mc.txt"
 
-data.output_centered_mc(out_name_mc, 1)
+data.output_centered_mc(out_name_mc)

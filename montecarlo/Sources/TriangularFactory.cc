@@ -18,8 +18,9 @@ double TriangularFactory::f (double x) const{
   if(x < center - delta/2)	return 0;
   if(x > center + delta/2) 	return 0;
   double h = 2.0/delta;
-  if(x < center) 		return h*(1.0 + 2*(x - center)/delta);
-				return h*(1.0 - 2*(x - center)/delta);
+  if(x < center) 
+	return h*(1.0 + 2*(x - center)/delta);
+  return h*(1.0 - 2*(x - center)/delta);
 }
 
 PDF* TriangularFactory::create_default(unsigned int steps) const{

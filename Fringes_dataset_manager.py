@@ -99,6 +99,14 @@ class dataset():
         else:
             plt.scatter(self.step_array, self.fringes_array)
             
+    def plot_center(self, radius, straightened=False):
+        if(straightened==False):
+            plt.scatter(self.step_array[np.abs(self.step_array)<radius],
+                    self.fringes_array[np.abs(self.step_array)<radius])
+        else:
+            plt.scatter(self.step_array[np.abs(self.step_array)<radius],
+                    np.abs(self.fringes_array[np.abs(self.step_array)<radius]))           
+            
     def split(self):
         """
         Must be called when the zero has already been set.
@@ -172,7 +180,7 @@ class dataset():
             fringe = (f2*(step-before_step) + f1*(after_step-step))/diff
         return(fringe)
         
-    def analyze_fine(self, fringes_radius=20):
+    def analyze_fine(self, fringes_radius=10):
         zero_fringe, zero_step = self.find_zero_fringe(fringes_radius)
         self.set_zero_fine(zero_fringe, zero_step)
         self.calculate_angles()
