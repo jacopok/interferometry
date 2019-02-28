@@ -141,7 +141,7 @@ double ParametricFit::chi2(vector<double>* fix_par_values, vector<double>* unk_p
   for(unsigned int h = 0; h < data_x->size(); h++){
     //get y
     y = f->f(data_x->at(h),fix_par_values,unk_par_values);
-    cout << "chi2: " << y << endl;
+    //cout << "chi2: " << y << endl;
     sum += pow(data_y_PDF->at(h)->mean() - y,2)/data_y_PDF->at(h)->var();
   }
   return sum;
@@ -194,7 +194,7 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
   //useful variables
   unsigned int n_unk = unknown_MultiPDF->getDimension();
   double sum = 0;
-  double partial_sum = 0, coeff = 1;
+  double partial_sum = 0, coeff = 1, c1 = 0, c2 = 0;
   unsigned int a_che_punto_siamo = 0, maxcount = unknown_MultiPDF->getSize();
   MultiPDF* fixed_MultiPDF;
   
@@ -213,6 +213,7 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	fixed_MultiPDF = MultiPDF::merge(fixed_parameters,"fixed_MultiPDF");
 	for(unsigned int k = 0; k < fixed_parameters->size(); k++)
 	  coeff *= fixed_parameters->at(k)->getDx();
+	fixed_MultiPDF->print("fixed_G.txt");
       }
     
       //iterate over unknown_parameters
@@ -234,7 +235,9 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	      v_fix[k] = DataSimulator::simulate_one(fixed_parameters->at(k));
 	    
 	    //iterate over data
-	      sum += data_iterator(&v_fix,&v_unk,q);//data_x->size();
+	    c1 = data_iterator(&v_fix,&v_unk,q);
+	    //cout << c1 << endl;
+	    sum += c1;//data_x->size();
 	    //cout << sum << endl;
 	  }
 	}
@@ -244,17 +247,22 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	    //initialize fixed parameters
 	    for(unsigned int k = 0; k < fixed_parameters->size(); k++)
 	      v_fix[k] = fixed_parameters->at(k)->getMin() + (0.5 + fixed_MultiPDF->getCounters()->at(k))*fixed_parameters->at(k)->getDx();
-	      
 	    //iterate over data
-	    if(*(fixed_MultiPDF->access()) != 0)
-	      sum += *(fixed_MultiPDF->access()) * coeff * data_iterator(&v_fix,&v_unk,q);//data_x->size();
-	      
+	    if((c2 = *(fixed_MultiPDF->access())) != 0){
+	      c1 = data_iterator(&v_fix,&v_unk,q);
+	      //cout << fixed_MultiPDF->getCounters()->at(0) << '\t' << c2*coeff*c1 << endl;
+	      sum += c2*coeff*c1;
+	    } 
 	  }while(fixed_MultiPDF->update_counters());
 	}
 	
 	//update the MultiPDF
-	*(unknown_MultiPDF->access()) += sum/n_rep;
-	
+	if(n_rep > 0)
+	  *(unknown_MultiPDF->access()) += sum/n_rep;
+	else{
+	  *(unknown_MultiPDF->access()) += sum;
+	}
+		
 	//ProgressBar
 	a_che_punto_siamo++;
 	ProgressBar::percentages(a_che_punto_siamo,maxcount);
