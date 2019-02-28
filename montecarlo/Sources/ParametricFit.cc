@@ -60,6 +60,8 @@ void ParametricFit::add_unknown_parameter(double min, double max, unsigned int s
 
 void ParametricFit::delete_unknown_parameters(){
   unknown_MultiPDF->clear();
+  delete unknown_MultiPDF;
+  unknown_MultiPDF = new MultiPDF("unknownMP");
   return;
 }
 

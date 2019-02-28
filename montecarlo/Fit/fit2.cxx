@@ -82,30 +82,43 @@ int main (int argc, char* argv[]){
   unsigned int n_rep, seed;
   double min_value = 0;
   double param_min, param_max;
+  unsigned int n_l_step, gamma_step, theta_0_step, N_0_step;
   MultiPDF *total;
   
   do{
     cout << "Do you want to reset unknown paramters? [y/n] ";
     cin >> ancora;
     
+    pf.delete_unknown_parameters();
+    
     if(ancora[0] == 'y'){
-      pf.delete_unknown_parameters();
       
       cout << "Insert min and max values for n_l and its steps: ";
-      cin >> param_min >> param_max >> datastep;
-      pf.add_unknown_parameter(param_min,param_max,datastep,"n_l");
+      cin >> param_min >> param_max >> n_l_step;
+      pf.add_unknown_parameter(param_min,param_max,n_l_step,"n_l");
       
       cout << "Insert min and max values for gamma and its steps: ";
-      cin >> param_min >> param_max >> datastep;
-      pf.add_unknown_parameter(param_min,param_max,datastep,"gamma");
+      cin >> param_min >> param_max >> gamma_step;
+      pf.add_unknown_parameter(param_min,param_max,gamma_step,"gamma");
       
       cout << "Insert min and max values for theta_0 and its steps: ";
-      cin >> param_min >> param_max >> datastep;
-      pf.add_unknown_parameter(param_min,param_max,datastep,"theta_0");
+      cin >> param_min >> param_max >> theta_0_step;
+      pf.add_unknown_parameter(param_min,param_max,theta_0_step,"theta_0");
       
       cout << "Insert min and max values for N_0 and its steps: ";
-      cin >> param_min >> param_max >> datastep;
-      pf.add_unknown_parameter(param_min,param_max,datastep,"N_0");
+      cin >> param_min >> param_max >> N_0_step;
+      pf.add_unknown_parameter(param_min,param_max,N_0_step,"N_0");
+    }
+    else{
+      cout << "Optimizing parameters" << endl << endl;
+      n_l->optimize();
+      pf.add_unknown_parameter(n_l->getMin(),n_l->getMax(),n_l_step,"n_l");
+      gamma->optimize();
+      pf.add_unknown_parameter(gamma->getMin(),gamma->getMax(),gamma_step,"gamma");
+      theta_0->optimize();
+      pf.add_unknown_parameter(theta_0->getMin(),theta_0->getMax(),theta_0_step,"theta_0");
+      N_0->optimize();
+      pf.add_unknown_parameter(N_0->getMin(),N_0->getMax(),N_0_step,"N_0");
     }
     
     cout << "Insert mode: value (v), p-value (p) or brute_force (b) (WARNING: brute_force takes time): ";
