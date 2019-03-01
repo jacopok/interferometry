@@ -213,7 +213,7 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 	fixed_MultiPDF = MultiPDF::merge(fixed_parameters,"fixed_MultiPDF");
 	for(unsigned int k = 0; k < fixed_parameters->size(); k++)
 	  coeff *= fixed_parameters->at(k)->getDx();
-	fixed_MultiPDF->print("fixed_G.txt");
+	//fixed_MultiPDF->print("fixed_G.txt");
       }
     
       //iterate over unknown_parameters

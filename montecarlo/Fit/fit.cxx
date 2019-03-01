@@ -22,8 +22,8 @@ class nu: public ParametricFit::Func {
 	virtual unsigned int n_unk(){return 3;}// theta_0,n_l,gamma = lambda/2d
 	virtual double f(double x, vector<double>* v_fix, vector<double>* v_unk){
 	  
-	  double n_l = v_fix->at(0);
-	  double gamma = v_unk->at(0);
+	  double n_l = v_unk->at(0);
+	  double gamma = v_fix->at(0);
 	  double theta_0 = v_unk->at(1);
 	  double N_0 = v_unk->at(2);
 	  double theta;
@@ -87,12 +87,21 @@ int main (int argc, char* argv[]){
   unsigned int n_l_step, gamma_step, theta_0_step, N_0_step;
   MultiPDF *total;
   
-  cout << "Insert type (Gauss/Box/Triangular), meam and width for n_l and its steps: ";
-  cin >> ancora >> param_min >> param_max >> n_l_step;
-  PDFFactory* F = PDFFactoryManager::create(ancora,param_min,param_max);
-  n_l = F->create_default(n_l_step);
-  n_l->rename("n_l");
-  pf.add_fixed_parameter(n_l);
+  cout << "Would you like to load gamma? [y/n] ";
+  cin >> ancora;
+  if(ancora[0] == 'n'){
+    cout << "Insert type (Gauss/Box/Triangular), meam and width for gamma and its steps: ";
+    cin >> ancora >> param_min >> param_max >> gamma_step;
+    PDFFactory* F = PDFFactoryManager::create(ancora,param_min,param_max);
+    gamma = F->create_default(gamma_step);
+    gamma->rename("gamma");
+  }
+  else{
+    cout << "Insert filename (_PDF.txt)";
+    cin >> ancora;
+    gamma = PDF::load(ancora);
+  }
+  pf.add_fixed_parameter(gamma);
   
   do{
     cout << "Do you want to reset unknown paramters? [y/n] ";
@@ -102,9 +111,9 @@ int main (int argc, char* argv[]){
     
     if(ancora[0] == 'y'){
       
-      cout << "Insert min and max values for gamma and its steps: ";
-      cin >> param_min >> param_max >> gamma_step;
-      pf.add_unknown_parameter(param_min,param_max,gamma_step,"gamma");
+      cout << "Insert min and max values for n_l and its steps: ";
+      cin >> param_min >> param_max >> n_l_step;
+      pf.add_unknown_parameter(param_min,param_max,n_l_step,"n_l");
       
       cout << "Insert min and max values for theta_0 and its steps: ";
       cin >> param_min >> param_max >> theta_0_step;
@@ -116,8 +125,8 @@ int main (int argc, char* argv[]){
     }
     else{
       cout << "Optimizing parameters" << endl << endl;
-      gamma->optimize();
-      pf.add_unknown_parameter(gamma->getMin(),gamma->getMax(),gamma_step,"gamma");
+      n_l->optimize();
+      pf.add_unknown_parameter(n_l->getMin(),n_l->getMax(),n_l_step,"n_l");
       theta_0->optimize();
       pf.add_unknown_parameter(theta_0->getMin(),theta_0->getMax(),theta_0_step,"theta_0");
       N_0->optimize();
@@ -147,11 +156,11 @@ int main (int argc, char* argv[]){
     total = pf.get_unknown_MultiPDF();
     
     
-    offsets = total->integrate_along("gamma","offsets");
+    offsets = total->integrate_along("n_l","offsets");
     gN = total->integrate_along("theta_0","gN");
     gt = total->integrate_along("N_0","gt");
     
-    gamma = gN->integrate_along("N_0","gamma")->toPDF();
+    n_l = gN->integrate_along("N_0","n_l")->toPDF();
     theta_0 = offsets->integrate_along("N_0","theta_0")->toPDF();
     N_0 = offsets->integrate_along("theta_0","N_0")->toPDF();
     
@@ -165,8 +174,8 @@ int main (int argc, char* argv[]){
     theta_0->print("theta_0_G.txt");
     N_0->print("N_0_G.txt");
     
-    cout << "Correlation coefficient between N_0 and gamma = " << gN->correlation_index() << endl;
-    cout << "Correlation coefficient between theta_0 and gamma = " << gt->correlation_index() << endl;
+    cout << "Correlation coefficient between N_0 and n_l = " << gN->correlation_index() << endl;
+    cout << "Correlation coefficient between theta_0 and n_l = " << gt->correlation_index() << endl;
     cout << "Correlation coefficient between N_0 and theta_0 = " << offsets->correlation_index() << endl << endl;
     cout << "Chi2 = " << pf.chi2() << endl;
     
@@ -183,9 +192,9 @@ int main (int argc, char* argv[]){
     cin >> ancora;
   }while(ancora[0] == 'y');
   
-  gamma->modifying_routine();
+  n_l->modifying_routine();
   
-  gamma->save("gamma_PDF.txt");
+  n_l->save("n_l_PDF.txt");
   
   cout << endl << endl;
   return 0;

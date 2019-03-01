@@ -4,7 +4,7 @@
 export MONTECARLO_PATH=${PWD}/..
 export LD_LIBRARY_PATH=${MONTECARLO_PATH}
 
-export EXEC_NAME=fit
+export EXEC_NAME=MultiPDFManager
 export MAIN_SOURCE=${EXEC_NAME}.cxx
 rm -f ${EXEC_NAME}
 

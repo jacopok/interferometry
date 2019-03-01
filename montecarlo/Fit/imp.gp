@@ -151,6 +151,5 @@ set loadpath
 set fontpath 
 set psdir
 set fit noerrorvariables
-GNUTERM = "wxt"
-splot "result_G.txt" u 1:2:3 w pm3d
+GNUTERM = "x11"
 #    EOF
