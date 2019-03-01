@@ -48,7 +48,7 @@ class dataset():
         self.read_file(flipped)
         self.conversion_factor = 42.6 * 10**(-6)
         self.step_error = 0.000213
-        self.gain_error = 0.0173
+        self.gain_error = 0.0047
 
     def read_file(self, flipped):
         """
