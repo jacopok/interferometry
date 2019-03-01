@@ -67,6 +67,7 @@ class ParametricFit {
     vector<PDF*>* fixed_parameters;
     
     bool extern_data_vectors;
+    mutable bool missed;
     double min_value;
     vector<double>* data_x;
     vector<PDF*>* data_y_PDF;
@@ -75,6 +76,8 @@ class ParametricFit {
     
     MultiPDF* unknown_MultiPDF;
     
+    
+    double data_iterator(vector<double>* v_fix, vector<double>* v_unk, mode q) const;
   
 };
 

@@ -19,7 +19,7 @@ class Analizer {
 private:
 	thread *thrds; // where "find minimum" function run
 
-	queue< pair<int,double>* > data;
+	queue< pair<int,double> > data;
 	mutex m_data;
 	condition_variable cv_data;
 	void minimize();
@@ -43,7 +43,7 @@ public:
 	void draw(int start =0, int end=0);
 	void reset(string folder);
 	void fit(int start,int end);
-	void analizeData( pair<int,double>* d);
+	void analizeData( pair<int,double> d);
 	ClassDef(Analizer,0);
 };
 

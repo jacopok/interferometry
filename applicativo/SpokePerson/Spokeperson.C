@@ -79,7 +79,7 @@ double* Spokeperson::read(ofstream* out, bool debug) {
 			data[j+i*col] = t;
 		}
 	return data;*/
-	double* data = new double[green.rows*green.cols];
+	double* data = (double*)malloc(green.rows*green.cols*sizeof(double));
 	double t=0;
 	*cap >> readed;
 //	cvtColor(readed, green, COLOR_RGB2GRAY);
