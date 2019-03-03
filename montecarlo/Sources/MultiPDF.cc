@@ -210,11 +210,14 @@ void MultiPDF::normalize(){
 vector<double>* MultiPDF::mean() const{
   initialize_counters();
   double val;
+  double dxs = 1;
+  for(unsigned int u = 0; u < dimension; u++)
+    dxs *= PDFs->at(u)->getDx();
   vector<double>* m = new vector<double>(dimension,0);
   do{
     val = *(access());
     for(unsigned int u = 0; u < dimension; u++)
-      m->at(u) += val*(PDFs->at(u)->getMin() + (0.5 + counters->at(u))*PDFs->at(u)->getDx());
+      m->at(u) += val*dxs*(PDFs->at(u)->getMin() + (0.5 + counters->at(u))*PDFs->at(u)->getDx());
   }while(update_counters());
   
   double s = somma();

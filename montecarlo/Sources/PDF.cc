@@ -208,11 +208,13 @@ PDF* PDF::optimize() {//removes zeros from the front and the back of values
     n1++;
     i++;
   }
+  if(n1 != 0) n1--;
   i = steps - 1;
   while(values[i] == 0){
     n2--;
     i--;
   }
+  if(n2 != steps) n2++;
   //set new min and max
   min += n1*dx;
   max -= (steps - n2)*dx;
