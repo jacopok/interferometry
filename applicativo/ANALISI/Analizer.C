@@ -79,22 +79,24 @@ void Analizer::take(double step, int cx, int cy, int cols, double* d) {
 	if(out) *out<<step<<" "<<sum<<endl;
 	m_data.lock();
 	data.push( pair<int,double>{ step, sum } );
-	cout<<"Pushed "<<step<<endl;
+//	cout<<"Pushed "<<step<<endl;
 	m_data.unlock();
 	cv_data.notify_all();
 	delete[] d;
-	cout<<"Cleaned "<<step<<endl;
+//	cout<<"Cleaned "<<step<<endl;
 }
 
 void Analizer::analizeData( pair<int,double> p ) {
 // 	add data in graph
-	cout<<"Starting "<<p.first<<endl;
+//	cout<<"Starting "<<p.first<<endl;
 	tg->SetPoint(tg->GetN(),p.first,p.second);
-	cout<<"Added "<<p.first<<endl;
+//	cout<<"Added "<<p.first<<endl;
 //	cout<<"Added point "<<p.first<<" "<<p.second<<endl;
-	if(painted) tg->GetXaxis()->SetLimits(p.first-100,p.first+100);
-	receiver->drawSmall(tg);
-	painted = true;
+	if( tg->GetN() < 300 ) {
+		if(painted) tg->GetXaxis()->SetLimits(p.first-100,p.first+100);
+		receiver->drawSmall(tg);
+		painted = true;
+	}
 	if(p.second > 75) {
 		if(cc > 4) fit(start,end);
 		start = p.first;
@@ -105,22 +107,22 @@ void Analizer::analizeData( pair<int,double> p ) {
 		end = p.first;
 		cc++;	
 	}
-	cout<<"Done "<<p.first<<endl;
+//	cout<<"Done "<<p.first<<endl;
 }
 
 void Analizer::fit(int start, int end) {
-	cout<<"Fitting "<<start<<endl;
+//	cout<<"Fitting "<<start<<endl;
 	if(start > end) swap(start,end);
 	func->SetParameters(1,1,-1);
-	Int_t fitStatus = tg->Fit(func,"Q","",start,end);
-	cout<<fitStatus<<endl;
+	Int_t fitStatus = tg->Fit(func,"Q0","",start,end);
+//	cout<<fitStatus<<endl;
 	if( fitStatus == 0 || fitStatus == 1 ) {
 		start = -(func->GetParameter(1))/2.0/(func->GetParameter(0));
-		cout<<"Fitting "<<start<<endl;
+//		cout<<"Fitting "<<start<<endl;
 		receiver->addPoint(cont,start);
 	}
-	cout<<"Fitting "<<start<<endl;
-	cout<<start<<" "<<end<<endl;
+//	cout<<"Fitting "<<start<<endl;
+//	cout<<start<<" "<<end<<endl;
 	cont++;
 }
 
