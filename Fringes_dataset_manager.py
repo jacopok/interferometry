@@ -67,12 +67,18 @@ class dataset():
             i_fringe=0
         with open(self.filename) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter='\t')
-            next(csv_reader)
+            #next(csv_reader)
             for row in csv_reader:
                 step_array.append(row[i_step])
                 fringes_array.append(row[i_fringe])
         self.uncentered_fringes_array = np.array(fringes_array, dtype="int")
         self.uncentered_step_array = np.array(step_array, dtype="int")
+        
+    def join(self, new_dataset):
+        self.uncentered_step_array = np.append(self.uncentered_step_array, new_dataset.uncentered_step_array)
+        max_fringe = np.max(self.uncentered_fringes_array)
+        new_dataset.uncentered_fringes_array += max_fringe + 1
+        self.uncentered_fringes_array = np.append(self.uncentered_fringes_array, new_dataset.uncentered_fringes_array)
         
     def set_zero(self, zero_fringe):
         """
@@ -134,14 +140,14 @@ class dataset():
         output(out_filenames[1], self.negative_step_array, self.negative_fringes_array,
            firstline="Negative step number, negative fringe number\n")
     
-    def find_zero_fringe(self, fringes_radius):
+    def find_zero_fringe(self, fringes_radius, ignore_radius=1.5):
         """
         Performs a parabolic fit of the data in a fringes_radius large radius
         around the origin, in order to find the precise position of the
         origin.
         """
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
-        condition_nonzero = np.abs(self.fringes_array) > 1.5
+        condition_nonzero = np.abs(self.fringes_array) > ignore_radius
         condition = condition_radius & condition_nonzero
         f = self.fringes_array[condition]
         s = self.step_array[condition]
@@ -153,6 +159,34 @@ class dataset():
         zero_fringe = p[2] - p[1]**2 / (4 * p[0])
         zero_step = - p[1] / (2 * p[0])
         return(zero_fringe, zero_step)
+
+    def find_zero_fringe_asymm(self, fringes_radius, ignore_radius=1.5):
+        """
+        Performs a parabolic fit of the data in a fringes_radius large radius
+        around the origin, in order to find the precise position of the
+        origin.
+        """
+        condition_radius = np.abs(self.fringes_array) <= fringes_radius
+        condition_nonzero = np.abs(self.fringes_array) > ignore_radius
+        plus = self.fringes_array > 0
+        minus = self.fringes_array < 0
+        condition = condition_radius & condition_nonzero
+        condition_plus = condition & plus
+        condition_minus = condition & minus
+        f_plus = self.fringes_array[condition_plus]
+        s_plus = self.step_array[condition_plus]
+        f_minus = self.fringes_array[condition_minus]
+        s_minus = self.step_array[condition_minus]
+        
+        parabola = lambda x, a, b, c: a*x**2 + b*x + c
+        
+        p_plus, pcov_plus = scipy.optimize.curve_fit(parabola, s_plus, f_plus)
+        p_minus, pcov_minus = scipy.optimize.curve_fit(parabola, s_minus, f_minus)
+        zero_fringe_plus = p_plus[2] - p_plus[1]**2 / (4 * p_plus[0])
+        zero_step_plus = - p_plus[1] / (2 * p_plus[0])
+        zero_fringe_minus = p_minus[2] - p_minus[1]**2 / (4 * p_minus[0])
+        zero_step_minus = - p_minus[1] / (2 * p_minus[0])
+        return(zero_fringe_plus, zero_step_plus, zero_fringe_minus, zero_step_minus)
         
     def calculate_angles(self):
         self.angle_array = self.conversion_factor * self.step_array
@@ -180,8 +214,8 @@ class dataset():
             fringe = (f2*(step-before_step) + f1*(after_step-step))/diff
         return(fringe)
         
-    def analyze_fine(self, fringes_radius=10):
-        zero_fringe, zero_step = self.find_zero_fringe(fringes_radius)
+    def analyze_fine(self, fringes_radius=10, ignore_radius=1.5):
+        zero_fringe, zero_step = self.find_zero_fringe(fringes_radius, ignore_radius)
         self.set_zero_fine(zero_fringe, zero_step)
         self.calculate_angles()
         

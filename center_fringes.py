@@ -18,10 +18,10 @@ data.set_zero(zero_fringe)
 data.analyze_fine(fringes_radius=20)
 
 name = os.path.splitext(filename)[0]
-out_name = name + "_centered.txt"
+out_name = "../processed/" + name + "_centered.txt"
 
 data.output_centered(out_name)
 
-out_name_mc = name + "_centered_mc.txt"
+out_name_mc = "../processed/" + name + "_centered_mc.txt"
 
 data.output_centered_mc(out_name_mc)
