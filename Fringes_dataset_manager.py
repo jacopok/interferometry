@@ -50,11 +50,17 @@ class dataset():
         self.step_error = 0.000213
         self.gain_error = 0.0047
 
-    def read_file(self, flipped):
+    def read_file(self, flipped, order='auto'):
         """
-        Works with files having exactly one starting line of comment.
-        The files must be CSV with rows containing the step number, followed
-        by the fringe number.
+        The files must be tab-separated
+        with rows containing the step number, followed
+        by the fringe number. If the order is inverted,
+        the flipped=True option can be selected for the file to be read correctly.
+        
+        order can be 'auto', 'same' or 'reversed', depending on how
+        you want the order of the fringes.
+        'auto' checks if the steps are increasing with fringe number
+        and adjusts accordingly
         """
         
         fringes_array = []
@@ -71,8 +77,28 @@ class dataset():
             for row in csv_reader:
                 step_array.append(row[i_step])
                 fringes_array.append(row[i_fringe])
-        self.uncentered_fringes_array = np.array(fringes_array, dtype="int")
-        self.uncentered_step_array = np.array(step_array, dtype="int")
+        
+        def flip_order(fa):
+            fa = -fa
+        
+        ufa = np.array(fringes_array, dtype="int")
+        usa = np.array(step_array, dtype="int")
+
+        if(order == 'auto'):
+            if(usa[0] < usa[5]):
+                order = 'same'
+            else:
+                order = 'flipped'
+        
+        if(order == 'same'):
+            pass
+        elif(order == 'flipped'):
+            flip_order(ufa)
+        else:
+            return(None)
+        
+        self.uncentered_fringes_array = ufa
+        self.uncentered_step_array = usa
         
     def join(self, new_dataset):
         self.uncentered_step_array = np.append(self.uncentered_step_array, new_dataset.uncentered_step_array)
