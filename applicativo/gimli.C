@@ -134,18 +134,18 @@ void Interface::click(const char* s) {
 
 void Interface::addPoint(int nfrange, int passo) {
 	mout.lock();
-	cout<<"Mout"<<endl;
+//	cout<<"Mout"<<endl;
 	*out<<nfrange<<"\t"<<passo<<"\n";
 	out->flush();
 	mout.unlock();
 	gui.lock();
-	cout<<"Mbg"<<endl;
+//	cout<<"Mbg"<<endl;
 	bg->addPoint(nfrange,passo);
 	mg->goToCanv(1);
 	bg->draw();
 	mg->canvUpdate();
 	gui.unlock();
-	cout<<"Bye"<<endl;
+//	cout<<"Bye"<<endl;
 }
 
 void Interface::drawSmall(TGraph* tg) {
