@@ -40,6 +40,7 @@ def initialize_merge(names, zero):
     tomerge_1 = fdm.dataset('data/MinsAndSinus/' + names[1] + '_mins.gimli')
     tomerge.join(tomerge_1)
     tomerge.set_zero(zero)
+    tomerge.analyze_fine(55, 6)
     return(tomerge)
 
 empty_par_0 = [initialize_merge(names_merge_1, zero=93)]
@@ -48,6 +49,8 @@ empty_par = empty_par_0 + empty_par_1
 par = initialize(name_array_par, zeros_array_par)
 
 #try with: par 1, empty_par 0
+
+empty_par[0].output_centered_mc('data/processed/bkg_auto_1.txt')
 
 meas = fdm.measure(empty_par[0], par[1])
 meas.subtract_background()

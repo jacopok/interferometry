@@ -270,8 +270,8 @@ class dataset():
         fmax = np.max(np.abs(f))
             
         p, pcov = scipy.optimize.curve_fit(self.offset_fringes_th, s, f,
-                   p0=(0,0,0,2.9e-5,1.4), bounds=([-smax, -fmax, -fmax, 1e-5, 1],
-                          [smax, fmax, fmax, 1e-4, 2]))
+                   p0=(0,0,0,2.9e-5,1.4), bounds=([-smax, -3, -fmax, 1e-5, 1],
+                          [smax, 3, fmax, 1e-4, 2]))
         return(p)
         
 class measure():
