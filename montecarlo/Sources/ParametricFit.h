@@ -47,10 +47,13 @@ class ParametricFit {
     void delete_data();
     void clear();
     
+    void reject_missed_data(unsigned int i);//if a data is missed more than i times, it will be rejected
+    
     MultiPDF* get_unknown_MultiPDF() const;
     
     double chi2(vector<double>* fix_par_values, vector<double>* unk_par_values) const;
     double chi2() const;
+    unsigned int degrees_of_freedom() const;
         
     bool isready() const;
     void set_min_value(double m);
@@ -58,6 +61,7 @@ class ParametricFit {
     void fit(unsigned int n_rep, unsigned int seed, mode q);
     
     void print_misses(const string& filename) const;
+    void print_data(const string& filename) const;
   
     
   private:

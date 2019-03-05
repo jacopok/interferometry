@@ -129,6 +129,30 @@ void ParametricFit::clear(){
   return;
 }
 
+void ParametricFit::reject_missed_data(unsigned int i){
+  vector<double>* new_data_x = new vector<double>;
+  vector<PDF*>* new_data_y_PDF = new vector<PDF*>;
+  new_data_x->reserve(data_x->size());
+  new_data_y_PDF->reserve(data_x->size());
+  
+  for(unsigned int h = 0; h < data_x->size(); h++){
+    if(data_misses->at(h) > i)
+      continue;
+    new_data_x->push_back(data_x->at(h));
+    new_data_y_PDF->push_back(new PDF(*(data_y_PDF->at(h))));
+  }
+  
+  cout << '\n' << data_x->size() - new_data_x->size() << " data have been rejected" << endl << endl;
+  
+  delete_data();
+  data_x = new_data_x;
+  data_y_PDF = new_data_y_PDF;
+  delete data_misses;
+  data_misses = new vector<unsigned int>(new_data_x->size(),0);
+  
+  return;
+}
+
 MultiPDF* ParametricFit::get_unknown_MultiPDF() const{
   return new MultiPDF(*unknown_MultiPDF);
 }
@@ -168,6 +192,10 @@ double ParametricFit::chi2() const{
   return chi2(fix_par_values,unk_par_values);
 }
 
+unsigned int ParametricFit::degrees_of_freedom() const{
+  return data_x->size() - unknown_MultiPDF->getDimension() - fixed_parameters->size();
+}
+
 bool ParametricFit::isready() const{
   if(f == 0){
     cout << "Fit FAILED: no given function" << endl;
@@ -203,6 +231,8 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
   
   //clean previous fit
   unknown_MultiPDF->zero();
+  delete data_misses;
+  data_misses = new vector<unsigned int>(data_x->size(),0);
   
   //useful variables
   unsigned int n_unk = unknown_MultiPDF->getDimension();
@@ -345,70 +375,44 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
 }
 
 double ParametricFit::data_iterator(vector<double>* v_fix, vector<double>* v_unk, mode q) const{
-  double partial_sum = 0, offset = 0, y = 0, yv = 0;
+  double partial_sum = 0, y = 0, yv = 0;
   unsigned int missed = 0;
   vector<unsigned int> hs;
   hs.reserve(misses);
   
-  if(min_value == 0){
-    for(unsigned int h = 0; h < data_x->size(); h++){
-      //get y
-      y = f->f(data_x->at(h),v_fix,v_unk);
-      
-      //compare with y_PDF
-      if(q == value)
-	yv = data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps(); 
-      else{
-	yv = data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps();
-      }
-      
-      if(yv == 0){ 
-	return 0;
-      }
+  for(unsigned int h = 0; h < data_x->size(); h++){
+    //get y
+    y = f->f(data_x->at(h),v_fix,v_unk);
+    
+    //compare with y_PDF
+    if(q == value)
+      yv = data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps(); 
+    else{
+      yv = data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps();
+    }
+    
+    if(yv <= 0){ 
+      missed++;
+      partial_sum += log(min_value);
+      hs.push_back(h);
+    }
+    else{
       partial_sum += log(yv);
     }
+    if(missed > misses)
+      return 0;
   }
-  else{
-    offset = 0;
-    for(unsigned int h = 0; h < data_x->size(); h++){
-      //get y
-      y = f->f(data_x->at(h),v_fix,v_unk);
-      
-      //compare with y_PDF
-      /*if(q == value){
-	partial_sum += log(min_value + data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps());
-      }
-      else{
-	partial_sum +=  log(min_value + data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps());
-      }*/
-      if(q == value)
-	yv = data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps(); 
-      else{
-	yv = data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps();
-      }
-      
-      if(yv == 0){ 
-	missed++;
-	if(missed > misses)
-	  return 0;
-	hs.push_back(h);
-      }
-      partial_sum += log(min_value + yv);
-      offset += log(min_value);
-    }
-    partial_sum -= offset;
-  }
-  
+
   if(missed > 0){
-    for(unsigned int m = 0; m < hs.size(); m++)
+    for(unsigned int m = 0; m < hs.size(); m++)//update data_misses
       data_misses->at(hs[m])++;
-    cout << "Missed " << missed << "data trying to fit with parameters: ";
+    /*cout << "Missed " << missed << "data trying to fit with parameters: " << flush;
     for(unsigned int k = 0; k < v_fix->size(); k++)
-      cout << v_fix->at(k) << " ";
-    cout << "; ";
+      cout << v_fix->at(k) << " " << flush;
+    cout << "; " << flush;
     for(unsigned int u = 0; u < v_unk->size(); u++)
-      cout << v_unk->at(u) << " ";
-    cout << endl;
+      cout << v_unk->at(u) << " " << flush;
+    cout << endl;*/
   } 
   
   return exp(partial_sum);
@@ -423,6 +427,19 @@ void ParametricFit::print_misses(const string& filename) const{
   mis << "#x\ty\tmisses" << endl << endl;
   for(unsigned int h = 0; h < data_x->size(); h++)
     mis << data_x->at(h) << '\t' << data_y_PDF->at(h)->mean() << '\t' << data_misses->at(h) << endl;
+  
+  return;
+}
+
+void ParametricFit::print_data(const string& filename) const{
+  ofstream rough(filename);
+  if(!rough){
+    cout << "Failed to print data onto " << filename << endl;
+    return;
+  }
+  
+  for(unsigned int h = 0; h < data_x->size(); h++)
+    rough << data_x->at(h) << '\t' << data_y_PDF->at(h)->mean() << '\t' << sqrt(data_y_PDF->at(h)->var()) << endl;
   
   return;
 }
