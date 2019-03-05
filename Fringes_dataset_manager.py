@@ -198,15 +198,13 @@ class dataset():
         condition = condition_radius & condition_nonzero
         f = self.fringes_array[condition]
         s = self.step_array[condition]
-        f = np.abs(f)
         
-        parabola = lambda step, a, zero_step, fringe_offset_abs, fringe_offset_rel: \
-            np.abs(sign(step-zero_step)) * a*(step-zero_step)**2 + c
+        parabola = lambda step, a, zero_step, fringe_offset, missed_fringes: \
+            (a*np.abs(step - zero_step)*(step - zero_step) + fringe_offset
+             + (1 + np.sign(step - zero_step))/2*missed_fringes)
         
         p, pcov = scipy.optimize.curve_fit(parabola, s, f)
-        zero_fringe = p[2] - p[1]**2 / (4 * p[0])
-        zero_step = - p[1] / (2 * p[0])
-        return(fringe_offset_abs, fringe_offset_rel, zero_step)
+        return(p)
         
     def calculate_angles(self):
         self.angle_array = self.conversion_factor * self.step_array
