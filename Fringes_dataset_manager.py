@@ -239,16 +239,33 @@ class dataset():
         self.set_zero_fine(zero_fringe, zero_step)
         self.calculate_angles()
         
-    def fringes_difference_medium(step, gamma, index, zero_step, zero_fringe_abs, zero_fringe_rel):
+    def fringes_th(self, step, gamma, index):
         '''
-        Number of fringes observed between 0 and theta due to a "thickness" thick layer of medium 
-        of refractive index "index"
+        Number of fringes observed between 0 and theta due to a
+        "thickness" thick layer of medium (with gamma = wavelength / (2*thickness)) 
+        of refractive index "index".
         '''
         theta = step * self.conversion_factor
         
-        nu = np.sign(theta) * 2 * thickness / wavelength * ( 1 - index - np.cos(theta) 
+        nu = 1 / gamma * ( 1 - index - np.cos(theta) 
                                            + np.sqrt(index**2 - np.sin(theta)**2))
         return(nu)
+        
+    def offset_fringes_th(self, step, zero_step, zero_fringe_abs, \
+                          zero_fringe_rel, gamma, index):
+        return(np.sign(step - zero_step) * 
+               ( self.fringes_th(step, gamma, index) + zero_fringe_rel) 
+               + zero_fringe_abs)
+    
+    def find_zero_th(self, fringes_radius, ignore_radius=1.5):
+        condition_radius = np.abs(self.fringes_array) <= fringes_radius
+        condition_nonzero = np.abs(self.fringes_array) > ignore_radius
+        condition = condition_radius & condition_nonzero
+        f = self.fringes_array[condition]
+        s = self.step_array[condition]
+            
+        p, pcov = scipy.optimize.curve_fit(self.offset_fringes_th, s, f)
+        return(p)
         
 class measure():
     
