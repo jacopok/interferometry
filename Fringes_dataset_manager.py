@@ -192,27 +192,21 @@ class dataset():
         around the origin, in order to find the precise position of the
         origin.
         """
+
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
         condition_nonzero = np.abs(self.fringes_array) > ignore_radius
-        plus = self.fringes_array > 0
-        minus = self.fringes_array < 0
         condition = condition_radius & condition_nonzero
-        condition_plus = condition & plus
-        condition_minus = condition & minus
-        f_plus = self.fringes_array[condition_plus]
-        s_plus = self.step_array[condition_plus]
-        f_minus = self.fringes_array[condition_minus]
-        s_minus = self.step_array[condition_minus]
+        f = self.fringes_array[condition]
+        s = self.step_array[condition]
+        f = np.abs(f)
         
-        parabola = lambda x, a, b, c: a*x**2 + b*x + c
+        parabola = lambda step, a, zero_step, fringe_offset_abs, fringe_offset_rel: \
+            np.abs(sign(step-zero_step)) * a*(step-zero_step)**2 + c
         
-        p_plus, pcov_plus = scipy.optimize.curve_fit(parabola, s_plus, f_plus)
-        p_minus, pcov_minus = scipy.optimize.curve_fit(parabola, s_minus, f_minus)
-        zero_fringe_plus = p_plus[2] - p_plus[1]**2 / (4 * p_plus[0])
-        zero_step_plus = - p_plus[1] / (2 * p_plus[0])
-        zero_fringe_minus = p_minus[2] - p_minus[1]**2 / (4 * p_minus[0])
-        zero_step_minus = - p_minus[1] / (2 * p_minus[0])
-        return(zero_fringe_plus, zero_step_plus, zero_fringe_minus, zero_step_minus)
+        p, pcov = scipy.optimize.curve_fit(parabola, s, f)
+        zero_fringe = p[2] - p[1]**2 / (4 * p[0])
+        zero_step = - p[1] / (2 * p[0])
+        return(fringe_offset_abs, fringe_offset_rel, zero_step)
         
     def calculate_angles(self):
         self.angle_array = self.conversion_factor * self.step_array
@@ -244,6 +238,17 @@ class dataset():
         zero_fringe, zero_step = self.find_zero_fringe(fringes_radius, ignore_radius)
         self.set_zero_fine(zero_fringe, zero_step)
         self.calculate_angles()
+        
+    def fringes_difference_medium(step, gamma, index, zero_step, zero_fringe_abs, zero_fringe_rel):
+        '''
+        Number of fringes observed between 0 and theta due to a "thickness" thick layer of medium 
+        of refractive index "index"
+        '''
+        theta = step * self.conversion_factor
+        
+        nu = np.sign(theta) * 2 * thickness / wavelength * ( 1 - index - np.cos(theta) 
+                                           + np.sqrt(index**2 - np.sin(theta)**2))
+        return(nu)
         
 class measure():
     
