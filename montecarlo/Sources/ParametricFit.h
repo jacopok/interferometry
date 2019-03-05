@@ -37,6 +37,7 @@ class ParametricFit {
     ~ParametricFit();
     
     void set_func(Func* g);
+    void set_misses(unsigned int i);
     void add_fixed_parameter(PDF* p);
     void delete_fixed_parameters();
     void add_unknown_parameter(double min, double max, unsigned int steps,const string& name);
@@ -55,6 +56,8 @@ class ParametricFit {
     void set_min_value(double m);
     
     void fit(unsigned int n_rep, unsigned int seed, mode q);
+    
+    void print_misses(const string& filename) const;
   
     
   private:
@@ -67,10 +70,11 @@ class ParametricFit {
     vector<PDF*>* fixed_parameters;
     
     bool extern_data_vectors;
-    mutable bool missed;
+    unsigned int misses;
     double min_value;
     vector<double>* data_x;
     vector<PDF*>* data_y_PDF;
+    vector<unsigned int>* data_misses;
      
     //map<string,PDF*>* unknown_parameters_PDFs;
     
