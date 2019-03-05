@@ -37,7 +37,7 @@ def output_montecarlo(out_filename, step_array, fringes_array, angle_array,
     
 class dataset():
     
-    def __init__(self, filename, flipped=False):
+    def __init__(self, filename, flipped=True):
         """
         Initialization of the data set.
         The conversion_factor, step_error and gain_error are hardcoded
@@ -78,9 +78,6 @@ class dataset():
                 step_array.append(row[i_step])
                 fringes_array.append(row[i_fringe])
         
-        def flip_order(fa):
-            fa = -fa
-        
         ufa = np.array(fringes_array, dtype="int")
         usa = np.array(step_array, dtype="int")
 
@@ -88,12 +85,11 @@ class dataset():
             if(usa[0] < usa[5]):
                 order = 'same'
             else:
-                order = 'flipped'
-        
+                order = 'flipped'        
         if(order == 'same'):
             pass
         elif(order == 'flipped'):
-            flip_order(ufa)
+            usa = -usa
         else:
             return(None)
         
@@ -130,19 +126,22 @@ class dataset():
             (np.abs(self.fringes_array) - zero_fringe_rel) - zero_fringe_abs
         self.step_array = self.step_array - zero_step
     
-    def plot(self, uncentered=False):
+    def plot(self, uncentered=False, label=None):
         if(uncentered==True):
-            plt.scatter(self.uncentered_step_array, self.uncentered_fringes_array)
+            plt.scatter(self.uncentered_step_array, self.uncentered_fringes_array,
+                        label=label)
         else:
-            plt.scatter(self.step_array, self.fringes_array)
+            plt.scatter(self.step_array, self.fringes_array, label=label)
             
-    def plot_center(self, radius, straightened=False):
+    def plot_center(self, radius, straightened=False, label=None):
         if(straightened==False):
             plt.scatter(self.step_array[np.abs(self.step_array)<radius],
-                    self.fringes_array[np.abs(self.step_array)<radius])
+                    self.fringes_array[np.abs(self.step_array)<radius],
+                    label=label)
         else:
             plt.scatter(self.step_array[np.abs(self.step_array)<radius],
-                    np.abs(self.fringes_array[np.abs(self.step_array)<radius]))           
+                    np.abs(self.fringes_array[np.abs(self.step_array)<radius]),
+                    label=label)           
             
     def split(self):
         """
