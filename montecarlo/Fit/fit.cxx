@@ -43,7 +43,7 @@ int main (int argc, char* argv[]){
   string ancora;
   PDF *n_l, *theta_0, *gamma, *N_0;
   MultiPDF *gN, *gt, *offsets;
-  unsigned int n_data = 0, datastep = 50;
+  unsigned int n_data = 0, datastep = 50, misses;
   vector<double>* xV = new vector<double>;
   vector<PDF*>* yVP = new vector<PDF*>;
   vector<double>* pattume = new vector<double>;
@@ -133,6 +133,9 @@ int main (int argc, char* argv[]){
       pf.add_unknown_parameter(N_0->getMin(),N_0->getMax(),N_0_step,"N_0");
     }
     
+    cout << "Insert maximum number of missable data: ";
+    cin >> misses;
+    pf.set_misses(misses);
     cout << "Insert mode: value (v), p-value (p) or brute_force (b) (WARNING: brute_force takes time): ";
     cin >> ancora;
     cout << "Insert min_value: ";
@@ -178,6 +181,9 @@ int main (int argc, char* argv[]){
     cout << "Correlation coefficient between theta_0 and n_l = " << gt->correlation_index() << endl;
     cout << "Correlation coefficient between N_0 and theta_0 = " << offsets->correlation_index() << endl << endl;
     cout << "Chi2 = " << pf.chi2() << endl;
+    
+    if(misses > 0)
+      pf.print_misses("misses.txt");
     
     cout << "printing gN" << endl;
     gN->print("gN_G.txt");

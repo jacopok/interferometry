@@ -23,6 +23,17 @@ label_array_par = ['Par1', 'Par2', 'Par3', 'Par4']
 zeros_array_empty_par = [33, 77]
 zeros_array_par = [125, 67, 82, 140]
 
+name_array_empty_wat = ['fold1551792325',
+'fold1551795340',
+'fold1551797827']
+
+name_array_wat = ['fold1551800969',
+'fold1551802455']
+
+zeros_array_empty_wat = [54, 50, 118]
+
+zeros_array_wat = [59, 0]
+
 def initialize(name_array, zeros_array):
     dataset_array = []
     for name, zero in zip(name_array, zeros_array):
@@ -48,8 +59,11 @@ empty_par_1 = initialize(name_array_empty_par, zeros_array_empty_par)
 empty_par = empty_par_0 + empty_par_1
 par = initialize(name_array_par, zeros_array_par)
 
-#try with: par 1, empty_par 0
+empty_wat = initialize(name_array_empty_wat, zeros_array_empty_wat)
+wat = initialize(name_array_wat, zeros_array_wat)
 
+#try with: par 1, empty_par 0
+"""
 empty_par[0].output_centered_mc('data/processed/bkg_auto_1.txt')
 
 meas = fdm.measure(empty_par[0], par[1])
@@ -57,3 +71,4 @@ meas.subtract_background()
 meas.signal.output_centered_mc('data/processed/subtracted_bkg_test.txt')
 meas.signal.analyze_fine(55, 6)
 meas.signal.output_centered_mc('data/processed/subtracted_bkg_test_centered.txt')
+"""
