@@ -82,7 +82,7 @@ class dataset():
         usa = np.array(step_array, dtype="int")
 
         if(order == 'auto'):
-            if(usa[0] < usa[5]):
+            if(usa[0] < usa[10]):
                 order = 'same'
             else:
                 order = 'flipped'        

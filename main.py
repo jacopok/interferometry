@@ -7,6 +7,7 @@ Created on Tue Mar  5 14:16:33 2019
 """
 
 import Fringes_dataset_manager as fdm
+import itertools
 
 name_array_empty_par = ['f20190304va',
 'fold1551694989']
@@ -32,7 +33,7 @@ name_array_wat = ['fold1551800969',
 
 zeros_array_empty_wat = [54, 50, 118]
 
-zeros_array_wat = [59, 0]
+zeros_array_wat = [59, 76]
 
 def initialize(name_array, zeros_array):
     dataset_array = []
@@ -63,7 +64,7 @@ empty_wat = initialize(name_array_empty_wat, zeros_array_empty_wat)
 wat = initialize(name_array_wat, zeros_array_wat)
 
 #try with: par 1, empty_par 0
-"""
+
 empty_par[0].output_centered_mc('data/processed/bkg_auto_1.txt')
 
 meas = fdm.measure(empty_par[0], par[1])
@@ -71,4 +72,19 @@ meas.subtract_background()
 meas.signal.output_centered_mc('data/processed/subtracted_bkg_test.txt')
 meas.signal.analyze_fine(55, 6)
 meas.signal.output_centered_mc('data/processed/subtracted_bkg_test_centered.txt')
-"""
+
+for i, j in itertools.product(range(3), range(2)):    
+    wmeas =fdm.measure(empty_wat[i], wat[j])
+    wmeas.subtract_background()
+    p = wmeas.signal.find_zero_th(55,6)
+    g = p[3]
+    n = p[4]
+    a = (n-1)/(g*n)
+    n = 1/(1-a*(2.67e-5))
+    x = meas.signal
+    s = x.step_array
+    fr = x.offset_fringes_th(s, *p)
+    plt.plot(s, fr)
+    plt.plot(s, x.fringes_array)
+    plt.show()
+    print(n)
