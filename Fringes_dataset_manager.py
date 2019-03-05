@@ -115,7 +115,7 @@ class dataset():
         self.fringes_array = self.uncentered_fringes_array - zero_fringe
         self.step_array = self.uncentered_step_array - zero_step
     
-    def set_zero_fine(self, zero_fringe, zero_step = None):
+    def set_zero_fine(self, zero_fringe, zero_step = None, ):
         """
         The zero_fringe must belong to the uncentered_fringes_array
         """
@@ -123,6 +123,11 @@ class dataset():
             zero_step = self.uncentered_step_array[self.uncentered_fringes_array == zero_fringe]
         self.fringes_array = np.sign(self.fringes_array) * \
             (np.abs(self.fringes_array) - zero_fringe)
+        self.step_array = self.step_array - zero_step
+
+    def set_zero_fine_th(self, zero_step, zero_fringe_rel, zero_fringe_abs):
+        self.fringes_array = np.sign(self.fringes_array) * \
+            (np.abs(self.fringes_array) - zero_fringe_rel) - zero_fringe_abs
         self.step_array = self.step_array - zero_step
     
     def plot(self, uncentered=False):
@@ -232,9 +237,10 @@ class dataset():
             fringe = (f2*(step-before_step) + f1*(after_step-step))/diff
         return(fringe)
         
-    def analyze_fine(self, fringes_radius=10, ignore_radius=1.5):
-        zero_fringe, zero_step = self.find_zero_fringe(fringes_radius, ignore_radius)
-        self.set_zero_fine(zero_fringe, zero_step)
+    def analyze_fine(self, fringes_radius=1000, ignore_radius=1.5):
+        #zero_fringe, zero_step = self.find_zero_fringe(fringes_radius, ignore_radius)
+        zero_step, zero_fringe_abs, zero_fringe_rel, gamma, index = self.find_zero_th(fringes_radius, ignore_radius)
+        self.set_zero_fine_th(zero_step, zero_fringe_rel, zero_fringe_abs)
         self.calculate_angles()
         
     def fringes_th(self, step, gamma, index):
