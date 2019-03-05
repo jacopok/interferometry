@@ -260,18 +260,17 @@ class dataset():
                ( self.fringes_th(step-zero_step, gamma, index) + zero_fringe_rel) 
                + zero_fringe_abs)
     
-    def find_zero_th(self, fringes_radius, ignore_radius=1.5):
+    def find_zero_th(self, fringes_radius, ignore_radius=1.5,
+                     p0=(0,0,0,2.9e-5,1.4), bounds=([-4000, -3, -100, 1e-5, 1],
+                          [4000, 3, 100, 1e-4, 2])):
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
         condition_nonzero = np.abs(self.fringes_array) > ignore_radius
         condition = condition_radius & condition_nonzero
         f = self.fringes_array[condition]
         s = self.step_array[condition]
-        smax = np.max(np.abs(s))
-        fmax = np.max(np.abs(f))
             
         p, pcov = scipy.optimize.curve_fit(self.offset_fringes_th, s, f,
-                   p0=(0,0,0,2.9e-5,1.4), bounds=([-smax, -3, -fmax, 1e-5, 1],
-                          [smax, 3, fmax, 1e-4, 2]))
+                                           p0=p0, bounds=bounds)
         return(p)
         
 class measure():
