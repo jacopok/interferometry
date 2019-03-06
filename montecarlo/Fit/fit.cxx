@@ -156,7 +156,7 @@ int main (int argc, char* argv[]){
     cout << "Insert maximum number of missable data: ";
     cin >> misses;
     pf.set_misses(misses);
-    cout << "Insert mode: value (v), p-value (p) or brute_force (b) (WARNING: brute_force takes time): ";
+    cout << "Insert mode: value (v), p-value (p), gauss (g), or brute_force (b) (WARNING: brute_force takes time): ";
     cin >> ancora;
     cout << "Insert min_value: ";
     cin >> min_value;
@@ -171,6 +171,8 @@ int main (int argc, char* argv[]){
       case 'v': pf.fit(n_rep,seed,ParametricFit::value);
 		break;
       case 'p': pf.fit(n_rep,seed,ParametricFit::p_value);
+		break;
+      case 'g': pf.fit(n_rep,seed,ParametricFit::gauss);
 		break;
       case 'b': pf.fit(n_rep,seed,ParametricFit::brute_force);
 		break;

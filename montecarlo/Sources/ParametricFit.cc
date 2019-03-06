@@ -24,6 +24,8 @@ ParametricFit::ParametricFit(Func* g):
   min_value(0),
   data_x(new vector<double>),
   data_y_PDF(new vector<PDF*>),
+  data_y_means(new vector<double>),
+  data_y_vars(new vector<double>),
   data_misses(new vector<unsigned int>),
   unknown_MultiPDF(new MultiPDF("unknownMP")){
   }
@@ -37,6 +39,8 @@ ParametricFit::~ParametricFit(){
   delete fixed_parameters;
   delete data_x;
   delete data_y_PDF;
+  delete data_y_means;
+  delete data_y_vars;
   delete data_misses;
   delete unknown_MultiPDF;
 }
@@ -88,6 +92,8 @@ void ParametricFit::add_data(double x, PDF* y_PDF){
   }
   data_x->push_back(x);
   data_y_PDF->push_back(y_PDF);
+  data_y_means->push_back(y_PDF->mean());
+  data_y_vars->push_back(y_PDF->var());
   data_misses->push_back(0);
   return;
 }
@@ -99,6 +105,7 @@ void ParametricFit::set_data(vector<double>* xV, vector<PDF*>* yVP){//data are N
   data_y_PDF = yVP;
   delete data_misses;
   data_misses = new vector<unsigned int>(data_x->size(),0);
+  fill_y_mv();
   return;
 }
 
@@ -115,6 +122,8 @@ void ParametricFit::delete_data(){
     data_x->clear();
     data_y_PDF->clear();
   }
+  data_y_means->clear();
+  data_y_vars->clear();
   data_misses->clear();
   extern_data_vectors = false;
   return;
@@ -149,7 +158,20 @@ void ParametricFit::reject_missed_data(unsigned int i){
   data_y_PDF = new_data_y_PDF;
   delete data_misses;
   data_misses = new vector<unsigned int>(new_data_x->size(),0);
+  fill_y_mv();
   
+  return;
+}
+
+void ParametricFit::fill_y_mv(){
+  if(data_y_means->size() == 0){
+    data_y_means->reserve(data_x->size());
+    data_y_vars->reserve(data_x->size());
+    for(unsigned int h = 0; h < data_x->size(); h++){
+      data_y_means->push_back(data_y_PDF->at(h)->mean());
+      data_y_vars->push_back(data_y_PDF->at(h)->var());
+    }
+  }
   return;
 }
 
@@ -179,7 +201,7 @@ double ParametricFit::chi2(vector<double>* fix_par_values, vector<double>* unk_p
     //get y
     y = f->f(data_x->at(h),fix_par_values,unk_par_values);
     //cout << "chi2: " << y << endl;
-    sum += pow(data_y_PDF->at(h)->mean() - y,2)/data_y_PDF->at(h)->var();
+    sum += pow(data_y_means->at(h) - y,2)/data_y_vars->at(h);
   }
   return sum;
 }
@@ -251,6 +273,7 @@ void ParametricFit::fit(unsigned int n_rep, unsigned int seed, mode q){
   switch(q){
     case value:
     case p_value:
+    case gauss:
       
       if(n_rep == 0){
 	fixed_MultiPDF = MultiPDF::merge(fixed_parameters,"fixed_MultiPDF");
@@ -380,12 +403,19 @@ double ParametricFit::data_iterator(vector<double>* v_fix, vector<double>* v_unk
   vector<unsigned int> hs;
   hs.reserve(misses);
   
+  
   for(unsigned int h = 0; h < data_x->size(); h++){
     //get y
     y = f->f(data_x->at(h),v_fix,v_unk);
     
     //compare with y_PDF
-    if(q == value)
+    if(q == gauss){
+      yv = pow(y - data_y_means->at(h),2)/data_y_vars->at(h);
+      if(yv < 25)
+	partial_sum += (25 - yv)/data_x->size();
+      continue;
+    }
+    else if(q == value)
       yv = data_y_PDF->at(h)->value(y)*data_y_PDF->at(h)->getDx()*data_y_PDF->at(h)->getSteps(); 
     else{
       yv = data_y_PDF->at(h)->p_value(y)*data_y_PDF->at(h)->getSteps();
@@ -426,7 +456,7 @@ void ParametricFit::print_misses(const string& filename) const{
   }
   mis << "#x\ty\tmisses" << endl << endl;
   for(unsigned int h = 0; h < data_x->size(); h++)
-    mis << data_x->at(h) << '\t' << data_y_PDF->at(h)->mean() << '\t' << data_misses->at(h) << endl;
+    mis << data_x->at(h) << '\t' << data_y_means->at(h) << '\t' << data_misses->at(h) << endl;
   
   return;
 }
@@ -439,7 +469,7 @@ void ParametricFit::print_data(const string& filename) const{
   }
   
   for(unsigned int h = 0; h < data_x->size(); h++)
-    rough << data_x->at(h) << '\t' << data_y_PDF->at(h)->mean() << '\t' << sqrt(data_y_PDF->at(h)->var()) << endl;
+    rough << data_x->at(h) << '\t' << data_y_means->at(h) << '\t' << sqrt(data_y_vars->at(h)) << endl;
   
   return;
 }

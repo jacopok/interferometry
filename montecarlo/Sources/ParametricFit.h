@@ -14,7 +14,7 @@ class ParametricFit {
   
   public:
     
-    enum mode {value, p_value, brute_force};
+    enum mode {value, p_value, gauss, brute_force};
     
     class Func {
       public:
@@ -78,6 +78,8 @@ class ParametricFit {
     double min_value;
     vector<double>* data_x;
     vector<PDF*>* data_y_PDF;
+    vector<double>* data_y_means;
+    vector<double>* data_y_vars;
     vector<unsigned int>* data_misses;
      
     //map<string,PDF*>* unknown_parameters_PDFs;
@@ -86,6 +88,7 @@ class ParametricFit {
     
     
     double data_iterator(vector<double>* v_fix, vector<double>* v_unk, mode q) const;
+    void fill_y_mv();
   
 };
 
