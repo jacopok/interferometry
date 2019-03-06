@@ -261,8 +261,8 @@ class dataset():
                + zero_fringe_abs)
     
     def find_zero_th(self, fringes_radius, ignore_radius=1.5,
-                     p0=(0,0,0,2.9e-5,1.4), bounds=([-4000, -3, -100, 1e-5, 1],
-                          [4000, 3, 100, 1e-4, 2])):
+                     p0=(0,0,0,2.9e-5,1.3), bounds=([-4000, -30, -100, 5e-6, 1],
+                          [4000, 30, 100, 2e-4, 3])):
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
         condition_nonzero = np.abs(self.fringes_array) > ignore_radius
         condition = condition_radius & condition_nonzero
@@ -273,17 +273,29 @@ class dataset():
                                            p0=p0, bounds=bounds)
         return(p)
         
+    def filter_steps(self):
+        matrix = np.stack((self.step_array, self.fringes_array))
+        uniques = np.unique(matrix, axis=1)
+        self.step_array = uniques[0,:]
+        self.fringes_array = uniques[1,:]
+    
 class measure():
     
     def __init__(self, background, gross_signal):
         self.background = background
         self.gross_signal = gross_signal
+        self.background.filter_steps()
+        self.gross_signal.filter_steps()
         
-    def subtract_background(self):
+    def subtract_background(self, use_data=True):
         import copy
         self.signal = copy.deepcopy(self.gross_signal)
+        zs, zfa, zfr, g, i = self.background.find_zero_th(55, 6)
         for step in self.gross_signal.step_array:
-            bkg_fringe = self.background.fringe_linearized_step(step)
+            if(use_data==True):
+                bkg_fringe = self.background.fringe_linearized_step(step)
+            else:
+                bkg_fringe = self.background.offset_fringes_th(step, zs, zfa, zfr, g, i)
             self.signal.fringes_array[self.gross_signal.step_array==step] -= bkg_fringe
 
     def process(self, zero_fringe_bkg, zero_fringe_sgn):

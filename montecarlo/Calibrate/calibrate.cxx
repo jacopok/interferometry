@@ -43,7 +43,7 @@ int main (int argc, char* argv[]){
   string ancora;
   PDF *n_l, *theta_0, *gamma, *N_0;
   MultiPDF *gN, *gt, *offsets;
-  unsigned int n_data = 0, datastep = 50;
+  unsigned int n_data = 0, datastep = 50, misses = 0, max_miss = 0;
   vector<double>* xV = new vector<double>;
   vector<PDF*>* yVP = new vector<PDF*>;
   vector<double>* pattume = new vector<double>;
@@ -65,21 +65,13 @@ int main (int argc, char* argv[]){
     n_data++;
   delete pattume;
   
-  //plot rough data
-  ofstream rough("rough_data.txt");
-  if(!rough){
-    cout << "Cannot open rough" << endl;
-    return -1;
-  }
-  
-  for(unsigned int i = 0; i < xV->size(); i++)
-    rough << xV->at(i) << '\t' << yVP->at(i)->mean() << '\t' << sqrt(yVP->at(i)->var()) << endl;
-  
   
   //prepare ParametricFit
   nu funz;
   ParametricFit pf(&funz);
   pf.set_data(xV,yVP);
+  
+  pf.print_data("rough_data.txt");
   
   unsigned int n_rep, seed;
   double min_value = 0;
@@ -87,14 +79,34 @@ int main (int argc, char* argv[]){
   unsigned int n_l_step, gamma_step, theta_0_step, N_0_step;
   MultiPDF *total;
   
-  cout << "Insert type (Gauss/Box/Triangular), meam and width for n_l and its steps: ";
-  cin >> ancora >> param_min >> param_max >> n_l_step;
-  PDFFactory* F = PDFFactoryManager::create(ancora,param_min,param_max);
-  n_l = F->create_default(n_l_step);
-  n_l->rename("n_l");
+  cout << "Would you like to load n_l? [y/n] ";
+  cin >> ancora;
+  if(ancora[0] == 'n'){
+    cout << "Insert type (Gauss/Box/Triangular), mean and width for n_l and its steps: ";
+    cin >> ancora >> param_min >> param_max >> n_l_step;
+    PDFFactory* F = PDFFactoryManager::create(ancora,param_min,param_max);
+    n_l = F->create_default(n_l_step);
+    n_l->rename("n_l");
+  }
+  else{
+    cout << "Insert filename (_PDF.txt)";
+    cin >> ancora;
+    n_l = PDF::load(ancora);
+  }
   pf.add_fixed_parameter(n_l);
   
   do{
+    if(misses > 0){
+      cout << "Do you want to reject missed data? [y/n] ";
+      cin >> ancora;
+      if(ancora[0] == 'y'){
+	cout << "Insert maximum number of tolerable misses ";
+	cin >> max_miss;
+	pf.reject_missed_data(max_miss);
+	pf.print_data("rough_data.txt");
+      }
+    }
+    
     cout << "Do you want to reset unknown paramters? [y/n] ";
     cin >> ancora;
     
@@ -102,29 +114,49 @@ int main (int argc, char* argv[]){
     
     if(ancora[0] == 'y'){
       
-      cout << "Insert min and max values for gamma and its steps: ";
-      cin >> param_min >> param_max >> gamma_step;
-      pf.add_unknown_parameter(param_min,param_max,gamma_step,"gamma");
-      
-      cout << "Insert min and max values for theta_0 and its steps: ";
-      cin >> param_min >> param_max >> theta_0_step;
-      pf.add_unknown_parameter(param_min,param_max,theta_0_step,"theta_0");
-      
-      cout << "Insert min and max values for N_0 and its steps: ";
-      cin >> param_min >> param_max >> N_0_step;
-      pf.add_unknown_parameter(param_min,param_max,N_0_step,"N_0");
+      cout << "Insert filename with parameters (type 0) for setting them manually: ";
+      cin >> ancora;
+      ifstream params(ancora);
+      if(!params){
+	cout << "Insert min and max values for gamma and its steps: ";
+	cin >> param_min >> param_max >> gamma_step;
+	pf.add_unknown_parameter(param_min,param_max,gamma_step,"gamma");
+	
+	cout << "Insert min and max values for theta_0 and its steps: ";
+	cin >> param_min >> param_max >> theta_0_step;
+	pf.add_unknown_parameter(param_min,param_max,theta_0_step,"theta_0");
+	
+	cout << "Insert min and max values for N_0 and its steps: ";
+	cin >> param_min >> param_max >> N_0_step;
+	pf.add_unknown_parameter(param_min,param_max,N_0_step,"N_0");
+      }
+      else{
+	params >> ancora >> param_min >> param_max >> gamma_step;
+	pf.add_unknown_parameter(param_min,param_max,gamma_step,"gamma");
+	params >> ancora >> param_min >> param_max >> theta_0_step;
+	pf.add_unknown_parameter(param_min,param_max,theta_0_step,"theta_0");
+	params >> ancora >> param_min >> param_max >> N_0_step;
+	pf.add_unknown_parameter(param_min,param_max,N_0_step,"N_0");
+      }
     }
     else{
-      cout << "Optimizing parameters" << endl << endl;
-      gamma->optimize();
+      cout << "Would you like to optimize parameters? [y/n] ";
+      cin >> ancora;
+      if(ancora[0] == 'y'){
+	cout << "Optimizing parameters" << endl << endl;
+	gamma->optimize();
+	theta_0->optimize();
+	N_0->optimize();
+      }
       pf.add_unknown_parameter(gamma->getMin(),gamma->getMax(),gamma_step,"gamma");
-      theta_0->optimize();
       pf.add_unknown_parameter(theta_0->getMin(),theta_0->getMax(),theta_0_step,"theta_0");
-      N_0->optimize();
       pf.add_unknown_parameter(N_0->getMin(),N_0->getMax(),N_0_step,"N_0");
     }
     
-    cout << "Insert mode: value (v), p-value (p) or brute_force (b) (WARNING: brute_force takes time): ";
+    cout << "Insert maximum number of missable data: ";
+    cin >> misses;
+    pf.set_misses(misses);
+    cout << "Insert mode: value (v), p-value (p), gauss (g), or brute_force (b) (WARNING: brute_force takes time): ";
     cin >> ancora;
     cout << "Insert min_value: ";
     cin >> min_value;
@@ -139,6 +171,8 @@ int main (int argc, char* argv[]){
       case 'v': pf.fit(n_rep,seed,ParametricFit::value);
 		break;
       case 'p': pf.fit(n_rep,seed,ParametricFit::p_value);
+		break;
+      case 'g': pf.fit(n_rep,seed,ParametricFit::gauss);
 		break;
       case 'b': pf.fit(n_rep,seed,ParametricFit::brute_force);
 		break;
@@ -168,16 +202,21 @@ int main (int argc, char* argv[]){
     cout << "Correlation coefficient between N_0 and gamma = " << gN->correlation_index() << endl;
     cout << "Correlation coefficient between theta_0 and gamma = " << gt->correlation_index() << endl;
     cout << "Correlation coefficient between N_0 and theta_0 = " << offsets->correlation_index() << endl << endl;
-    cout << "Chi2 = " << pf.chi2() << endl;
+    cout << "Chi2/dof = " << pf.chi2() << '/' << pf.degrees_of_freedom() << endl;
     
-    cout << "printing gN" << endl;
-    gN->print("gN_G.txt");
-    cout << "printing gt" << endl;
-    gt->print("gt_G.txt");
-    cout << "printing offsets" << endl;
-    offsets->print("offsets_G.txt");
-    cout << "saving total" << endl;
-    total->save("total_MPDF.txt");
+    if(misses > 0)
+      pf.print_misses("misses.txt");
+    
+    cout << "Would you like to print the MultiPDFs? [y/n] ";
+    cin >> ancora;
+    if(ancora[0] == 'y'){
+      cout << "printing gN" << endl;
+      gN->print("gN_G.txt");
+      cout << "printing gt" << endl;
+      gt->print("gt_G.txt");
+      cout << "printing offsets" << endl;
+      offsets->print("offsets_G.txt");
+    }
     
     cout << "Do you want to fit again? [y/n]: ";
     cin >> ancora;
@@ -185,7 +224,10 @@ int main (int argc, char* argv[]){
   
   gamma->modifying_routine();
   
-  gamma->save("gamma_PDF.txt");
+  gamma->save("n_l_PDF.txt");
+  
+  cout << "saving total" << endl;
+  total->save("total_MPDF.txt");
   
   cout << endl << endl;
   return 0;

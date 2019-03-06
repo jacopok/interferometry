@@ -14,7 +14,7 @@ class ParametricFit {
   
   public:
     
-    enum mode {value, p_value, brute_force};
+    enum mode {value, p_value, gauss, brute_force};
     
     class Func {
       public:
@@ -47,10 +47,13 @@ class ParametricFit {
     void delete_data();
     void clear();
     
+    void reject_missed_data(unsigned int i);//if a data is missed more than i times, it will be rejected
+    
     MultiPDF* get_unknown_MultiPDF() const;
     
     double chi2(vector<double>* fix_par_values, vector<double>* unk_par_values) const;
     double chi2() const;
+    unsigned int degrees_of_freedom() const;
         
     bool isready() const;
     void set_min_value(double m);
@@ -58,6 +61,7 @@ class ParametricFit {
     void fit(unsigned int n_rep, unsigned int seed, mode q);
     
     void print_misses(const string& filename) const;
+    void print_data(const string& filename) const;
   
     
   private:
@@ -74,6 +78,8 @@ class ParametricFit {
     double min_value;
     vector<double>* data_x;
     vector<PDF*>* data_y_PDF;
+    vector<double>* data_y_means;
+    vector<double>* data_y_vars;
     vector<unsigned int>* data_misses;
      
     //map<string,PDF*>* unknown_parameters_PDFs;
@@ -82,6 +88,7 @@ class ParametricFit {
     
     
     double data_iterator(vector<double>* v_fix, vector<double>* v_unk, mode q) const;
+    void fill_y_mv();
   
 };
 

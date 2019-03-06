@@ -75,16 +75,16 @@ meas.signal.output_centered_mc('data/processed/subtracted_bkg_test_centered.txt'
 
 for i, j in itertools.product(range(3), range(2)):    
     wmeas =fdm.measure(empty_wat[i], wat[j])
-    wmeas.subtract_background()
-    p = wmeas.signal.find_zero_th(55,6)
+    wmeas.subtract_background(use_data=True)
+    p = wmeas.signal.find_zero_th(22,6)
     g = p[3]
     n = p[4]
     a = (n-1)/(g*n)
     n = 1/(1-a*(2.67e-5))
-    x = meas.signal
+    x = wmeas.signal
     s = x.step_array
     fr = x.offset_fringes_th(s, *p)
-    plt.plot(s, fr)
-    plt.plot(s, x.fringes_array)
+    mask = (6 <= np.abs(x.fringes_array)) & (np.abs(x.fringes_array) <= 22)
+    plt.hist(x.fringes_array[mask]-fr[mask])
     plt.show()
     print(n)
