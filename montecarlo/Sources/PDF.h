@@ -39,7 +39,7 @@ class PDF {
     PDF* optimize(); //removes zeros from the front and the back of values
     void modifying_routine(); //interactive usage of normalize, smoothen, coarse, optimize
     PDF* traslate(double l); //traslate the whole PDF along the x-axis
-    bool add(double x); //if x is fuond in values, values[i]++: it will be used for building simulated PDFs
+    bool add(double x, double val = 1.0); //if x is fuond in values, values[i] += val: it will be used for building simulated PDFs
     
     //statistical properties
     double value(double x) const;

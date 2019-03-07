@@ -9,8 +9,22 @@
 #include "LinearFit.h"
 #include "PDFFactory.h"
 #include "PDFFactoryManager.h"
+#include "ErrorPropagator.h"
 
 using namespace std;
+
+class DataGenerator: public ErrorPropagator{
+  public:
+    DataGenerator(const vector<PDF*>* vp):
+      ErrorPropagator(vp){}
+    ~DataGenerator(){}
+    
+    double f() const{
+      double a = sim_sample->at(0);
+      double st = sim_sample->at(1);
+      return a*st;
+    }
+};
 
 class nu: public ParametricFit::Func {
     public:
@@ -40,14 +54,23 @@ class nu: public ParametricFit::Func {
 
 
 int main (int argc, char* argv[]){
+  if(argc == 1){
+    cout << "\nThis programm fits GIMLI data having a known PDF for n_l in order to find gamma." << endl;
+    cout << "In order to use it type ./fit [data_file] [alpha_file]." << endl;
+    cout << "If data are already in radiants omitt alpha_file" << endl << endl;
+    return 0;
+  }
+  
   string ancora;
-  PDF *n_l, *theta_0, *gamma, *N_0;
+  PDF *n_l, *theta_0, *gamma, *N_0, *alpha, *aux, *y;
   MultiPDF *gN, *gt, *offsets;
   unsigned int n_data = 0, datastep = 50, misses = 0, max_miss = 0;
   vector<double>* xV = new vector<double>;
-  vector<PDF*>* yVP = new vector<PDF*>;
+  vector<PDF*>* yVP = new vector<PDF*>, *couple = new vector<PDF*>;
   vector<double>* pattume = new vector<double>;
   vector<string> names;
+  
+  LinearFit lf;
   
   ifstream in(argv[1]);
   if(!in){
@@ -55,14 +78,64 @@ int main (int argc, char* argv[]){
     return -1;
   }
   
+  if(argc > 2){
+    cout << "How many steps should the alpha PDF have? ";
+    cin >> datastep;
+    lf.setPrecision(datastep);
+    ifstream alphafile(argv[2]);
+    if(!alphafile){
+      cout << "ERROR opening alpha" << endl;
+      return -1;
+    }
+    lf.add(&alphafile,pattume,couple);
+    alpha = couple->at(0);
+    alpha->rename("alpha");
+  }
+  
   cout << "How many steps should the data PDFs have? ";
   cin >> datastep;
   
   //get the data
-  LinearFit lf;
   lf.setPrecision(datastep);
-  while(lf.add(&in,xV,yVP))
-    n_data++;
+  if(argc > 2){
+    vector<PDF*>* auxv = new vector<PDF*>;
+    double data_min, data_max;
+    unsigned int last = 0;
+    
+    while(lf.add(&in,xV,auxv)){
+      y = auxv->at(last);
+      couple->push_back(y);
+      DataGenerator d(couple);
+      
+      if(y->getMax() > 0)
+	data_max = alpha->getMax()*y->getMax();
+      else
+	data_max = alpha->getMin()*y->getMax();
+      
+      if(y->getMin() > 0)
+	data_min = alpha->getMin()*y->getMin();
+      else
+	data_min = alpha->getMax()*y->getMin();
+      
+      cout << "\nCreating theta at N = " << xV->at(last) << endl;
+      aux = d.propagation(0,1,data_min,data_max,datastep,"data");
+      aux->optimize();
+      
+      yVP->push_back(aux);
+      couple->pop_back();
+      
+      last++;
+    }
+    
+    //clean up
+    for(unsigned int h = 0; h < auxv->size(); h++)
+      delete auxv->at(h);
+    delete auxv;
+  }
+  else{
+    while(lf.add(&in,xV,yVP))
+      n_data++;
+  }
   delete pattume;
   
   
@@ -70,7 +143,7 @@ int main (int argc, char* argv[]){
   nu funz;
   ParametricFit pf(&funz);
   pf.set_data(xV,yVP);
-  
+
   pf.print_data("rough_data.txt");
   
   unsigned int n_rep, seed;

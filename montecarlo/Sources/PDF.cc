@@ -272,12 +272,12 @@ PDF* PDF::traslate(double l) {
   return this;
 }
 
-bool PDF::add(double x) {
+bool PDF::add(double x, double val) {
   if(x < min) return false;
   if(x > max + dx) return false;
   
   unsigned int j = (x - min)/dx;
-  values[j] += 1.0;
+  values[j] += val;
   if(CDF->size() != 0)
     CDF->clear();
   return true;
