@@ -22,9 +22,9 @@ void minsfinder(char* inName,char* outName,double lb, double ub) {
 		}
 		if ( t2 > ub ) {
 			if ( cont >= num ) {
-				func.SetParameters(3523,53252,53253);
+				func.SetParameters(1,0,0);
 				tg->Fit(&func,"Q0","",min(start,end),max(start,end));
-				out<<++fr<<" "<< - func.GetParameter(1) / 2.0 / func.GetParameter(0) <<endl;
+				out<<++fr<<"\t"<< - func.GetParameter(1) / 2.0 / func.GetParameter(0) <<endl;
 				cout<<start<<" "<<end<<" "<< - func.GetParameter(1) / 2.0 / func.GetParameter(0) << " "<<tg->GetN()<< endl;
 			}
 			cont = 0;

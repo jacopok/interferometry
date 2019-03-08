@@ -1,0 +1,15 @@
+f20190304va_mins.gimli
+fold1551439624_mins.gimli
+fold1551441226_mins.gimli
+fold1551694989_mins.gimli
+fold1551697620_mins.gimli
+fold1551779770_mins.gimli
+fold1551781255_mins.gimli
+fold1551783240_mins.gimli
+fold1551792325_mins.gimli
+fold1551795340_mins.gimli
+fold1551797827_mins.gimli
+fold1551800969_mins.gimli
+fold1551802455_mins.gimli
+fold1551804385_mins.gimli
+list.txt
