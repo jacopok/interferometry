@@ -8,6 +8,7 @@ Created on Tue Mar  5 14:16:33 2019
 
 import Fringes_dataset_manager as fdm
 from os import listdir
+from itertools import product
 
 names = listdir('./data/belly')
 
@@ -22,4 +23,16 @@ def initialize(name_array):
         dataset_array.append(data)
     return(dataset_array)
 
-#par_names = name
+bkg_names = [n for n in names if 'b' in n]
+sig_names = [n for n in names if n not in bkg_names]
+
+bkg_datasets = initialize(bkg_names)
+sig_datasets = initialize(sig_names)
+
+for bkg, sig in product(bkg_datasets, sig_datasets):
+    mea = fdm.measure(bkg, sig)
+    mea.subtract_background(use_data=False)
+    signal = mea.signal
+    signal.plot_center(2000)
+    plt.show()
+    print(bkg.filename,  sig.filename)

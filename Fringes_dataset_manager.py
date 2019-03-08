@@ -307,12 +307,12 @@ class measure():
     def subtract_background(self, use_data=True):
         import copy
         self.signal = copy.deepcopy(self.gross_signal)
-        zs, zfa, zfr, g, i = self.background.find_zero_th(55, 6)
+        zs, zf, g, i = self.background.find_zero_th(1000, 0)
         for step in self.gross_signal.step_array:
             if(use_data==True):
                 bkg_fringe = self.background.fringe_linearized_step(step)
             else:
-                bkg_fringe = self.background.offset_fringes_th(step, zs, zfa, zfr, g, i)
+                bkg_fringe = self.background.offset_fringes_proper_th(step, zs, zf, g, i)
             self.signal.fringes_array[self.gross_signal.step_array==step] -= bkg_fringe
 
     def process(self, zero_fringe_bkg, zero_fringe_sgn):
