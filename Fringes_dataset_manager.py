@@ -71,13 +71,26 @@ class dataset():
         else:
             i_step=1
             i_fringe=0
-        with open(self.filename) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=' ')
-            #next(csv_reader)
-            for row in csv_reader:
-                step_array.append(row[i_step])
-                fringes_array.append(row[i_fringe])
+            
+        with open(self.filename) as file:
+            firstrow = file.read(100)
+            if(' ' in firstrow):
+                delim = ' '
+            elif('\t' in firstrow):
+                delim = '\t'
+            else:
+                print('Delimiter error on file ' + self.filename)
+                return(None)
         
+        with open(self.filename) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=delim)
+            for row in csv_reader:
+                if(len(row)>1):
+                    step_array.append(row[i_step])
+                    fringes_array.append(row[i_fringe])
+        
+        fringes_array = list(filter(None, fringes_array))
+        step_array = list(filter(None, step_array))
         ufa = np.array(fringes_array, dtype='int')
         usa = np.array(step_array, dtype = 'float')
 
@@ -89,7 +102,8 @@ class dataset():
         if(order == 'same'):
             pass
         elif(order == 'flipped'):
-            ufa = -ufa
+            #ufa = -ufa
+            pass
         else:
             return(None)
         
