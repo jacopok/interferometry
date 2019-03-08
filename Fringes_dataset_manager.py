@@ -16,7 +16,7 @@ def output(out_filename, step_array, fringes_array,
     
     data = np.stack((step_array, fringes_array), axis=-1)
     
-    with open(out_filename, "w") as csv_file:
+    with open(out_filename, "w+") as csv_file:
         csv_file.write(firstline)
         csv_writer = csv.writer(csv_file, delimiter = '\t')
         csv_writer.writerows(data)
@@ -31,7 +31,7 @@ def output_montecarlo(out_filename, step_array, fringes_array, angle_array,
     data = np.stack((fringes_array, digital_array,
                      angle_array, step_error_array, gain_error_array), axis=-1)
 
-    with open(out_filename, "w") as csv_file:
+    with open(out_filename, "w+") as csv_file:
         csv_writer = csv.writer(csv_file, delimiter = '\t')
         csv_writer.writerows(data)
     
@@ -277,9 +277,12 @@ class dataset():
         return(np.sign(step - zero_step) * 
                ( self.fringes_th(step-zero_step, gamma, index) + zero_fringe))        
     
-    def find_zero_th(self, fringes_radius, ignore_radius=1.5,
+    def find_zero_th(self, fringes_radius=1000, ignore_radius=0,
                      p0=(0,0,2.9e-5,1.3), bounds=([-4000, -100, 5e-6, 1],
                           [4000, 100, 2e-4, 3])):
+        """Returns:
+            zero_step, zero_fringe, gamma = lambda/(2d), index
+        """
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
         condition_nonzero = np.abs(self.fringes_array) > ignore_radius
         condition = condition_radius & condition_nonzero
