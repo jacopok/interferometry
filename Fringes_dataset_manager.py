@@ -72,14 +72,14 @@ class dataset():
             i_step=1
             i_fringe=0
         with open(self.filename) as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter='\t')
+            csv_reader = csv.reader(csv_file, delimiter=' ')
             #next(csv_reader)
             for row in csv_reader:
                 step_array.append(row[i_step])
                 fringes_array.append(row[i_fringe])
         
-        ufa = np.array(fringes_array, dtype="int")
-        usa = np.array(step_array, dtype="int")
+        ufa = np.array(fringes_array, dtype='int')
+        usa = np.array(step_array, dtype = 'float')
 
         if(order == 'auto'):
             if(usa[0] < usa[10]):
@@ -89,7 +89,7 @@ class dataset():
         if(order == 'same'):
             pass
         elif(order == 'flipped'):
-            usa = -usa
+            ufa = -ufa
         else:
             return(None)
         
@@ -106,10 +106,17 @@ class dataset():
         """
         The zero_fringe must belong to the uncentered_fringes_array
         """
-        zero_fringe = int(zero_fringe)
-        zero_step = self.uncentered_step_array[self.uncentered_fringes_array == zero_fringe]
-        self.fringes_array = self.uncentered_fringes_array - zero_fringe
+        if(zero_fringe in self.uncentered_fringes_array):
+            zero_step = self.uncentered_step_array[self.uncentered_fringes_array == zero_fringe]
+            self.fringes_array = self.uncentered_fringes_array - zero_fringe
+        else:
+            f_bef = np.max(self.uncentered_fringes_array[self.uncentered_fringes_array<zero_fringe])
+            f_aft = np.min(self.uncentered_fringes_array[self.uncentered_fringes_array>zero_fringe])
+            self.fringes_array = self.uncentered_fringes_array - f_bef
+            self.fringes_array[self.fringes_array>=0] +=1
+            zero_step = np.average((self.uncentered_step_array[self.uncentered_fringes_array==f_bef], self.uncentered_step_array[self.uncentered_fringes_array==f_aft]))
         self.step_array = self.uncentered_step_array - zero_step
+
     
     def set_zero_fine(self, zero_fringe, zero_step = None, ):
         """
@@ -124,6 +131,9 @@ class dataset():
     def set_zero_fine_th(self, zero_step, zero_fringe_rel, zero_fringe_abs):
         self.fringes_array = np.sign(self.fringes_array) * \
             (np.abs(self.fringes_array) - zero_fringe_rel) - zero_fringe_abs
+        self.step_array = self.step_array - zero_step
+        
+    def set_zero_angle(self, zero_step):
         self.step_array = self.step_array - zero_step
     
     def plot(self, uncentered=False, label=None):
@@ -143,17 +153,6 @@ class dataset():
                     np.abs(self.fringes_array[np.abs(self.step_array)<radius]),
                     label=label)           
             
-    def split(self):
-        """
-        Must be called when the zero has already been set.
-        """
-        f = self.fringes_array
-        s = self.step_array
-        self.positive_fringes_array = f[f>0]
-        self.negative_fringes_array = f[f<0]
-        self.positive_step_array = s[s>0]
-        self.negative_step_array = s[s<0]
-        
     def output_centered(self, out_filename):
         output(out_filename, self.step_array, self.fringes_array)
     
@@ -238,8 +237,8 @@ class dataset():
         
     def analyze_fine(self, fringes_radius=1000, ignore_radius=1.5):
         #zero_fringe, zero_step = self.find_zero_fringe(fringes_radius, ignore_radius)
-        zero_step, zero_fringe_abs, zero_fringe_rel, gamma, index = self.find_zero_th(fringes_radius, ignore_radius)
-        self.set_zero_fine_th(zero_step, zero_fringe_rel, zero_fringe_abs)
+        zero_step, zero_fringe, gamma, index = self.find_zero_th(fringes_radius, ignore_radius)
+        self.set_zero_angle(zero_step)
         self.calculate_angles()
         
     def fringes_th(self, step, gamma, index):
@@ -259,17 +258,21 @@ class dataset():
         return(np.sign(step - zero_step) * 
                ( self.fringes_th(step-zero_step, gamma, index) + zero_fringe_rel) 
                + zero_fringe_abs)
+        
+    def offset_fringes_proper_th(self, step, zero_step, zero_fringe, gamma, index):
+        return(np.sign(step - zero_step) * 
+               ( self.fringes_th(step-zero_step, gamma, index) + zero_fringe))        
     
     def find_zero_th(self, fringes_radius, ignore_radius=1.5,
-                     p0=(0,0,0,2.9e-5,1.3), bounds=([-4000, -30, -100, 5e-6, 1],
-                          [4000, 30, 100, 2e-4, 3])):
+                     p0=(0,0,2.9e-5,1.3), bounds=([-4000, -100, 5e-6, 1],
+                          [4000, 100, 2e-4, 3])):
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
         condition_nonzero = np.abs(self.fringes_array) > ignore_radius
         condition = condition_radius & condition_nonzero
         f = self.fringes_array[condition]
         s = self.step_array[condition]
             
-        p, pcov = scipy.optimize.curve_fit(self.offset_fringes_th, s, f,
+        p, pcov = scipy.optimize.curve_fit(self.offset_fringes_proper_th, s, f,
                                            p0=p0, bounds=bounds)
         return(p)
         

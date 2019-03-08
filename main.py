@@ -38,7 +38,7 @@ zeros_array_wat = [59, 76]
 def initialize(name_array, zeros_array):
     dataset_array = []
     for name, zero in zip(name_array, zeros_array):
-        data = fdm.dataset('data/MinsAndSinus/' + name + '_mins.gimli')
+        data = fdm.dataset('data/Mins/' + name + '_mins.gimli')
         data.set_zero(zero)
         data.analyze_fine(ignore_radius=6, fringes_radius=55)
         dataset_array.append(data)
@@ -48,8 +48,8 @@ def initialize(name_array, zeros_array):
 names_merge_1 = ['fold1551439624', 'fold1551441226']
 
 def initialize_merge(names, zero):
-    tomerge = fdm.dataset('data/MinsAndSinus/' + names[0] + '_mins.gimli')
-    tomerge_1 = fdm.dataset('data/MinsAndSinus/' + names[1] + '_mins.gimli')
+    tomerge = fdm.dataset('data/Mins/' + names[0] + '_mins.gimli')
+    tomerge_1 = fdm.dataset('data/Mins/' + names[1] + '_mins.gimli')
     tomerge.join(tomerge_1)
     tomerge.set_zero(zero)
     tomerge.analyze_fine(55, 6)
@@ -85,6 +85,6 @@ for i, j in itertools.product(range(3), range(2)):
     s = x.step_array
     fr = x.offset_fringes_th(s, *p)
     mask = (6 <= np.abs(x.fringes_array)) & (np.abs(x.fringes_array) <= 22)
-    plt.hist(x.fringes_array[mask]-fr[mask])
-    plt.show()
-    print(n)
+    #plt.hist(x.fringes_array[mask]-fr[mask])
+    #plt.show()
+    #print(n)
