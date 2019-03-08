@@ -20,7 +20,7 @@ class MultiPDF {
     MultiPDF& operator=(const MultiPDF& p);
     
     static MultiPDF* load(const string& filename);
-    static MultiPDF* merge(vector<PDF*>* vP, const string& s);//transforms a vector of independent PDFs into a MultiPDF
+    static MultiPDF* merge(const vector<PDF*>* vP, const string& s);//transforms a vector of independent PDFs into a MultiPDF
     
     void initialize_counters() const;
     bool update_counters() const;
@@ -31,7 +31,7 @@ class MultiPDF {
     void zero();
     void clear();
     
-    bool add(vector<double>* v);//increases by 1 the point corresponding to the coordinates in v (if found)
+    bool add(vector<double>* v, double val = 1.0);//increases by 1 the point corresponding to the coordinates in v (if found)
     double somma() const;
     bool isnormalized() const;
     void normalize();

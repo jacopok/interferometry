@@ -12,7 +12,7 @@ PDF: it is the main object of the class and it is well explained in "PDF.h"
 MultiPDF: multidimensional PDF used to handle correlated aleatory variables
     Usually a MultiPDF is built by object such as LinearFit, ParametricFit or MultiErrorPropagator: an example is provided below (MultiErrorPropagator)
     You can also create a MultiPDF via the static function
-    >merge(vector<PDF*>* vp, string name): the PDFs in `vp` will be merged into a MultiPDF* with name `name` considering them independent
+    >merge(const vector<PDF*>* vp, string name): the PDFs in `vp` will be merged into a MultiPDF* with name `name` considering them independent
 
    In order to initialize a MultiPDF you can use the function >add(PDF* p) which adds another dimension to the MultiPDF in which the domain of the `p` is put
    (A deep copy of p is saved inside the MultiPDF, so modifying p after the call to add won't affect the MultiPDF)
@@ -45,6 +45,8 @@ ErrorPropagator
     constructor: ErrorPropagator(v): `v` is a vector<PDF*>*
     >f(): it is the function of the variables whose PDFs are in the vector passed to the constructor
     >propagation(n,seed,min,max,steps,name): returns a PDF by `n` iterations between `min` and `max` with `steps` steps and name `name`
+	if you use it with n = 0 the final PDF will be calculated via MultiPDFs (deterministic method)
+	TIP: if the product of the number of steps of the PDFs in `v` is below 1e06 use n = 0: It will be much faster and more accurate.
 
      example of usage of a derived class for projecting the error of the x coordinates of a dataset onto the y coordinate
 
@@ -57,8 +59,8 @@ ErrorPropagator
 		        ~ErrorPropagatorE(){}
 		    
 		        double f() const {
-		            double x = DataSimulator::simulate_one(vP->at(0));
-		            double y = DataSimulator::simulate_one(vP->at(1));
+		            double x = sim_smaple->at(0);
+		            double y = sim_sample->at(1);
 		            return y + m*(x - mean);
 		        }
 		    
@@ -199,6 +201,8 @@ ParametricFit
    There are functions to set and add fixed or unknown parameters: see "ParametricFit.h"
 
     >fit(repetitions,seed,mode): builds the unknown MultiPDF
+	If you use `repetitions` = 0 the fit will be done in a deterministic way
+	TIP: if the product of the number of steps of the fixed parameters PDFs is below 1e06 use n = 0: It will be much faster and more accurate.
 
    The three modes are:
 	- ParametricFit::value
@@ -208,6 +212,10 @@ ParametricFit
        If there are no fixed parameters the number of repetitions doesn't matter: so use 1!
        If the function does not intersect one of the data the probability for that particular tuple of unknown parameters will be 0. In order to change this behaviour set `min_value` 
        to a small positive number. Be careful because the larger `min_value` is the wider the unknown PDFs will be.
+
+	- ParametricFit::gauss
+		each data PDF will be replaced by a gaussian with the same mean and variance: useful method if the data are noisy
+		In this mode the algorithm will never miss any data
 
 	- ParametricFit::brute_force
 		this method is pretty unefficient as it scans all the possible tuples in order to find the best with the minimum square method. In order to obtain a significant result many

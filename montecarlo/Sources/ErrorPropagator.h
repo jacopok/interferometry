@@ -29,6 +29,7 @@ class ErrorPropagator {
     ErrorPropagator& operator=(const ErrorPropagator& e);
     
     const vector<PDF*>* vP;
+    mutable vector<double>* sim_sample;
 };
 
 

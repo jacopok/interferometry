@@ -88,7 +88,7 @@ MultiPDF* MultiPDF::load(const string& filename){
   return p;
 }
 
-MultiPDF* MultiPDF::merge(vector<PDF*>* vP, const string& s){
+MultiPDF* MultiPDF::merge(const vector<PDF*>* vP, const string& s){
   //initialize p
   MultiPDF* p = new MultiPDF(s);
   for(unsigned int u = 0; u < vP->size(); u++)
@@ -162,7 +162,7 @@ void MultiPDF::clear(){
   return;
 }
 
-bool MultiPDF::add(vector<double>* v){
+bool MultiPDF::add(vector<double>* v, double val){
   if(v->size() != dimension)
     return false;
   vector<unsigned int>* indexs = new vector<unsigned int>(dimension,0);
@@ -173,7 +173,7 @@ bool MultiPDF::add(vector<double>* v){
     indexs->at(u) = j;
   }
   
-  *access(indexs) += 1.0;
+  *access(indexs) += val;
   return true;
 }
 

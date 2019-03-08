@@ -411,8 +411,9 @@ double ParametricFit::data_iterator(vector<double>* v_fix, vector<double>* v_unk
     //compare with y_PDF
     if(q == gauss){
       yv = pow(y - data_y_means->at(h),2)/data_y_vars->at(h);
-      if(yv < 25)
-	partial_sum += (25 - yv)/data_x->size();
+      partial_sum += 1 + min_value - 0.5*yv;
+      /*if(yv < 25)
+	partial_sum += 7 + 0.5*(11 - yv);*/
       continue;
     }
     else if(q == value)
@@ -444,7 +445,7 @@ double ParametricFit::data_iterator(vector<double>* v_fix, vector<double>* v_unk
       cout << v_unk->at(u) << " " << flush;
     cout << endl;*/
   } 
-  
+  //cout << partial_sum << endl;
   return exp(partial_sum);
 }
 
