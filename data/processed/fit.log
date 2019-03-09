@@ -1,0 +1,141 @@
+
+
+*******************************************************************************
+Sat Mar 09 14:03:57 2019
+
+
+FIT:    data read from "b5a2.txt" u 1:3
+        format = x:z
+        x range restricted to [-60.0000 : 80.0000]
+        #datapoints = 180
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x) = t0 + sgn(x)*acos((n*n - 1 - p(x)*p(x))/(2*p(x)))
+	p(x) = (gamma*(abs(x) - N0) + n - 1)
+fitted parameters initialized with current variable values
+
+Warning: Initial value of parameter 't0' is zero.
+Warning: Initial value of parameter 'N0' is zero.
+iter      chisq       delta/lim  lambda   t0            N0            gamma        
+   0 2.3764096551e-03   0.00e+00  1.89e-02    1.000000e-30   1.000000e-30   2.000000e-05
+BREAK: Singular matrix in Invert_RtR
+
+*******************************************************************************
+Sat Mar 09 14:04:38 2019
+
+
+FIT:    data read from "b5a2.txt" u 1:3
+        format = x:z
+        x range restricted to [-60.0000 : 80.0000]
+        #datapoints = 180
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x) = t0 + sgn(x)*acos((n*n - 1 - p(x)*p(x))/(2*p(x)))
+	p(x) = (gamma*(abs(x) - N0) + n - 1)
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   t0            N0            gamma        
+   0 3.2394874366e-04   0.00e+00  1.80e-02    1.000000e-04   1.000000e-02   1.801563e-05
+   7 6.0912132991e-05  -1.77e-01  1.80e-09    4.213460e-05   6.925639e-01   1.847939e-05
+
+After 7 iterations the fit converged.
+final sum of squares of residuals : 6.09121e-05
+rel. change during last iteration : -1.77488e-06
+
+degrees of freedom    (FIT_NDF)                        : 177
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.000586631
+variance of residuals (reduced chisquare) = WSSR/ndf   : 3.44136e-07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+t0              = 4.21346e-05      +/- 4.417e-05    (104.8%)
+N0              = 0.692564         +/- 0.02341      (3.38%)
+gamma           = 1.84794e-05      +/- 3.103e-08    (0.1679%)
+
+correlation matrix of the fit parameters:
+                t0     N0     gamma  
+t0              1.000 
+N0             -0.013  1.000 
+gamma          -0.126  0.534  1.000 
+
+
+*******************************************************************************
+Sat Mar 09 14:07:29 2019
+
+
+FIT:    data read from "b3p2.txt" u 1:3
+        format = x:z
+        x range restricted to [-60.0000 : 80.0000]
+        #datapoints = 147
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x) = t0 + sgn(x)*acos((n*n - 1 - p(x)*p(x))/(2*p(x)))
+	p(x) = (gamma*(abs(x) - N0) + n - 1)
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   t0            N0            n            
+   0 3.3072320178e-03   0.00e+00  5.04e-02    4.213460e-05   6.925639e-01   1.330000e+00
+   5 9.8856615230e-05  -3.81e-01  5.04e-07   -2.635548e-04   3.842431e-01   1.422123e+00
+
+After 5 iterations the fit converged.
+final sum of squares of residuals : 9.88566e-05
+rel. change during last iteration : -3.81036e-06
+
+degrees of freedom    (FIT_NDF)                        : 144
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.000828556
+variance of residuals (reduced chisquare) = WSSR/ndf   : 6.86504e-07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+t0              = -0.000263555     +/- 6.882e-05    (26.11%)
+N0              = 0.384243         +/- 0.04663      (12.14%)
+n               = 1.42212          +/- 0.001977     (0.139%)
+
+correlation matrix of the fit parameters:
+                t0     N0     n      
+t0              1.000 
+N0             -0.015  1.000 
+n               0.102 -0.616  1.000 
+
+
+*******************************************************************************
+Sat Mar 09 14:17:29 2019
+
+
+FIT:    data read from "b6a2.txt" u 1:3
+        format = x:z
+        x range restricted to [-60.0000 : 80.0000]
+        #datapoints = 180
+        residuals are weighted equally (unit weight)
+
+function used for fitting: f(x)
+	f(x) = t0 + sgn(x)*acos((n*n - 1 - p(x)*p(x))/(2*p(x)))
+	p(x) = (gamma*(abs(x) - N0) + n - 1)
+fitted parameters initialized with current variable values
+
+iter      chisq       delta/lim  lambda   t0            N0            n            
+   0 4.6421015010e-03   0.00e+00  3.91e-02   -2.635548e-04   3.842431e-01   1.422123e+00
+   5 9.2297424154e-05  -1.35e-01  3.91e-07    4.278244e-04   8.948068e-01   1.329380e+00
+
+After 5 iterations the fit converged.
+final sum of squares of residuals : 9.22974e-05
+rel. change during last iteration : -1.34755e-06
+
+degrees of freedom    (FIT_NDF)                        : 177
+rms of residuals      (FIT_STDFIT) = sqrt(WSSR/ndf)    : 0.000722118
+variance of residuals (reduced chisquare) = WSSR/ndf   : 5.21454e-07
+
+Final set of parameters            Asymptotic Standard Error
+=======================            ==========================
+t0              = 0.000427824      +/- 5.439e-05    (12.71%)
+N0              = 0.894807         +/- 0.0365       (4.079%)
+n               = 1.32938          +/- 0.0009848    (0.07408%)
+
+correlation matrix of the fit parameters:
+                t0     N0     n      
+t0              1.000 
+N0             -0.051  1.000 
+n               0.137 -0.626  1.000 
