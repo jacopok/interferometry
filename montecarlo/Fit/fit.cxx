@@ -61,7 +61,7 @@ int main (int argc, char* argv[]){
     return 0;
   }
   
-  string ancora;
+  string ancora, session;
   PDF *n_l, *theta_0, *gamma, *N_0, *alpha, *aux, *y;
   MultiPDF *gN, *gt, *offsets;
   unsigned int n_data = 0, datastep = 50, misses = 0, max_miss = 0;
@@ -69,6 +69,10 @@ int main (int argc, char* argv[]){
   vector<PDF*>* yVP = new vector<PDF*>, *couple = new vector<PDF*>;
   vector<double>* pattume = new vector<double>;
   vector<string> names;
+  double c1, c2, c3, chi, dof;
+  
+  cout << "Name this session: ";
+  cin >> session;
   
   LinearFit lf;
   
@@ -144,7 +148,7 @@ int main (int argc, char* argv[]){
   ParametricFit pf(&funz);
   pf.set_data(xV,yVP);
   
-  pf.print_data("rough_data.txt");
+  pf.print_data((session + "_rough_data.txt").c_str());
   
   unsigned int n_rep, seed;
   double min_value = 0;
@@ -176,7 +180,7 @@ int main (int argc, char* argv[]){
 	cout << "Insert maximum number of tolerable misses ";
 	cin >> max_miss;
 	pf.reject_missed_data(max_miss);
-	pf.print_data("rough_data.txt");
+	pf.print_data((session + "_rough_data.txt").c_str());
       }
     }
     
@@ -258,6 +262,12 @@ int main (int argc, char* argv[]){
     gN = total->integrate_along("theta_0","gN");
     gt = total->integrate_along("N_0","gt");
     
+    c1 = gN->correlation_index();
+    c2 = gt->correlation_index();
+    c3 = offsets->correlation_index();
+    chi = pf.chi2();
+    dof = pf.degrees_of_freedom();
+    
     n_l = gN->integrate_along("N_0","n_l")->toPDF();
     theta_0 = offsets->integrate_along("N_0","theta_0")->toPDF();
     N_0 = offsets->integrate_along("theta_0","N_0")->toPDF();
@@ -267,40 +277,57 @@ int main (int argc, char* argv[]){
     cout << "theta_0 = " << theta_0->mean() << " +- " << sqrt(theta_0->var()) << endl;
     cout << "N_0 = " << N_0->mean() << " +- " << sqrt(N_0->var()) << endl << endl;
     
-    n_l->print("n_l_G.txt");
-    gamma->print("gamma_G.txt");
-    theta_0->print("theta_0_G.txt");
-    N_0->print("N_0_G.txt");
+    n_l->print((session + "_n_l_G.txt").c_str());
+    gamma->print((session + "_gamma_G.txt").c_str());
+    theta_0->print((session + "_theta_0_G.txt").c_str());
+    N_0->print((session + "_N_0_G.txt").c_str());
     
-    cout << "Correlation coefficient between N_0 and n_l = " << gN->correlation_index() << endl;
-    cout << "Correlation coefficient between theta_0 and n_l = " << gt->correlation_index() << endl;
-    cout << "Correlation coefficient between N_0 and theta_0 = " << offsets->correlation_index() << endl << endl;
-    cout << "Chi2/dof = " << pf.chi2() << '/' << pf.degrees_of_freedom() << endl;
+    cout << "Correlation coefficient between N_0 and n_l = " << c1 << endl;
+    cout << "Correlation coefficient between theta_0 and n_l = " << c2 << endl;
+    cout << "Correlation coefficient between N_0 and theta_0 = " << c3 << endl << endl;
+    cout << "Chi2/dof = " << chi << '/' << dof << endl;
     
     if(misses > 0)
-      pf.print_misses("misses.txt");
+      pf.print_misses((session + "_misses.txt").c_str());
     
     cout << "Would you like to print the MultiPDFs? [y/n] ";
     cin >> ancora;
     if(ancora[0] == 'y'){
       cout << "printing gN" << endl;
-      gN->print("gN_G.txt");
+      gN->print((session + "_gN_G.txt").c_str());
       cout << "printing gt" << endl;
-      gt->print("gt_G.txt");
+      gt->print((session + "_gt_G.txt").c_str());
       cout << "printing offsets" << endl;
-      offsets->print("offsets_G.txt");
+      offsets->print((session +"_offsets_G.txt").c_str());
     }
     
     cout << "Do you want to fit again? [y/n]: ";
     cin >> ancora;
   }while(ancora[0] == 'y');
   
+  n_l->rename((session + "_n_l").c_str());
+  
   n_l->modifying_routine();
   
-  n_l->save("n_l_PDF.txt");
+  n_l->save((session + "_n_l_PDF.txt").c_str());
+  
+  ofstream out((session + "_results.txt").c_str());
+  if(!out){
+    cout << "Failed to print results" << endl;
+    return -1;
+  }
+
+  out << "n_l = " << n_l->mean() << " +- " << sqrt(n_l->var()) << endl;
+  out << "gamma = " << gamma->mean() << " +- " << sqrt(gamma->var()) << endl;
+  out << "theta_0 = " << theta_0->mean() << " +- " << sqrt(theta_0->var()) << endl;
+  out << "N_0 = " << N_0->mean() << " +- " << sqrt(N_0->var()) << endl << endl;
+  out << "Correlation coefficient between N_0 and gamma = " << c1 << endl;
+  out << "Correlation coefficient between theta_0 and gamma = " << c2 << endl;
+  out << "Correlation coefficient between N_0 and theta_0 = " << c3 << endl << endl;
+  out << "Chi2/dof = " << chi << '/' << dof << endl;
   
   cout << "saving total" << endl;
-  total->save("total_MPDF.txt");
+  total->save((session + "_total_MPDF.txt").c_str());
   
   cout << endl << endl;
   return 0;
