@@ -46,6 +46,7 @@ class dataset():
         """
         
         self.filename = filename
+        self.name = self.filename.split('.')[-2].split('/')[-1]
         self.read_file(flipped)
         self.conversion_factor = 42.6 * 10**(-6)
         self.step_error = 0.000213
@@ -172,7 +173,7 @@ class dataset():
         output(out_filename, self.step_array, self.fringes_array)
     
     def output_centered_mc(self, out_filename):
-        output_montecarlo(out_filename, self.step_array, self.fringes_array,
+        output_montecarlo(out_filename, self.fringes_array,
                           self.angle_array, self.step_error, self.gain_error)
                 
     def output_split(self, out_filenames):
@@ -252,7 +253,7 @@ class dataset():
         
     def analyze_fine(self, fringes_radius=1000, ignore_radius=1.5):
         #zero_fringe, zero_step = self.find_zero_fringe(fringes_radius, ignore_radius)
-        zero_step, zero_fringe, gamma, index = self.find_zero_th(fringes_radius, ignore_radius)
+        zero_step, zero_fringe, gamma, index = self.fit(fringes_radius, ignore_radius)
         self.set_zero_angle(zero_step)
         self.calculate_angles()
         
@@ -278,7 +279,7 @@ class dataset():
         return(np.sign(step - zero_step) * 
                ( self.fringes_th(step-zero_step, gamma, index) + zero_fringe))        
     
-    def find_zero_th(self, fringes_radius=1000, ignore_radius=0,
+    def fit(self, fringes_radius=1000, ignore_radius=0,
                      p0=(0,0,2.9e-5,1.3), bounds=([-4000, -100, 5e-6, 1],
                           [4000, 100, 2e-4, 3])):
         """Returns:
@@ -311,7 +312,7 @@ class measure():
     def subtract_background(self, use_data=True):
         import copy
         self.signal = copy.deepcopy(self.gross_signal)
-        zs, zf, g, i = self.background.find_zero_th(1000, 0)
+        zs, zf, g, i = self.background.fit()
         for step in self.gross_signal.step_array:
             if(use_data==True):
                 bkg_fringe = self.background.fringe_linearized_step(step)

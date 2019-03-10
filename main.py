@@ -17,25 +17,40 @@ names = listdir(data_dir)
 
 names = [name for name in names if 'sinus' not in name]
 
-def initialize(name_array):
-    dataset_array = []
-    for name in name_array:
-        data = fdm.dataset(data_dir + name)
-        data.set_zero(0)
-        data.analyze_fine(ignore_radius=0, fringes_radius=1000)
-        dataset_array.append(data)
-    return(dataset_array)
+def initialize(name):
+    data = fdm.dataset(data_dir + name)
+    data.set_zero(0)
+    data.analyze_fine(ignore_radius=0, fringes_radius=1000)
+    return(data)
+    
+def create_measures(sig_name_array, bkg_name_array):
+    measure_dict = {}
+    for sig, bkg in product(sig_name_array, bkg_name_array):
+        data_sig = initialize(sig)
+        data_bkg = initialize(bkg)
+        mea = fdm.measure(data_bkg, data_sig)
+        mea.subtract_background()
+        mea_name = data_bkg.name + '-' + data_sig.name
+        measure_dict[mea_name] = mea
+    return(measure_dict)
 
-bkg_names = [n for n in names if 'b' in n]
-sig_names = [n for n in names if n not in bkg_names]
-a_names = [n for n in sig_names if 'a' in n]
-p_names = [n for n in sig_names if 'p' in n]
+def get_names(liquid, names):
+    bkg = 'b'
+    liquid_names = [n for n in names if liquid in n]
+    sig_names = [n for n in liquid_names if bkg not in n]
+    bkg_names = [n for n in liquid_names if bkg in n]
+    return(sig_names, bkg_names)
 
-bkg_datasets = initialize(bkg_names)
-sig_datasets = initialize(sig_names)
-a_datasets = initialize(a_names)
-p_datasets = initialize(p_names)
+def output_mc(measure_dict):
+    for key, measure in measure_dict.items():
+        sig = measure.signal
+        bkg_name, sig_name = key.split('-')
+        sig.output_centered_mc(proc_dir + bkg_name + sig_name + '.txt')
 
+for l in ['p', 'a']:
+    output_mc(create_measures(*get_names(l, names)))
+
+    """
 n_array = []
 for bkg, sig in product(bkg_datasets, sig_datasets):
     mea = fdm.measure(bkg, sig)
@@ -44,7 +59,7 @@ for bkg, sig in product(bkg_datasets, sig_datasets):
     bkg_name = bkg.filename.split('.')[-2].split('/')[-1]
     sig_name = sig.filename.split('.')[-2].split('/')[-1]
     signal.output_centered_mc(proc_dir + bkg_name + sig_name + '.txt')
-    """
+
     print(bkg.filename,  sig.filename)
     p = signal.find_zero_th()
     a = (p[3]-1) / (p[2] * p[3])
