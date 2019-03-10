@@ -30,8 +30,9 @@ def create_measures(sig_name_array, bkg_name_array):
         data_bkg = initialize(bkg)
         mea = fdm.measure(data_bkg, data_sig)
         mea.subtract_background()
-        mea_name = (data_bkg.name, data_sig.name)
-        measure_dict[mea_name] = mea
+        mea_name = (int(data_bkg.name[-1]), int(data_sig.name[-1]))
+        measure_dict[mea_name[0]] = measure_dict.get(mea_name[0], {})
+        measure_dict[mea_name[0]][mea_name[1]] = mea
     return(measure_dict)
 
 def get_names(liquid, names):
@@ -45,7 +46,7 @@ def output_mc(measure_dict):
     for key, measure in measure_dict.items():
         sig = measure.signal
         bkg_name, sig_name = key
-        sig.output_centered_mc(proc_dir + bkg_name + sig_name + '.txt')
+        sig.output_mc(proc_dir + bkg_name + sig_name + '.txt')
 
 def quick_measures(l):
     return(create_measures(*get_names(l, names)))

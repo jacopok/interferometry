@@ -7,14 +7,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize
 
-def output(out_filename, step_array, fringes_array,
-           firstline = "Step number, fringe number\n"):
+def output(out_filename, fringes_array, step_array):
     """
-    Outputs to "out_filename" the data in csv format, with the specified
-    first line.
+    Outputs to "out_filename" the data in tab-separated format
     """
     
-    data = np.stack((step_array, fringes_array), axis=-1)
+    data = np.stack((fringes_array, step_array), axis=-1)
     
     with open(out_filename, "w+") as csv_file:
         #csv_file.write(firstline)
@@ -23,6 +21,20 @@ def output(out_filename, step_array, fringes_array,
         
 def output_montecarlo(out_filename, fringes_array, angle_array,
                       step_error, gain_error):
+    """
+    Outputs to out_filename
+    data in a format which is readable by the Montecarlo simulator
+    found in ./montecarlo/
+    Outputs in tab-separated rows:
+        fringe number
+        "Digital" (needed for the MC program to calculate the ditribution)
+        angle
+        step error (actually angle error: the constant part
+                    of the error in the angle)
+        gain error (percent error in the step-angle conversion, which
+                    gets scaled as angles increase by the MC simulator)
+        
+    """
     
     n = len(fringes_array)
     step_error_array = np.ones(n) * step_error
@@ -37,8 +49,13 @@ def output_montecarlo(out_filename, fringes_array, angle_array,
         csv_writer.writerows(data)
     
 class dataset():
+    """
+    Contains a measurement set, from a certain angle to some other angle.
+    The file in "filename" must contain the raw data,
+    tab or space separated, in the order "fringe, step".
+    """
     
-    def __init__(self, filename, flipped=True):
+    def __init__(self, filename, flipped=False):
         """
         Initialization of the data set.
         The conversion_factor, step_error and gain_error are hardcoded
@@ -47,16 +64,17 @@ class dataset():
         
         self.filename = filename
         self.name = self.filename.split('.')[-2].split('/')[-1]
+            #removes the file extension and the path to give just the name
         self.read_file(flipped)
         self.conversion_factor = 42.6 * 10**(-6)
         self.step_error = 0.000213
         self.gain_error = 0.0047
 
-    def read_file(self, flipped, order='auto'):
+    def read_file(self, flipped, order='same'):
         """
-        The files must be tab-separated
-        with rows containing the step number, followed
-        by the fringe number. If the order is inverted,
+        The files must be tab- or space-separated
+        with rows containing the fringe number, followed
+        by the step number. If the order is inverted,
         the flipped=True option can be selected for the file to be read correctly.
         
         order can be 'auto', 'same' or 'reversed', depending on how
@@ -67,7 +85,7 @@ class dataset():
         
         fringes_array = []
         step_array = []
-        if(flipped==False):
+        if(flipped==True):
             i_step=0
             i_fringe=1
         else:
@@ -104,15 +122,29 @@ class dataset():
         if(order == 'same'):
             pass
         elif(order == 'flipped'):
-            #ufa = -ufa
-            pass
+            ufa = -ufa
         else:
             return(None)
         
         self.uncentered_fringes_array = ufa
         self.uncentered_step_array = usa
         
+    def filter_steps(self):
+        """
+        Removes duplicates of step-fringe couples
+        """
+        
+        matrix = np.stack((self.step_array, self.fringes_array))
+        uniques = np.unique(matrix, axis=1)
+        self.step_array = uniques[0,:]
+        self.fringes_array = uniques[1,:]
+        
     def join(self, new_dataset):
+        """
+        Joins a new_dataset to the current one,
+        adjusting the fringe numbers accordingly.
+        Not needed anymore, probably.
+        """
         self.uncentered_step_array = np.append(self.uncentered_step_array, new_dataset.uncentered_step_array)
         max_fringe = np.max(self.uncentered_fringes_array)
         new_dataset.uncentered_fringes_array += max_fringe + 1
@@ -120,76 +152,83 @@ class dataset():
         
     def set_zero(self, zero_fringe):
         """
-        The zero_fringe must belong to the uncentered_fringes_array
-        """
-        if(zero_fringe in self.uncentered_fringes_array):
-            zero_step = self.uncentered_step_array[self.uncentered_fringes_array == zero_fringe]
-            self.fringes_array = self.uncentered_fringes_array - zero_fringe
-        else:
-            f_bef = np.max(self.uncentered_fringes_array[self.uncentered_fringes_array<zero_fringe])
-            f_aft = np.min(self.uncentered_fringes_array[self.uncentered_fringes_array>zero_fringe])
-            self.fringes_array = self.uncentered_fringes_array - f_bef
-            self.fringes_array[self.fringes_array>=0] +=1
-            zero_step = np.average((self.uncentered_step_array[self.uncentered_fringes_array==f_bef], self.uncentered_step_array[self.uncentered_fringes_array==f_aft]))
-        self.step_array = self.uncentered_step_array - zero_step
-
-    
-    def set_zero_fine(self, zero_fringe, zero_step = None, ):
-        """
-        The zero_fringe must belong to the uncentered_fringes_array
-        """
-        if(zero_step==None):
-            zero_step = self.uncentered_step_array[self.uncentered_fringes_array == zero_fringe]
-        self.fringes_array = np.sign(self.fringes_array) * \
-            (np.abs(self.fringes_array) - zero_fringe)
-        self.step_array = self.step_array - zero_step
-
-    def set_zero_fine_th(self, zero_step, zero_fringe_rel, zero_fringe_abs):
-        self.fringes_array = np.sign(self.fringes_array) * \
-            (np.abs(self.fringes_array) - zero_fringe_rel) - zero_fringe_abs
-        self.step_array = self.step_array - zero_step
+        Centers the data by setting the zero fringe to zero_fringe,
+        and adjusting the step numbers accordingly (the zero step will then
+        correspond to the zero fringe).
+        If zero_fringe does not belong to the fringes_array, the two nearest fringes
+        are interpreted to be the -1 and 1 fringes,
+        (this is necessary when the inversion happens around a maximum).
+        An average is then performed to find the zero step.
         
-    def set_zero_angle(self, zero_step):
+        The uncentered data is kept in the uncentered_* arrays,
+        the centered data is stored in the fringes_array and the step_array
+        """
+        ufa = self.uncentered_fringes_array
+        usa = self.uncentered_step_array
+        if(zero_fringe in ufa):
+            zero_step = usa[ufa == zero_fringe]
+            self.fringes_array = ufa - zero_fringe
+        else:
+            f_bef = np.max(ufa[ufa<zero_fringe])
+            f_aft = np.min(ufa[ufa>zero_fringe])
+            self.fringes_array = ufa - f_bef
+            self.fringes_array[self.fringes_array>=0] +=1
+            zero_step = np.average((usa[ufa==f_bef], usa[ufa==f_aft]))
+        self.step_array = usa - zero_step
+        
+    def set_zero_step(self, zero_step):
+        """
+        Subtracts the zero_step from the
+        """
         self.step_array = self.step_array - zero_step
     
-    def plot(self, uncentered=False, label=None):
-        if(uncentered==True):
-            plt.scatter(self.uncentered_step_array, self.uncentered_fringes_array,
-                        label=label)
+    def plot(self, radius=None, straight=False, label=None):
+        """
+        Plots the data using matplotlib.
+        
+        If radius is specified, only the data such that
+        -radius <= step <= radius
+        is plotted.
+        
+        If straight is set to True, the absolute value of the fringe numbers
+        is taken.
+        
+        A label can be specified.
+        """
+        if(straight==True):
+            fa = np.abs(self.fringes_array)
         else:
-            plt.scatter(self.step_array, self.fringes_array, label=label)
-            
-    def plot_center(self, radius, straightened=False, label=None):
-        if(straightened==False):
-            plt.scatter(self.step_array[np.abs(self.step_array)<radius],
-                    self.fringes_array[np.abs(self.step_array)<radius],
-                    label=label)
+            fa = self.fringes_array
+        sa = self.step_array
+        
+        if(radius==None):
+            mask=True
         else:
-            plt.scatter(self.step_array[np.abs(self.step_array)<radius],
-                    np.abs(self.fringes_array[np.abs(self.step_array)<radius]),
-                    label=label)           
+            mask=[np.abs(self.step_array)<radius]
             
-    def output_centered(self, out_filename):
-        output(out_filename, self.step_array, self.fringes_array)
+        plt.plot(sa[mask], fa[mask], label=label)       
+            
+    def output(self, out_filename):
+        """
+        Outputs the centered data to out_filename
+        in tab-separated rows,
+        """
+        
+        output(out_filename, self.fringes_array, self.step_array)
     
-    def output_centered_mc(self, out_filename):
+    def output_mc(self, out_filename):
         output_montecarlo(out_filename, self.fringes_array,
                           self.angle_array, self.step_error, self.gain_error)
                 
-    def output_split(self, out_filenames):
-        """
-        Takes a pair of strings as input, the filenames of the positive
-        and of the negative fringes files respectively
-        """
-        output(out_filenames[0], self.positive_step_array, self.positive_fringes_array)
-        output(out_filenames[1], self.negative_step_array, self.negative_fringes_array,
-           firstline="Negative step number, negative fringe number\n")
-    
     def find_zero_fringe(self, fringes_radius, ignore_radius=1.5):
         """
+        NOT USED ANYMORE
+        
         Performs a parabolic fit of the data in a fringes_radius large radius
         around the origin, in order to find the precise position of the
         origin.
+        
+        NOT USED ANYMORE
         """
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
         condition_nonzero = np.abs(self.fringes_array) > ignore_radius
@@ -207,9 +246,13 @@ class dataset():
 
     def find_zero_fringe_asymm(self, fringes_radius, ignore_radius=1.5):
         """
+        NOT USED ANYMORE
+        
         Performs a parabolic fit of the data in a fringes_radius large radius
         around the origin, in order to find the precise position of the
         origin.
+        
+        NOT USED ANYMORE
         """
 
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
@@ -226,6 +269,10 @@ class dataset():
         return(p)
         
     def calculate_angles(self):
+        """
+        Fills self.angle_array by converting self.step_array
+        """
+        
         self.angle_array = self.conversion_factor * self.step_array
 
     def fringe_linearized_step(self, step):
@@ -234,27 +281,32 @@ class dataset():
         the selected step, using a linear approximation.
         """
         
-        if(step<np.min(self.step_array)):
-            before_step = after_step = np.min(self.step_array)
-        elif(step>np.max(self.step_array)):
-            before_step = after_step = np.max(self.step_array)
+        sa = self.step_array
+        
+        if(step<np.min(sa)):
+            before_step = after_step = np.min(sa)
+        elif(step>np.max(sa)):
+            before_step = after_step = np.max(sa)
         else:        
-            before_step = np.max(self.step_array[self.step_array<=step])
-            after_step = np.min(self.step_array[self.step_array>=step])
+            before_step = np.max(sa[sa<=step])
+            after_step = np.min(sa[sa>=step])
         
         diff = after_step-before_step
-        f1 = self.fringes_array[self.step_array==before_step]
-        f2 = self.fringes_array[self.step_array==after_step]
+        f1 = self.fringes_array[sa==before_step]
+        f2 = self.fringes_array[sa==after_step]
         if(f1==f2):
             fringe = f2
         else:
             fringe = (f2*(step-before_step) + f1*(after_step-step))/diff
         return(fringe)
         
-    def analyze_fine(self, fringes_radius=1000, ignore_radius=1.5):
-        #zero_fringe, zero_step = self.find_zero_fringe(fringes_radius, ignore_radius)
-        zero_step, zero_fringe, gamma, index = self.fit(fringes_radius, ignore_radius)
-        self.set_zero_angle(zero_step)
+    def analyze_fine(self):
+        """
+        Find the zero step by fitting the data to the model with self.fit
+        Sets the zero step, then calculates the new angles.
+        """
+        zero_step, zero_fringe, gamma, index = self.fit()
+        self.set_zero_step(zero_step)
         self.calculate_angles()
         
     def fringes_th(self, step, gamma, index):
@@ -269,21 +321,34 @@ class dataset():
                                            + np.sqrt(index**2 - np.sin(theta)**2))
         return(nu)
         
-    def offset_fringes_th(self, step, zero_step, zero_fringe_abs, \
-                          zero_fringe_rel, gamma, index):
-        return(np.sign(step - zero_step) * 
-               ( self.fringes_th(step-zero_step, gamma, index) + zero_fringe_rel) 
-               + zero_fringe_abs)
+    def offset_fringes(self, step, zero_step, zero_fringe, gamma, index):
+        """
+        The model in self.fringes_th, shifted such that the
+        zero step is at zero_step, with a fringe number offset
+        to account for the zero not being at a whole number of
+        fringes, and with the fringes numbers flipped for
+        negative (step-zero_step).
         
-    def offset_fringes_proper_th(self, step, zero_step, zero_fringe, gamma, index):
+        Given a step, returns the corresponding model fringe.
+        """
+        
         return(np.sign(step - zero_step) * 
                ( self.fringes_th(step-zero_step, gamma, index) + zero_fringe))        
     
     def fit(self, fringes_radius=1000, ignore_radius=0,
                      p0=(0,0,2.9e-5,1.3), bounds=([-4000, -100, 5e-6, 1],
                           [4000, 100, 2e-4, 3])):
-        """Returns:
-            zero_step, zero_fringe, gamma = lambda/(2d), index
+        """
+        Fits the model in self.offset_fringes
+        
+        Returns:
+            zero_step
+            zero_fringe
+            gamma = lambda/(2d)
+            index of refraction of the medium
+            
+        The initial parameter values can be set as the array "p0",
+        the bounds can be set as a tuple of array "bounds"
         """
         condition_radius = np.abs(self.fringes_array) <= fringes_radius
         condition_nonzero = np.abs(self.fringes_array) > ignore_radius
@@ -291,25 +356,35 @@ class dataset():
         f = self.fringes_array[condition]
         s = self.step_array[condition]
             
-        p, pcov = scipy.optimize.curve_fit(self.offset_fringes_proper_th, s, f,
+        p, pcov = scipy.optimize.curve_fit(self.offset_fringes, s, f,
                                            p0=p0, bounds=bounds)
         return(p)
         
-    def filter_steps(self):
-        matrix = np.stack((self.step_array, self.fringes_array))
-        uniques = np.unique(matrix, axis=1)
-        self.step_array = uniques[0,:]
-        self.fringes_array = uniques[1,:]
+
     
 class measure():
+    """
+    A class containing a two datasets: background and
+    the gross signal from both the background and the liquid.
+    """
     
     def __init__(self, background, gross_signal):
+        
         self.background = background
         self.gross_signal = gross_signal
         self.background.filter_steps()
         self.gross_signal.filter_steps()
         
     def subtract_background(self, use_data=True):
+        """
+        For each step of the signal data, subtracts the corresponding 
+        background fringe;
+        if use_data is True this is found by linearly interpolating
+        between the closest steps,
+        if use_data is False this is found by fitting the model to the
+        background data, and subtracting the model value to each signal datum.
+        """
+        
         import copy
         self.signal = copy.deepcopy(self.gross_signal)
         zs, zf, g, i = self.background.fit()
@@ -317,11 +392,12 @@ class measure():
             if(use_data==True):
                 bkg_fringe = self.background.fringe_linearized_step(step)
             else:
-                bkg_fringe = self.background.offset_fringes_proper_th(step, zs, zf, g, i)
+                bkg_fringe = self.background.offset_fringes(step, zs, zf, g, i)
             self.signal.fringes_array[self.gross_signal.step_array==step] -= bkg_fringe
         self.signal.calculate_angles()
 
-    def process(self, zero_fringe_bkg, zero_fringe_sgn):
-        self.background.analyze(zero_fringe_bkg)
-        self.gross_signal.analyze(zero_fringe_sgn)
-        self.subtract_background()
+    def plot(self, *args):
+        self.background.plot(args, label='Background')
+        self.signal.plot(args, label='Net signal')
+        self.gross_signal.plot(args, label='Gross signal')
+        plt.legend()
