@@ -30,7 +30,7 @@ def create_measures(sig_name_array, bkg_name_array):
         data_bkg = initialize(bkg)
         mea = fdm.measure(data_bkg, data_sig)
         mea.subtract_background()
-        mea_name = data_bkg.name + '-' + data_sig.name
+        mea_name = (data_bkg.name, data_sig.name)
         measure_dict[mea_name] = mea
     return(measure_dict)
 
@@ -44,25 +44,16 @@ def get_names(liquid, names):
 def output_mc(measure_dict):
     for key, measure in measure_dict.items():
         sig = measure.signal
-        bkg_name, sig_name = key.split('-')
+        bkg_name, sig_name = key
         sig.output_centered_mc(proc_dir + bkg_name + sig_name + '.txt')
 
-for l in ['p', 'a']:
-    output_mc(create_measures(*get_names(l, names)))
+def quick_measures(l):
+    return(create_measures(*get_names(l, names)))
 
-    """
-n_array = []
-for bkg, sig in product(bkg_datasets, sig_datasets):
-    mea = fdm.measure(bkg, sig)
-    mea.subtract_background(use_data=True)
-    signal = mea.signal
-    bkg_name = bkg.filename.split('.')[-2].split('/')[-1]
-    sig_name = sig.filename.split('.')[-2].split('/')[-1]
-    signal.output_centered_mc(proc_dir + bkg_name + sig_name + '.txt')
+#for l in ['p', 'a']:
+#    output_mc(create_measures(*get_names(l, names)))
 
-    print(bkg.filename,  sig.filename)
-    p = signal.find_zero_th()
+def get_n(meas, gamma = 2.67e-5):
+    p = meas.signal.fit()
     a = (p[3]-1) / (p[2] * p[3])
-    print(1/(1-a * 2.67e-5))
-    n_array.append(1/(1-a * 2.67e-5))
-    """
+    return(1/(1-a * gamma))
