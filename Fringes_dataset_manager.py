@@ -17,16 +17,17 @@ def output(out_filename, step_array, fringes_array,
     data = np.stack((step_array, fringes_array), axis=-1)
     
     with open(out_filename, "w+") as csv_file:
-        csv_file.write(firstline)
+        #csv_file.write(firstline)
         csv_writer = csv.writer(csv_file, delimiter = '\t')
         csv_writer.writerows(data)
         
-def output_montecarlo(out_filename, step_array, fringes_array, angle_array,
+def output_montecarlo(out_filename, fringes_array, angle_array,
                       step_error, gain_error):
     
-    step_error_array = np.ones(len(step_array)) * step_error
-    gain_error_array = np.ones(len(step_array)) * gain_error
-    digital_array = np.repeat("Digital", len(step_array))
+    n = len(fringes_array)
+    step_error_array = np.ones(n) * step_error
+    gain_error_array = np.ones(n) * gain_error
+    digital_array = np.repeat("Digital", n)
     
     data = np.stack((fringes_array, digital_array,
                      angle_array, step_error_array, gain_error_array), axis=-1)
@@ -317,6 +318,7 @@ class measure():
             else:
                 bkg_fringe = self.background.offset_fringes_proper_th(step, zs, zf, g, i)
             self.signal.fringes_array[self.gross_signal.step_array==step] -= bkg_fringe
+        self.signal.calculate_angles()
 
     def process(self, zero_fringe_bkg, zero_fringe_sgn):
         self.background.analyze(zero_fringe_bkg)
