@@ -66,7 +66,7 @@ class dataset():
         self.name = self.filename.split('.')[-2].split('/')[-1]
             #removes the file extension and the path to give just the name
         self.read_file(flipped)
-        self.conversion_factor = 42.6 * 10**(-6)
+        self.conversion_factor = 42.6e-6
         self.step_error = 0.000213
         self.gain_error = 0.0047
 
@@ -199,14 +199,13 @@ class dataset():
             fa = np.abs(self.fringes_array)
         else:
             fa = self.fringes_array
-        sa = self.step_array
+        aa = self.angle_array
         
-        if(radius==None):
-            mask=True
-        else:
-            mask=[np.abs(self.step_array)<radius]
+        mask=np.full(len(aa), True)
+        if(radius!=None):
+            mask=np.abs(self.angle_array)<radius
             
-        plt.plot(sa[mask], fa[mask], label=label)       
+        plt.plot(aa[mask], fa[mask], label=label)       
             
     def output(self, out_filename):
         """
@@ -336,8 +335,9 @@ class dataset():
                ( self.fringes_th(step-zero_step, gamma, index) + zero_fringe))        
     
     def fit(self, fringes_radius=1000, ignore_radius=0,
-                     p0=(0,0,2.9e-5,1.3), bounds=([-4000, -100, 5e-6, 1],
-                          [4000, 100, 2e-4, 3])):
+                     p0=(0,0,2.9e-5,1.3),
+                     bounds=([-4000, -1, 5e-6, 1],
+                              [4000, 1, 2e-4, 3])):
         """
         Fits the model in self.offset_fringes
         
@@ -374,6 +374,8 @@ class measure():
         self.gross_signal = gross_signal
         self.background.filter_steps()
         self.gross_signal.filter_steps()
+        self.background.calculate_angles()
+        self.gross_signal.calculate_angles()
         
     def subtract_background(self, use_data=True):
         """
@@ -388,6 +390,7 @@ class measure():
         import copy
         self.signal = copy.deepcopy(self.gross_signal)
         zs, zf, g, i = self.background.fit()
+        bkg_step_range = (np.min(self.background.step_array), np.max(self.background.step_array))
         for step in self.gross_signal.step_array:
             if(use_data==True):
                 bkg_fringe = self.background.fringe_linearized_step(step)
@@ -396,8 +399,8 @@ class measure():
             self.signal.fringes_array[self.gross_signal.step_array==step] -= bkg_fringe
         self.signal.calculate_angles()
 
-    def plot(self, *args):
-        self.background.plot(args, label='Background')
-        self.signal.plot(args, label='Net signal')
-        self.gross_signal.plot(args, label='Gross signal')
+    def plot(self, **kwargs):
+        self.background.plot(**kwargs, label='Background')
+        self.signal.plot(**kwargs, label='Net signal')
+        self.gross_signal.plot(**kwargs, label='Gross signal')
         plt.legend()
