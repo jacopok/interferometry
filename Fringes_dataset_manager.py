@@ -214,7 +214,9 @@ class dataset():
         
         plt.xlabel('Angle [rad]')
         plt.ylabel('Fringes [1]')
-        plt.plot(aa[mask], fa[mask], label=label)       
+        plt.plot(aa[mask], fa[mask], label=label)
+        if(label):
+            plt.legend()
             
     def output(self, out_filename):
         """
@@ -385,6 +387,7 @@ class measure():
         self.gross_signal.filter_steps()
         self.background.calculate_angles()
         self.gross_signal.calculate_angles()
+        self.name = ''
         
     def subtract_background(self, use_data=True):
         """
@@ -415,7 +418,8 @@ class measure():
         self.signal.calculate_angles()
 
     def plot(self, **kwargs):
-        self.background.plot(**kwargs, label='Background')
-        self.signal.plot(**kwargs, label='Net signal')
-        self.gross_signal.plot(**kwargs, label='Gross signal')
-        #plt.legend()
+        name = self.name
+        self.background.plot(**kwargs, label='Background: ' + self.name)
+        self.signal.plot(**kwargs, label='Net signal: ' + self.name)
+        self.gross_signal.plot(**kwargs, label='Gross signal: ' + self.name)
+        plt.legend()

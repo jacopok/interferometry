@@ -41,8 +41,8 @@ def create_measures(sig_name_array, bkg_name_array):
         data_bkg = initialize(bkg)
         mea = fdm.measure(data_bkg, data_sig)
         mea.subtract_background(use_data=True)
-        mea_name = data_bkg.name + '-' + data_sig.name
-        measure_dict[mea_name] = mea
+        mea.name = data_bkg.name + '-' + data_sig.name
+        measure_dict[mea.name] = mea
     return(measure_dict)
 
 def get_names(liquid, names, bkg='b',):
