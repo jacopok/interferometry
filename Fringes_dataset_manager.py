@@ -7,6 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize
 
+plt.style.use('seaborn')
+
 def output(out_filename, fringes_array, step_array):
     """
     Outputs to "out_filename" the data in tab-separated format
@@ -14,7 +16,7 @@ def output(out_filename, fringes_array, step_array):
     
     data = np.stack((fringes_array, step_array), axis=-1)
     
-    with open(out_filename, "w+") as csv_file:
+    with open(out_filename, 'w') as csv_file:
         #csv_file.write(firstline)
         csv_writer = csv.writer(csv_file, delimiter = '\t')
         csv_writer.writerows(data)
@@ -55,17 +57,18 @@ class dataset():
     tab or space separated, in the order "fringe, step".
     """
     
-    def __init__(self, filename, flipped=False):
+    def __init__(self, filename=None, flipped=False):
         """
         Initialization of the data set.
         The conversion_factor, step_error and gain_error are hardcoded
         for now, since they just have to be 
         """
         
-        self.filename = filename
-        self.name = self.filename.split('.')[-2].split('/')[-1]
+        if(filename):
+            self.filename = filename
+            self.read_file(flipped)
             #removes the file extension and the path to give just the name
-        self.read_file(flipped)
+            self.name = self.filename.split('.')[-2].split('/')[-1]
         self.conversion_factor = 42.6e-6
         self.step_error = 0.000213
         self.gain_error = 0.0047
@@ -111,6 +114,7 @@ class dataset():
         
         fringes_array = list(filter(None, fringes_array))
         step_array = list(filter(None, step_array))
+        fringes_array = np.array(fringes_array, dtype='float')
         ufa = np.array(fringes_array, dtype='int')
         usa = np.array(step_array, dtype = 'float')
 
@@ -150,7 +154,7 @@ class dataset():
         new_dataset.uncentered_fringes_array += max_fringe + 1
         self.uncentered_fringes_array = np.append(self.uncentered_fringes_array, new_dataset.uncentered_fringes_array)
         
-    def set_zero(self, zero_fringe):
+    def set_zero(self, zero_fringe=0):
         """
         Centers the data by setting the zero fringe to zero_fringe,
         and adjusting the step numbers accordingly (the zero step will then
@@ -182,7 +186,7 @@ class dataset():
         """
         self.step_array = self.step_array - zero_step
     
-    def plot(self, radius=None, straight=False, label=None, residuals=False):
+    def plot(self, radius=None, straight=False, label=None, residuals=False, **kwargs):
         """
         Plots the data using matplotlib.
         
@@ -214,9 +218,7 @@ class dataset():
         
         plt.xlabel('Angle [rad]')
         plt.ylabel('Fringes [1]')
-        plt.plot(aa[mask], fa[mask], label=label)
-        if(label):
-            plt.legend()
+        plt.plot(aa[mask], fa[mask], **kwargs, label=label)
             
     def output(self, out_filename):
         """
@@ -293,9 +295,9 @@ class dataset():
         
         sa = self.step_array
         
-        if(step<np.min(sa)):
+        if(step<=np.min(sa)):
             before_step = after_step = np.min(sa)
-        elif(step>np.max(sa)):
+        elif(step>=np.max(sa)):
             before_step = after_step = np.max(sa)
         else:        
             before_step = np.max(sa[sa<=step])
@@ -419,7 +421,7 @@ class measure():
 
     def plot(self, **kwargs):
         name = self.name
-        self.background.plot(**kwargs, label='Background: ' + self.name)
-        self.signal.plot(**kwargs, label='Net signal: ' + self.name)
-        self.gross_signal.plot(**kwargs, label='Gross signal: ' + self.name)
+        self.background.plot(**kwargs, label='Background: ' + name)
+        self.signal.plot(**kwargs, label='Net signal: ' + name)
+        self.gross_signal.plot(**kwargs, label='Gross signal: ' + name)
         plt.legend()

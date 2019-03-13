@@ -17,11 +17,11 @@ names = listdir(data_dir)
 names = [name for name in names if 'sinus' not in name]
 #keeps only the names which do not contain 'sinus'
 
-def initialize(name):
+def initialize(name, data_dir=data_dir):
     """
     Creates a dataset from the data in the file "name" in the folder "data_dir"
     """
-    data = fdm.dataset(data_dir + name)
+    data = fdm.dataset(filename=data_dir + name)
     data.set_zero(0)
     data.analyze_fine()
     return(data)
@@ -71,7 +71,7 @@ def quick_measures(l):
     return(create_measures(*get_names(l, names)))
 
 
-def get_n(meas, gamma = 2.67e-5):
-    p = meas.signal.fit()
+def get_n(dataset, gamma = 2.67e-5, **kwargs):
+    p = dataset.fit(**kwargs)
     a = (p[3]-1) / (p[2] * p[3])
     return(1/(1-a * gamma))
