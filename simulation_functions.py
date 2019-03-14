@@ -14,28 +14,25 @@ from numpy.random import normal
 def theta_from_fringes_medium(N, index, gamma):
     """
     Inverse function of fringes_difference_medium, still for a generic medium
-    """    
+    """
+    from math import isnan
     Nabs = np.abs(N)
-    theta = (np.sign(N) * np.arccos((index**2 - 1 - (gamma * Nabs + index - 1)**2)
-        /(2*(gamma*Nabs+index-1))))
+    cos_arg = (index**2 - 1 - (gamma * Nabs + index - 1)**2)/(2*(gamma*Nabs+index-1))
+    cos_arg = np.clip(cos_arg, -1, 1)
+    theta = (np.sign(N) * np.arccos(cos_arg))
     return(theta)
     
-thickness = 1e-2 #m
-wavelength = 532e-9 #m
-index = 1.33
+def fringes_from_theta_medium(theta, index, gamma):
+    '''
+    Number of fringes observed between 0 and theta due to a "thickness" thick layer of medium 
+    of refractive index "index"
+    '''
+    
+    n = np.sign(theta) / gamma * ( 1 - index - np.cos(theta) 
+                                       + np.sqrt(index**2 - np.sin(theta)**2))
+    return(n)
+    
 
-gamma = wavelength /2 /thickness
-
-cfac = 42.6e-6
-
-Nsims = 50
-maxfringe = 80
-Ndata = 2*maxfringe
-
-np.random.seed(10414)
-
-fringes = np.arange(-80, 80)
-angles = theta_from_fringes_medium(fringes, index, gamma)
 
 def dirty_angles(angles, step_noise=cfac, gain_noise=10/6151):
     noise1 = uniform(-step_noise, step_noise, Ndata)
@@ -44,7 +41,8 @@ def dirty_angles(angles, step_noise=cfac, gain_noise=10/6151):
     angles *= noise2
     return(angles)
     
-def dataset_sim(fringes, index, gamma, cfac=cfac):
+def dataset_sim(n_fringes, index, gamma, cfac=cfac):
+    fringes = np.arange(-n_fringes, n_fringes)
     angles = theta_from_fringes_medium(fringes, index, gamma)
     angles = dirty_angles(angles)
     steps = angles / cfac
@@ -57,16 +55,12 @@ def dataset_sim(fringes, index, gamma, cfac=cfac):
 def measure_sim(fringes, index_b, gamma_b, index_l, gamma_l, cfac=cfac):
     bkg = dataset_sim(fringes, index_b, gamma_b, cfac)
     sig = dataset_sim(fringes, index_l, gamma_l, cfac)
+    
+    angles = sig.step_array * cfac
+    bkg_fringes = fringes_from_theta_medium(angles, index_b, gamma_b)
+    sig.fringes_array = sig.fringes_array + bkg_fringes
+    
     mea = fdm.measure(bkg, sig)
     mea.subtract_background(use_data=True)
     return(mea)
 
-index_array = []
-
-for s in seed_array:
-    data = dataset_sim(fringes, index, gamma)
-    p = data.fit()
-    a = (p[3]-1) / (p[2] * p[3])
-    index_array.append(1/(1-a * gamma))
-    #d.plot(residuals=True, label = str(n))
-#plt.legend()
