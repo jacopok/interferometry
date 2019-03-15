@@ -72,7 +72,13 @@ def quick_measures(l, use_data=False):
 
 
 def get_n(dataset, gamma = 2.66e-5, **kwargs):
-    p = dataset.fit(p0=(0,0,2.66e-5,1.3), bounds=([-4000, -1, 2.66e-5, 1],
-                              [4000, 1, 2.660001e-5, 3]) ,**kwargs)
-    a = (p[3]-1) / (p[2] * p[3])
-    return(1/(1-a * gamma))
+    p = dataset.fit(p0=(0,0,gamma,1.3), bounds=([-4000, -1, gamma-1e-10, 1],
+                              [4000, 1, gamma+1e-10, 3]) ,**kwargs)
+    return(p[3])
+
+def get_gamma(dataset, n, gamma=2.66e-5, **kwargs):
+    p = dataset.fit(p0=(0,0,gamma, n), bounds=([-4000, -1, gamma/5, n-1e-10],
+                              [4000, 1, 2*gamma, n+1e-10]) ,**kwargs)
+    return(p[2])
+
+    
