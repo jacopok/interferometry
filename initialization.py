@@ -26,7 +26,7 @@ def initialize(name, data_dir=data_dir):
     data.analyze_fine()
     return(data)
     
-def create_measures(sig_name_array, bkg_name_array):
+def create_measures(sig_name_array, bkg_name_array, use_data=False):
     """
     Takes in input two arrays of strings, containing the names of the
     files from which to read the signal and background respectively.
@@ -40,7 +40,7 @@ def create_measures(sig_name_array, bkg_name_array):
         data_sig = initialize(sig)
         data_bkg = initialize(bkg)
         mea = fdm.measure(data_bkg, data_sig)
-        mea.subtract_background(use_data=True)
+        mea.subtract_background(use_data)
         mea.name = data_bkg.name + '-' + data_sig.name
         measure_dict[mea.name] = mea
     return(measure_dict)
@@ -67,8 +67,8 @@ def output_mc(measure_dict):
         sig = measure.signal
         sig.output_mc(proc_dir + key + '.txt')
 
-def quick_measures(l):
-    return(create_measures(*get_names(l, names)))
+def quick_measures(l, use_data=False):
+    return(create_measures(*get_names(l, names), use_data))
 
 
 def get_n(dataset, gamma = 2.67e-5, **kwargs):

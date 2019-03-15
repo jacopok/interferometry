@@ -12,7 +12,8 @@ index = 1.33
 
 gamma = wavelength /2 /thickness
 
-cfac = 42.6e-6
+#cfac = 42.6e-6
+cfac = 51e-6
 
 Nsims = 50
 maxfringe = 80
@@ -27,4 +28,3 @@ for s in range(Nsims):
     p = data.signal.fit()
     a = (p[3]-1) / (p[2] * p[3])
     index_array.append(1/(1-a * gamma))
-    print('this')

@@ -27,12 +27,9 @@ def fringes_from_theta_medium(theta, index, gamma):
     Number of fringes observed between 0 and theta due to a "thickness" thick layer of medium 
     of refractive index "index"
     '''
-    
     n = np.sign(theta) / gamma * ( 1 - index - np.cos(theta) 
                                        + np.sqrt(index**2 - np.sin(theta)**2))
     return(n)
-    
-
 
 def dirty_angles(angles, step_noise=cfac, gain_noise=10/6151):
     noise1 = uniform(-step_noise, step_noise, Ndata)
