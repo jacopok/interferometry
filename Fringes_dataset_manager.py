@@ -69,9 +69,9 @@ class dataset():
             self.read_file(flipped)
             #removes the file extension and the path to give just the name
             self.name = self.filename.split('.')[-2].split('/')[-1]
-        self.conversion_factor = 51e-6
+        self.conversion_factor = 5.11915e-05
         self.step_error = 0.000213
-        self.gain_error = 0.0047
+        self.gain_error = 1.36427e-07 / 5.11915e-05
 
     def read_file(self, flipped, order='same'):
         """

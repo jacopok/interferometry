@@ -1,0 +1,50 @@
+RadAngles=[
+6.178465552	;
+6.195918845	;
+6.213372137	;
+6.23082543	;
+6.248278722	;
+6.265732015	;
+6.283185307	;
+6.3006386	;
+6.318091892	;
+6.335545185	;
+6.352998477	;
+6.37045177	;
+6.387905062	;
+6.405358355	;
+6.422811647	;
+6.44026494	;
+6.457718232	;
+6.475171525	;]; 
+
+
+Steps=[
+120	;
+452	;
+780	;
+1133	;
+1460	;
+1798	;
+2140	;
+2517	;
+2863	;
+3225	;
+3530	;
+3820	;
+4220	;
+4570	;
+4890	;
+5220	;
+5540	;
+5900	;
+]
+
+Errore sugli step: 20 ( ottenuto applicando la uniforme su un intervallo di semiampiezza 30 step)
+
+Il coefficiente step/radang è 19534.5 e il suo errore è 52.0602. 
+
+IL coefficiente radianti/steo è 5.11915e-05 e il suo errore 1.36427e-07. 
+
+ Il Chi Quadro è 19.2765 con 16 gradi di libertà
+

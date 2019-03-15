@@ -71,7 +71,8 @@ def quick_measures(l, use_data=False):
     return(create_measures(*get_names(l, names), use_data))
 
 
-def get_n(dataset, gamma = 2.67e-5, **kwargs):
-    p = dataset.fit(**kwargs)
+def get_n(dataset, gamma = 2.66e-5, **kwargs):
+    p = dataset.fit(p0=(0,0,2.66e-5,1.3), bounds=([-4000, -1, 2.66e-5, 1],
+                              [4000, 1, 2.660001e-5, 3]) ,**kwargs)
     a = (p[3]-1) / (p[2] * p[3])
     return(1/(1-a * gamma))
