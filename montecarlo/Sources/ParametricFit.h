@@ -62,6 +62,7 @@ class ParametricFit {
     
     void print_misses(const string& filename) const;
     void print_data(const string& filename) const;
+    void print_residuals(const string& filename) const;
   
     
   private:

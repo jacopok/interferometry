@@ -474,3 +474,24 @@ void ParametricFit::print_data(const string& filename) const{
   
   return;
 }
+
+void ParametricFit::print_residuals(const string& filename) const{
+  ofstream residuals(filename);
+  if(!residuals){
+    cout << "Failed to print residuals onto " << filename << endl;
+    return;
+  }
+  
+  vector<double>* fix_par_values = new vector<double>;
+  for(unsigned int k = 0; k < fixed_parameters->size(); k++)
+    fix_par_values->push_back(fixed_parameters->at(k)->mean());
+  vector<double>* unk_par_values = unknown_MultiPDF->mean();
+  double res = 0;
+  for(unsigned int h = 0; h < data_x->size(); h++){
+    res = data_y_means->at(h) - f->f(data_x->at(h),fix_par_values,unk_par_values);
+    residuals << data_x->at(h) << '\t' << res << '\t' << sqrt(data_y_vars->at(h)) << endl;
+  }
+  delete fix_par_values;
+  
+  return;
+}

@@ -169,6 +169,7 @@ int main (int argc, char* argv[]){
     cout << "Insert filename (_PDF.txt)";
     cin >> ancora;
     gamma = PDF::load(ancora);
+    gamma->rename("gamma");
   }
   pf.add_fixed_parameter(gamma);
   
@@ -286,6 +287,8 @@ int main (int argc, char* argv[]){
     cout << "Correlation coefficient between theta_0 and n_l = " << c2 << endl;
     cout << "Correlation coefficient between N_0 and theta_0 = " << c3 << endl << endl;
     cout << "Chi2/dof = " << chi << '/' << dof << endl;
+    
+    pf.print_residuals((session + "_residuals.txt").c_str());
     
     if(misses > 0)
       pf.print_misses((session + "_misses.txt").c_str());

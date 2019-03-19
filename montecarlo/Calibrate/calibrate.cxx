@@ -287,6 +287,8 @@ int main (int argc, char* argv[]){
     cout << "Correlation coefficient between N_0 and theta_0 = " << c3 << endl << endl;
     cout << "Chi2/dof = " << chi << '/' << dof << endl;
     
+    pf.print_residuals((session + "_residuals.txt").c_str());
+    
     if(misses > 0)
       pf.print_misses((session + "_misses.txt").c_str());
     
@@ -309,7 +311,7 @@ int main (int argc, char* argv[]){
   
   gamma->modifying_routine();
   
-  gamma->save((session + "_n_l_PDF.txt").c_str());
+  gamma->save((session + "_gamma_PDF.txt").c_str());
   
   ofstream out((session + "_results.txt").c_str());
   if(!out){

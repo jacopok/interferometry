@@ -1,3 +1,5 @@
+n = 1.5
+
 bp1
 	gamma = 3.4925	N0 = 0.33	t0 = 0.13 
 bp3
@@ -6,4 +8,15 @@ ba1
 	gamma = 3.4551	N0 = 0.54	t0 = 0.10
 ba2
 	gamma = 3.4352	N0 = 0.30	t0 = -0.10
- 
+ba3
+	gamma = 3.4299	N0 = 0.11	t0 = 0.15
+
+
+a1	gamma = 1.435
+a2	gamma = 1.437
+a3	gamma = 1.434
+
+p1	gamma = 1.306
+p2	gamma = 1.295
+p3	gamma = 1.290
+p4	gamma = 1.301
