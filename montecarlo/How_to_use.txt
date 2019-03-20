@@ -59,7 +59,7 @@ ErrorPropagator
 		        ~ErrorPropagatorE(){}
 		    
 		        double f() const {
-		            double x = sim_smaple->at(0);
+		            double x = sim_sample->at(0);
 		            double y = sim_sample->at(1);
 		            return y + m*(x - mean);
 		        }
@@ -162,6 +162,7 @@ LinearFit
 		      "Gauss"				-> yPDF_a = mean,	yPDF_b = sigma
 		      "Digital"			-> yPDF_a = value	yPDF_b = digit		yPDF_c = gain
 		      "Oscilloscope"		-> yPDF_a = V,		yPDF_b = Vdiv                 it considers a contribute of 3% gain + 0.05*Vdiv of digits
+		      "Qbic"				-> yPDF_a = center, yPDF_b = full width 1,	yPDF_c = full width 2
  		      
     Settings:
 	>setAB_steps(n)	-> set the number of steps of the `a`,`b`,`ix`,`iy` PDFs
@@ -240,7 +241,8 @@ PDFFactory
 		with errors due to `digit` and `gain` (this one is a percentage, e.g.: 0.03)
 		default digitals are created where they are non 0
 		This PDFs are created via a propagation of two uniform distributions
-		
+	QbicFactory(center,full width 1, full width 2): builds a PDF that is the convolution (sum) of two triangulars. `center` is the center of the resulting PDF	
+
 ----------------------------------------------------------------------------------------------------------------------
 
 PDFFactoryManager
@@ -253,6 +255,7 @@ PDFFactoryManager
 STANDARD  WAY OF BUILDING PDFs via a PDFFactory
 
 PDFFactory* F = PDFFactoryManager::create(PDF_type,PDFa,PDFb);
+//or PDFFactory* F = PDFFactoryManager::create(PDF_type,PDFa,PDFb,PDFc);
 PDF* pdf = F->create(min,max,steps,name);
 delete F;
 
