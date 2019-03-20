@@ -26,7 +26,7 @@ def initialize(name, data_dir=data_dir):
     data.analyze_fine()
     return(data)
     
-def create_measures(sig_name_array, bkg_name_array, use_data=False):
+def create_measures(sig_name_array, bkg_name_array, use_data=True):
     """
     Takes in input two arrays of strings, containing the names of the
     files from which to read the signal and background respectively.
@@ -74,11 +74,11 @@ def quick_measures(l, use_data=False):
 def get_n(dataset, gamma = 2.66e-5, **kwargs):
     p = dataset.fit(p0=(0,0,gamma,1.3), bounds=([-4000, -1, gamma-1e-10, 1],
                               [4000, 1, gamma+1e-10, 3]) ,**kwargs)
-    return(p[3])
+    return(p)
 
 def get_gamma(dataset, n, gamma=2.66e-5, **kwargs):
     p = dataset.fit(p0=(0,0,gamma, n), bounds=([-4000, -1, gamma/5, n-1e-10],
                               [4000, 1, 2*gamma, n+1e-10]) ,**kwargs)
-    return(p[2])
+    return(p)
 
     
