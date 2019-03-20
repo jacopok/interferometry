@@ -67,17 +67,18 @@ def output_mc(measure_dict):
         sig = measure.signal
         sig.output_mc(proc_dir + key + '.txt')
 
-def quick_measures(l, use_data=False):
+def quick_measures(l, use_data=True):
     return(create_measures(*get_names(l, names), use_data))
 
 
 def get_n(dataset, gamma = 2.66e-5, **kwargs):
-    p = dataset.fit(p0=(0,0,gamma,1.3), bounds=([-4000, -1, gamma-1e-10, 1],
+    p = dataset.fit(p0=(0,0,gamma,1.3), bounds=([-4000, 0, gamma-1e-10, 1],
                               [4000, 1, gamma+1e-10, 3]) ,**kwargs)
     return(p)
 
 def get_gamma(dataset, n, gamma=2.66e-5, **kwargs):
-    p = dataset.fit(p0=(0,0,gamma, n), bounds=([-4000, -1, gamma/5, n-1e-10],
+    
+    p = dataset.fit(p0=(0,0,gamma, n), bounds=([-4000, 0, gamma/5, n-1e-10],
                               [4000, 1, 2*gamma, n+1e-10]) ,**kwargs)
     return(p)
 
