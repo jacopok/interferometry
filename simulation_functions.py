@@ -60,4 +60,3 @@ def measure_sim(fringes, index_b, gamma_b, index_l, gamma_l, cfac=cfac):
     mea = fdm.measure(bkg, sig)
     mea.subtract_background(use_data=True)
     return(mea)
-
