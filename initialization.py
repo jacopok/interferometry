@@ -11,7 +11,7 @@ from os import listdir
 from itertools import product
 
 data_dir = './data/belly/'
-proc_dir = './data/processed/'
+proc_dir = './data/processed_qbic/'
 
 names = listdir(data_dir)
 names = [name for name in names if 'sinus' not in name]
@@ -64,22 +64,22 @@ def output_mc(measure_dict):
     in montecarlo-ready format
     """
     for key, measure in measure_dict.items():
-        sig = measure.signal
-        sig.output_mc(proc_dir + key + '.txt')
+        measure.calculate_hw()
+        measure.output_mc_triang(proc_dir + key + '.txt')
 
 def quick_measures(l, use_data=True):
     return(create_measures(*get_names(l, names), use_data))
 
 
 def get_n(dataset, gamma = 2.66e-5, **kwargs):
-    p = dataset.fit(p0=(0,0,gamma,1.3), bounds=([-4000, 0, gamma-1e-10, 1],
+    p, perr = dataset.fit(p0=(0,0,gamma,1.3), bounds=([-4000, 0, gamma-1e-10, 1],
                               [4000, 1, gamma+1e-10, 3]) ,**kwargs)
-    return(p)
+    return(p, perr)
 
 def get_gamma(dataset, n, gamma=2.66e-5, **kwargs):
     
-    p = dataset.fit(p0=(0,0,gamma, n), bounds=([-4000, 0, gamma/5, n-1e-10],
+    p, perr = dataset.fit(p0=(0,0,gamma, n), bounds=([-4000, 0, gamma/5, n-1e-10],
                               [4000, 1, 2*gamma, n+1e-10]) ,**kwargs)
-    return(p)
+    return(p, perr)
 
     

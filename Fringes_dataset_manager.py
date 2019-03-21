@@ -50,6 +50,34 @@ def output_montecarlo(out_filename, fringes_array, angle_array,
         csv_writer = csv.writer(csv_file, delimiter = '\t')
         csv_writer.writerows(data)
     
+def output_montecarlo_triang(out_filename, fringes_array, step_array,
+                      fw1_array, fw2_array):
+    """
+    Outputs to out_filename
+    data in a format which is readable by the Montecarlo simulator
+    found in ./montecarlo/
+    Outputs in tab-separated rows:
+        fringe number
+        "Qbic" (needed for the MC program to calculate the ditribution)
+        angle
+        step number
+        full width 1
+        full width 2 (full widths of triangular distributions on the
+                      data points: each of these is normalized according to
+                      the estimated derivative dfringe/dstep at the point)
+        
+    """
+    
+    n = len(fringes_array)
+    qbic_array = np.repeat("Qbic", n)
+    
+    data = np.stack((fringes_array, qbic_array,
+                     step_array, fw1_array, fw2_array), axis=-1)
+
+    with open(out_filename, "w+") as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter = '\t')
+        csv_writer.writerows(data)
+
 class dataset():
     """
     Contains a measurement set, from a certain angle to some other angle.
@@ -72,6 +100,7 @@ class dataset():
         self.conversion_factor = 5.11915e-05
         self.step_error = 0.000213
         self.gain_error = 1.36427e-07 / 5.11915e-05
+        self.normalized_hw = None
 
     def read_file(self, flipped, order='same'):
         """
@@ -201,7 +230,7 @@ class dataset():
         """
         if(residuals==True):
             efa = self.fringes_array
-            p = self.fit()
+            p = self.fit()[0]
             tfa = self.offset_fringes(self.step_array, *p)
             fa = efa -tfa
         else:
@@ -311,13 +340,32 @@ class dataset():
         else:
             fringe = (f2*(step-before_step) + f1*(after_step-step))/diff
         return(fringe)
+    
+    def calculate_hw(self):
+        sa = self.step_array
+        grad = np.gradient(sa)
+        self.hw_array = grad / 4
+        
+    def hw_from_step(self, step):
+        from scipy.interpolate import interp1d
+        self.calculate_hw()
+        interpol = interp1d(self.step_array, self.hw_array)
+        return(interpol(step))
+        
+    def average_gradient(self, step, step_radius=100):
+        grad = np.gradient(self.fringes_array, self.step_array)
+        mask = np.abs(self.step_array - step) < step_radius
+        if(np.count_nonzero(mask) == 0):
+            radius = np.max(np.abs(np.diff(self.step_array)))
+            mask = np.abs(self.step_array - step) < radius
+        return(np.average(grad[mask]))
         
     def analyze_fine(self):
         """
         Find the zero step by fitting the data to the model with self.fit
         Sets the zero step, then calculates the new angles.
         """
-        zero_step, zero_fringe, gamma, index = self.fit()
+        zero_step, zero_fringe, gamma, index = self.fit()[0]
         self.set_zero_step(zero_step)
         self.calculate_angles()
         
@@ -371,9 +419,9 @@ class dataset():
             
         p, pcov = scipy.optimize.curve_fit(self.offset_fringes, s, f,
                                            p0=p0, bounds=bounds)
-        return(p)
+        return((p, np.sqrt(np.diag(pcov))))
         
-
+    #def 
     
 class measure():
     """
@@ -403,7 +451,8 @@ class measure():
         
         import copy
         self.signal = copy.deepcopy(self.gross_signal)
-        zs, zf, g, i = self.background.fit()
+        p, perr = self.background.fit()
+        (zs, zf, g, i) = p
         bsr = (np.min(self.background.step_array), np.max(self.background.step_array))
         for step in self.gross_signal.step_array:
             if(use_data==True):
@@ -418,7 +467,32 @@ class measure():
         self.signal.fringes_array = self.signal.fringes_array[mask]
         self.signal.step_array = self.signal.step_array[mask]
         self.signal.calculate_angles()
-
+        
+    def calculate_hw(self):
+        hw_array = []
+        nhw_bkg = []
+        nhw_sig = []
+        for step in self.signal.step_array:
+            grad_bkg = self.background.average_gradient(step)
+            grad_gsig = self.gross_signal.average_gradient(step)
+            grad_sig = self.signal.average_gradient(step)
+            hw_bkg = self.background.hw_from_step(step)
+            hw_gsig = self.gross_signal.hw_from_step(step)
+                #should be the same as the corresponding value of hw_array
+           
+            hw = (np.sqrt((grad_bkg*hw_bkg)**2 + (grad_gsig*hw_gsig)**2))/grad_sig
+            hw_array.append(hw)
+            nhw_bkg.append(hw_bkg*grad_bkg/grad_sig)
+            nhw_sig.append(hw_gsig*grad_gsig/grad_sig)
+        self.background.normalized_hw = np.array(nhw_bkg)
+        self.gross_signal.normalized_hw = np.array(nhw_sig)
+        self.signal.hw_array = np.array(hw_array)
+    
+    def output_mc_triang(self, out_filename):
+        output_montecarlo_triang(out_filename, self.signal.fringes_array,
+                                 self.signal.step_array, 2*self.background.normalized_hw,
+                                 2*self.gross_signal.normalized_hw)
+        
     def plot(self, **kwargs):
         name = self.name
         self.background.plot(**kwargs, label='Background: ' + name)
