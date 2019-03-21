@@ -5,6 +5,7 @@
 #include "PDFFactory.h"
 #include "PDFFactoryManager.h"
 #include "DigitalFactory.h"
+#include "QbicFactory.h"
 #include "DataSimulator.h"
 #include "ProgressBar.h"
 
@@ -152,7 +153,13 @@ bool LinearFit::add(ifstream* file, vector<double>* xV, vector<PDF*>* yVP) {
     yVP->push_back(F->create_default(precision));//create the PDF for the y data and store it
     delete F;
   }
-  
+  else if((PDF_type[0] == 'q')||(PDF_type[0] == 'Q')){//QbicFactory requires a special treatment
+    if(!(*file >> PDF_a >> PDF_b >> PDF_c)) return false;
+    F = new QbicFactory(PDF_a,PDF_b,PDF_c);
+    xV->push_back(x);
+    yVP->push_back(F->create_default(precision));//create the PDF for the y data and store it
+    delete F;
+  }
   else{
     if(!(*file >> PDF_a >> PDF_b)) return false;
     

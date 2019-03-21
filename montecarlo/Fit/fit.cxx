@@ -169,6 +169,7 @@ int main (int argc, char* argv[]){
     cout << "Insert filename (_PDF.txt)";
     cin >> ancora;
     gamma = PDF::load(ancora);
+    gamma->modifying_routine();
     gamma->rename("gamma");
   }
   pf.add_fixed_parameter(gamma);

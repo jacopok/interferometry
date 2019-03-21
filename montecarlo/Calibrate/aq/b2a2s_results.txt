@@ -7,4 +7,4 @@ Correlation coefficient between N_0 and gamma = 0.943328
 Correlation coefficient between theta_0 and gamma = -0.278997
 Correlation coefficient between N_0 and theta_0 = -0.303371
 
-Chi2/dof = -nan/94
+Chi2/dof = 83.118/94
