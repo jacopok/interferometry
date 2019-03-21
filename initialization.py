@@ -45,7 +45,7 @@ def create_measures(sig_name_array, bkg_name_array, use_data=True):
         measure_dict[mea.name] = mea
     return(measure_dict)
 
-def get_names(liquid, names, bkg='b',):
+def get_names(liquid, names, bkg='b'):
     """
     Assuming the names in "names" contain the string bkg
     only if they are background, and the string liquid only if

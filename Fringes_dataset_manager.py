@@ -398,7 +398,7 @@ class dataset():
     def fit(self, fringes_radius=1000, ignore_radius=0,
                      p0=(0,0,2.9e-5,1.3),
                      bounds=([-4000, -1, 5e-6, 1],
-                              [4000, 1, 2e-4, 3])):
+                              [4000, 1, 2e-4, 2])):
         """
         Fits the model in self.offset_fringes
         
