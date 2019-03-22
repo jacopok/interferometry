@@ -151,6 +151,7 @@ set loadpath
 set fontpath 
 set psdir
 set fit noerrorvariables
+zero(x) = 0
 p(x) = (gamma*(abs(x) - N0) + n - 1)
 f(x) = t0 + sgn(x)*acos((n*n - 1 - p(x)*p(x))/(2*p(x)))
 gamma = 2.67e-05

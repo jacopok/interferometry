@@ -202,15 +202,23 @@ void PDF::coarse(unsigned int f) {
 }
 
 PDF* PDF::optimize() {//removes zeros from the front and the back of values
+  //find max_value
+  double max_value = 0, thr = 0;
+  for(unsigned int i = 0; i < steps; i++){
+    if(values[i] > max_value)
+      max_value = values[i];
+  }
+  thr = max_value*1e-20;
+  
   vector<double> newValues;
   unsigned int n1 = 0, i = 0, n2 = steps;//=values.size()
-  while(values[i] == 0){
+  while(values[i] <= thr){
     n1++;
     i++;
   }
   if(n1 != 0) n1--;
   i = steps - 1;
-  while(values[i] == 0){
+  while(values[i] <= thr){
     n2--;
     i--;
   }
