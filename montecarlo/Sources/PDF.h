@@ -36,7 +36,7 @@ class PDF {
     void normalize();
     void smoothen(unsigned int f); //each value is replaced with the mean of the nearest f values
     void coarse(unsigned int f); //the number of values is divided by f
-    PDF* optimize(); //removes zeros from the front and the back of values
+    PDF* optimize(double thr = 1e-20); //removes values < thr*maxvalue from the front and the back of the PDF
     void modifying_routine(); //interactive usage of normalize, smoothen, coarse, optimize
     PDF* traslate(double l); //traslate the whole PDF along the x-axis
     bool add(double x, double val = 1.0); //if x is fuond in values, values[i] += val: it will be used for building simulated PDFs
@@ -70,10 +70,11 @@ class PDF {
     PDF operator+(const PDF& p) const;
     
     
-    void print() const;
+    void print_on_screen() const;
     void print(const string& fileName) const;
+    void print() const;
     void save(const string& fileName) const;
-    
+    void save() const;
     /*
     //builds a root TH1F to plot the PDF
     void root(const string& fileName) const;

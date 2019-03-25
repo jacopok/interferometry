@@ -1,0 +1,6 @@
+../Calibrate/qbic/ba1a1_gamma_PDF.txt
+../Calibrate/qbic/ba1a2_gamma_PDF.txt
+../Calibrate/qbic/ba1a3_gamma_PDF.txt
+../Calibrate/qbic/ba2a1_gamma_PDF.txt
+../Calibrate/qbic/ba2a2_gamma_PDF.txt
+../Calibrate/qbic/ba2a3_gamma_PDF.txt

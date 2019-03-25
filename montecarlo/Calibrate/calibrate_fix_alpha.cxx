@@ -13,56 +13,43 @@
 
 using namespace std;
 
-class DataGenerator: public ErrorPropagator{
-  public:
-    DataGenerator(const vector<PDF*>* vp):
-      ErrorPropagator(vp){}
-    ~DataGenerator(){}
-    
-    double f() const{
-      double a = sim_sample->at(0);
-      double st = sim_sample->at(1);
-      return a*st;
-    }
-};
-
 class nu: public ParametricFit::Func {
     public:
 	nu():
 	  Func("intFunc"){}
 	~nu(){}
 	
-	virtual unsigned int n_fix(){return 1;}
+	virtual unsigned int n_fix(){return 2;}
 	virtual unsigned int n_unk(){return 3;}// theta_0,n_l,gamma = lambda/2d
 	virtual double f(double x, vector<double>* v_fix, vector<double>* v_unk){
 	  
-	  double n_l = v_fix->at(0);
+	  double alpha = v_fix->at(0);
+	  double n_l = v_fix->at(1);
 	  double gamma = v_unk->at(0);
 	  double theta_0 = v_unk->at(1);
 	  double N_0 = v_unk->at(2);
-	  double theta;
+	  double st;
 	  if(x > 0)
-	    theta = acos((pow(n_l,2) - 1 - pow((gamma*(x - N_0) + n_l - 1),2))/(2*(gamma*(x - N_0) + n_l - 1)));
+	    st = acos((pow(n_l,2) - 1 - pow((gamma*(x - N_0) + n_l - 1),2))/(2*(gamma*(x - N_0) + n_l - 1)));
 	  else{
-	    theta = -acos((pow(n_l,2) - 1 - pow((gamma*(-x - N_0) + n_l - 1),2))/(2*(gamma*(-x - N_0) + n_l - 1)));
+	    st = -acos((pow(n_l,2) - 1 - pow((gamma*(-x - N_0) + n_l - 1),2))/(2*(gamma*(-x - N_0) + n_l - 1)));
 	  }
 	  
-	  return theta + theta_0;
+	  return alpha*st + theta_0;
 	}
 };
 
 
 
 int main (int argc, char* argv[]){
-  if(argc == 1){
+  if(argc != 3){
     cout << "\nThis programm fits GIMLI data having a known PDF for n_l in order to find gamma." << endl;
     cout << "In order to use it type ./calibrate [data_file] [alpha_file]." << endl;
-    cout << "If data are already in radiants omitt alpha_file" << endl << endl;
     return 0;
   }
   
   string ancora, session;
-  PDF *n_l, *theta_0, *gamma, *N_0, *alpha, *aux, *y;
+  PDF *n_l, *theta_0, *gamma, *N_0, *alpha;
   MultiPDF *gN, *gt, *offsets;
   unsigned int n_data = 0, datastep = 50, misses = 0, max_miss = 0;
   vector<double>* xV = new vector<double>;
@@ -82,72 +69,38 @@ int main (int argc, char* argv[]){
     return -1;
   }
   
-  if(argc > 2){
-    cout << "How many steps should the alpha PDF have? ";
-    cin >> datastep;
-    lf.setPrecision(datastep);
-    ifstream alphafile(argv[2]);
-    if(!alphafile){
-      cout << "ERROR opening alpha" << endl;
-      return -1;
-    }
-    lf.add(&alphafile,pattume,couple);
-    alpha = couple->at(0);
-    alpha->rename("alpha");
-    if(alpha->getSteps() > datastep)
-      alpha->coarse(alpha->getSteps()/datastep);
+  
+  cout << "How many steps should the alpha PDF have? ";
+  cin >> datastep;
+  lf.setPrecision(datastep);
+  ifstream alphafile(argv[2]);
+  if(!alphafile){
+    cout << "ERROR opening alpha" << endl;
+    return -1;
   }
+  lf.add(&alphafile,pattume,couple);
+  alpha = couple->at(0);
+  alpha->rename("alpha");
+  if(alpha->getSteps() > datastep)
+    alpha->coarse(alpha->getSteps()/datastep);
+  alpha->print();
   
   cout << "How many steps should the data PDFs have? ";
   cin >> datastep;
   
   //get the data
   lf.setPrecision(datastep);
-  if(argc > 2){
-    vector<PDF*>* auxv = new vector<PDF*>;
-    double data_min, data_max;
-    unsigned int last = 0;
-    
-    while(lf.add(&in,xV,auxv)){
-      y = auxv->at(last);
-      couple->push_back(y);
-      DataGenerator d(couple);
-      
-      if(y->getMax() > 0)
-	data_max = alpha->getMax()*y->getMax();
-      else
-	data_max = alpha->getMin()*y->getMax();
-      
-      if(y->getMin() > 0)
-	data_min = alpha->getMin()*y->getMin();
-      else
-	data_min = alpha->getMax()*y->getMin();
-      
-      cout << "\nCreating theta at N = " << xV->at(last) << endl;
-      aux = d.propagation(0,1,data_min,data_max,datastep,"data");
-      aux->optimize();
-      
-      yVP->push_back(aux);
-      couple->pop_back();
-      
-      last++;
-    }
-    
-    //clean up
-    for(unsigned int h = 0; h < auxv->size(); h++)
-      delete auxv->at(h);
-    delete auxv;
-  }
-  else{
-    while(lf.add(&in,xV,yVP))
-      n_data++;
-  }
+  
+  while(lf.add(&in,xV,yVP))
+    n_data++;
+
   delete pattume;
   
   
   //prepare ParametricFit
   nu funz;
   ParametricFit pf(&funz);
+  pf.add_fixed_parameter(alpha);
   pf.set_data(xV,yVP);
 
   pf.print_data((session + "_rough_data.txt").c_str());

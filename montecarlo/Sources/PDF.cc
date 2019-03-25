@@ -201,24 +201,24 @@ void PDF::coarse(unsigned int f) {
   return;
 }
 
-PDF* PDF::optimize() {//removes zeros from the front and the back of values
+PDF* PDF::optimize(double thr) {//removes zeros from the front and the back of values
   //find max_value
-  double max_value = 0, thr = 0;
+  double max_value = 0, soglia = 0;
   for(unsigned int i = 0; i < steps; i++){
     if(values[i] > max_value)
       max_value = values[i];
   }
-  thr = max_value*1e-20;
+  soglia = max_value*thr;
   
   vector<double> newValues;
   unsigned int n1 = 0, i = 0, n2 = steps;//=values.size()
-  while(values[i] <= thr){
+  while(values[i] <= soglia){
     n1++;
     i++;
   }
   if(n1 != 0) n1--;
   i = steps - 1;
-  while(values[i] <= thr){
+  while(values[i] <= soglia){
     n2--;
     i--;
   }
@@ -240,13 +240,21 @@ PDF* PDF::optimize() {//removes zeros from the front and the back of values
 void PDF::modifying_routine(){
   string ancora;
   unsigned int f;
+  double thr;
   cout << name << endl;
   
   do{
-      cout << "Would you like to coarse (c) smoothen (s) or proceed (p)? ";
+      cout << "Would you like to manually optimize (o) coarse (c) smoothen (s) or proceed (p)? ";
       cin >> ancora;
       
       switch(ancora[0]){
+	case 'o':
+	  cout << "Insert optimization threshold (preferred < 1e-12) ";
+	  cin >> thr;
+	  optimize(thr);
+	  normalize();
+	  break;
+	  
 	case 'c':
 	  optimize();
 	  cout << "Insert coarsing factor: ";
@@ -264,7 +272,7 @@ void PDF::modifying_routine(){
 	  break;
       }
       
-      print((name + "_G.txt").c_str());
+      print();
       
       cout << "Would you like to do other modifications (y/n) ";
       cin >> ancora;
@@ -552,7 +560,7 @@ PDF PDF::operator+(const PDF& p) const {
 }
 
 
-void PDF::print() const{
+void PDF::print_on_screen() const{
   cout << min - dx << '\t' << "0" << endl;
   for(unsigned int i = 0; i < steps; i++)
     cout << min + i*dx << '\t' << values[i] << endl;
@@ -573,6 +581,11 @@ void PDF::print(const string& fileName) const{
   return;
 }
 
+void PDF::print() const{
+  print((name + "_G.txt").c_str());
+  return;
+}
+
 void PDF::save(const string& fileName) const{
   ofstream file (fileName);
   if(!file){
@@ -584,6 +597,11 @@ void PDF::save(const string& fileName) const{
   file << max << endl;
   for(double v : values)
     file << v << endl;
+  return;
+}
+
+void PDF::save() const{
+  save((name + "_PDF.txt").c_str());
   return;
 }
 

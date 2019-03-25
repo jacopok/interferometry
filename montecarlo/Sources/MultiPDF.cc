@@ -495,6 +495,11 @@ void MultiPDF::print(const string& filename) const{
   return;
 }
 
+void MultiPDF::print() const{
+  print((name + "_GM.txt").c_str());
+  return;
+}
+
 void MultiPDF::save(const string& filename) const{
   ofstream out(filename);
   if(!out){
@@ -512,6 +517,11 @@ void MultiPDF::save(const string& filename) const{
       out << endl;
   }
   out << endl;
+  return;
+}
+
+void MultiPDF::save() const{
+  save((name + "_MPDF.txt").c_str());
   return;
 }
 

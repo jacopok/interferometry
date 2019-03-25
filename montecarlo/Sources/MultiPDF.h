@@ -59,7 +59,9 @@ class MultiPDF {
     
     
     void print(const string& filename) const;
+    void print() const;
     void save(const string& filename) const;
+    void save() const;
     
     //functions that work only with specific dimensions
     
