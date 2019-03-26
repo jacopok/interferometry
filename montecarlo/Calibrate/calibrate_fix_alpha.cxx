@@ -28,14 +28,14 @@ class nu: public ParametricFit::Func {
 	  double gamma = v_unk->at(0);
 	  double theta_0 = v_unk->at(1);
 	  double N_0 = v_unk->at(2);
-	  double st;
+	  double theta;
 	  if(x > 0)
-	    st = acos((pow(n_l,2) - 1 - pow((gamma*(x - N_0) + n_l - 1),2))/(2*(gamma*(x - N_0) + n_l - 1)));
+	    theta = acos((pow(n_l,2) - 1 - pow((gamma*(x - N_0) + n_l - 1),2))/(2*(gamma*(x - N_0) + n_l - 1)));
 	  else{
-	    st = -acos((pow(n_l,2) - 1 - pow((gamma*(-x - N_0) + n_l - 1),2))/(2*(gamma*(-x - N_0) + n_l - 1)));
+	    theta = -acos((pow(n_l,2) - 1 - pow((gamma*(-x - N_0) + n_l - 1),2))/(2*(gamma*(-x - N_0) + n_l - 1)));
 	  }
 	  
-	  return alpha*st + theta_0;
+	  return (theta + theta_0)/alpha;
 	}
 };
 

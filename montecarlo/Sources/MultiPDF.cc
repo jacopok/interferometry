@@ -163,15 +163,22 @@ void MultiPDF::clear(){
 }
 
 bool MultiPDF::add(vector<double>* v, double val){
-  if(v->size() != dimension)
+  if(v->size() != dimension){
+    cout << "MultiPDF::add: wrong v dimension" << endl;
     return false;
+  }
   vector<unsigned int>* indexs = new vector<unsigned int>(dimension,0);
   int j;
+  //cout << "adding " << flush;
   for(unsigned int u = 0; u < dimension; u++){
     j = PDFs->at(u)->getIndex(v->at(u));
+    //cout << v->at(u) << " -> " <<  j << " " << flush;
     if(j < 0) return false;
     indexs->at(u) = j;
   }
+  //cout << endl;
+  if(access(indexs) == 0)
+    return false;
   
   *access(indexs) += val;
   return true;

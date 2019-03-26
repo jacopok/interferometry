@@ -86,7 +86,7 @@ MultiErrorPropagator
     abstract class for propagating errors starting from both PDFs and MultiPDFs: derivate classes must reimplement function `f`
     
     constructor: ErrorPropagator(vmp,vp,name): `vmp` is a vector<MultiPDF*>* , `vp` is a vector<PDF*>*
-    >getResult(): returns the MultiPDF* `result` of the propagation. Use this function before the propagation to initialize the MultiPDF (via MultiPDF::add(PDF* p))
+    >getResult(): returns the MultiPDF* `result` of the propagation. Use this function before the propagation to initialize the MultiPDF (via MultiPDF::add_PDF(PDF* p))
     >propagation(n,seed): fills the MultiPDF `result`
     >f(): access simulated data via the map `sim_sample` and combine them in a vector<double>* that will be added to `result`
 
@@ -114,8 +114,8 @@ MultiErrorPropagator
 		  // create b_su_a and b2 as empty PDFs
 		  ...
        		  MultiErrorPropagatorC c(ab,"c");
-		  c.getResult()->add(b_su_a);
-		  c.getResult()->add(b2); 
+		  c.getResult()->add_PDF(b_su_a);
+		  c.getResult()->add_PDF(b2); 
 		  c.propagation(10000,1);
 		  MultiPDF* c_copy = new MultiPDF(*(c.getResult()));
 		  ...
