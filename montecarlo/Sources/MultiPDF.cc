@@ -337,6 +337,27 @@ double* MultiPDF::access(vector<unsigned int>* indexs) const{
   return &(values->at(bigindex));
 }
 
+vector<double>* MultiPDF::coordinates() const{
+  return coordinates(counters);
+}
+
+vector<double>* MultiPDF::coordinates(vector<unsigned int>* indexs) const{
+  if(indexs->size() != dimension){
+    cout << "Failed to access data in MultiPDF " << name << endl;
+    return 0;
+  }
+  vector<double>* coo = new vector<double>(dimension,0);
+  for(unsigned int u = 0; u < dimension; u++){
+    if(indexs->at(u) >= PDFs->at(u)->getSteps()){
+      cout << "MultiPDF::coordinates: invalid index" << endl;
+      return 0;
+    }
+    coo->at(u) = PDFs->at(u)->getMin() + (indexs->at(u) + 0.5)*PDFs->at(u)->getDx();
+  }
+  
+  return coo;
+}
+
 unsigned int MultiPDF::getAxis(const string& s) const{
   for(unsigned int u = 0; u < dimension; u++)
     if(PDFs->at(u)->getName() == s)

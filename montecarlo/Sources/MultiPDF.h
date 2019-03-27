@@ -49,6 +49,8 @@ class MultiPDF {
     
     double* access() const;// = access(counters)
     double* access(vector<unsigned int>* indexs) const;
+    vector<double>* coordinates() const;// = coordinates(counters)
+    vector<double>* coordinates(vector<unsigned int>* indexs) const;
     unsigned int getAxis(const string& s) const;
     
     MultiPDF* integrate_along(const string& PDFname, const string& newname, double min = 0, double max = -1) const;

@@ -46,15 +46,62 @@ MultiPDF* MultiErrorPropagator::getResult() const{
 void MultiErrorPropagator::propagation(unsigned int n, unsigned int seed) const{
   //clear previous propagation
   result->zero();
-  srandom(seed);
-  cout << "Starting simulation: (" << n << ")" << endl;
   
-  for(unsigned int i = 0; i < n; i++){
-    simulate_sample();
-    result->add(f());
-    ProgressBar::percentages(i,n);
+  if(n > 0){
+    srandom(seed);
+    cout << "Starting simulation: (" << n << ")" << endl;
+    
+    for(unsigned int i = 0; i < n; i++){
+      simulate_sample();
+      result->add(f());
+      ProgressBar::percentages(i,n);
+    }
   }
-  
+  else{
+    unsigned int a_che_punto_siamo = 0, maxcount = 1;
+    vector<double>* ms;
+    double val = 1;
+    MultiPDF* pre = MultiPDF::merge(vP,"pre");
+    vector<MultiPDF*>* all = new vector<MultiPDF*>(*vMP);
+    all->push_back(pre);
+    
+    for(unsigned int i = 0; i < all->size(); i++){
+      maxcount *= all->at(i)->getSize();
+      all->at(i)->initialize_counters();
+    }
+    
+    cout << "Starting simulation (" << maxcount << ")" << endl << endl;
+    
+    while(a_che_punto_siamo < maxcount){
+      //fill sim_sample
+      val = 1;
+      for(unsigned int i = 0; i < all->size(); i++){
+	ms = all->at(i)->coordinates();
+	val *= *(all->at(i)->access());
+	for(unsigned int u = 0; u < all->at(i)->getDimension(); u++)
+	  sim_sample->at(all->at(i)->getPDFs()->at(u)->getName()) = ms->at(u);
+	delete ms;
+      }
+      
+      result->add(f(),val);
+      
+      //update
+      for(unsigned int i = 0; i < all->size(); i++){
+	if(all->at(i)->update_counters())
+	  break;
+	else{
+	  all->at(i)->initialize_counters();
+	}
+      }
+      
+      ProgressBar::percentages(a_che_punto_siamo,maxcount);
+      a_che_punto_siamo++;
+    }
+    
+    all = 0;
+    delete all;
+    delete pre;
+  }
   result->normalize();
   
   return;
