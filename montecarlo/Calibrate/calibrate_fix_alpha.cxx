@@ -29,8 +29,11 @@ class nu: public ParametricFit::Func {
 	  double theta_0 = v_unk->at(1);
 	  double N_0 = v_unk->at(2);
 	  double theta;
-	  if(x > 0)
+	  if(x > N_0)
 	    theta = acos((pow(n_l,2) - 1 - pow((gamma*(x - N_0) + n_l - 1),2))/(2*(gamma*(x - N_0) + n_l - 1)));
+	  else if(x >= -N_0){
+	    return 0;
+	  }
 	  else{
 	    theta = -acos((pow(n_l,2) - 1 - pow((gamma*(-x - N_0) + n_l - 1),2))/(2*(gamma*(-x - N_0) + n_l - 1)));
 	  }
