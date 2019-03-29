@@ -81,7 +81,7 @@ int main (int argc, char* argv[]){
   lf.add(&alphafile,pattume,couple);
   alpha = couple->at(0);
   alpha->rename("alpha");
-  if(alpha->getSteps() > datastep)
+  if(alpha->getSteps() > 2*datastep)
     alpha->coarse(alpha->getSteps()/datastep);
   alpha->print();
   
@@ -264,7 +264,7 @@ int main (int argc, char* argv[]){
   
   gamma->rename((session + "_gamma").c_str());
   
-  gamma->modifying_routine();
+  //gamma->modifying_routine();
   
   gamma->save((session + "_gamma_PDF.txt").c_str());
   

@@ -63,7 +63,7 @@ int main (int argc, char* argv[]){
   
   string ancora, session;
   PDF *n_l, *theta_0, *gamma, *N_0, *alpha, *aux, *y;
-  MultiPDF *gN, *gt, *offsets;
+  MultiPDF *nN, *nt, *offsets;
   unsigned int n_data = 0, datastep = 50, misses = 0, max_miss = 0;
   vector<double>* xV = new vector<double>;
   vector<PDF*>* yVP = new vector<PDF*>, *couple = new vector<PDF*>;
@@ -94,6 +94,8 @@ int main (int argc, char* argv[]){
     lf.add(&alphafile,pattume,couple);
     alpha = couple->at(0);
     alpha->rename("alpha");
+    if(alpha->getSteps() > 2*datastep)
+      alpha->coarse(alpha->getSteps()/datastep);
   }
   
   cout << "How many steps should the data PDFs have? ";
@@ -261,16 +263,16 @@ int main (int argc, char* argv[]){
     
     
     offsets = total->integrate_along("n_l","offsets");
-    gN = total->integrate_along("theta_0","gN");
-    gt = total->integrate_along("N_0","gt");
+    nN = total->integrate_along("theta_0","nN");
+    nt = total->integrate_along("N_0","nt");
     
-    c1 = gN->correlation_index();
-    c2 = gt->correlation_index();
+    c1 = nN->correlation_index();
+    c2 = nt->correlation_index();
     c3 = offsets->correlation_index();
     chi = pf.chi2();
     dof = pf.degrees_of_freedom();
     
-    n_l = gN->integrate_along("N_0","n_l")->toPDF();
+    n_l = nN->integrate_along("N_0","n_l")->toPDF();
     theta_0 = offsets->integrate_along("N_0","theta_0")->toPDF();
     N_0 = offsets->integrate_along("theta_0","N_0")->toPDF();
     
@@ -297,10 +299,10 @@ int main (int argc, char* argv[]){
     cout << "Would you like to print the MultiPDFs? [y/n] ";
     cin >> ancora;
     if(ancora[0] == 'y'){
-      cout << "printing gN" << endl;
-      gN->print((session + "_gN_G.txt").c_str());
-      cout << "printing gt" << endl;
-      gt->print((session + "_gt_G.txt").c_str());
+      cout << "printing nN" << endl;
+      nN->print((session + "_nN_G.txt").c_str());
+      cout << "printing nt" << endl;
+      nt->print((session + "_nt_G.txt").c_str());
       cout << "printing offsets" << endl;
       offsets->print((session +"_offsets_G.txt").c_str());
     }

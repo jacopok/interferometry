@@ -94,7 +94,7 @@ int main (int argc, char* argv[]){
     lf.add(&alphafile,pattume,couple);
     alpha = couple->at(0);
     alpha->rename("alpha");
-    if(alpha->getSteps() > datastep)
+    if(alpha->getSteps() > 2*datastep)
       alpha->coarse(alpha->getSteps()/datastep);
   }
   
