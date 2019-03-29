@@ -1,0 +1,10 @@
+n_l = 1.336 +- 7.48687e-09
+gamma = 2.69268e-05 +- 3.17038e-08
+theta_0 = 0.000226951 +- 2.58637e-05
+N_0 = 0.371831 +- 0.0222005
+
+Correlation coefficient between N_0 and gamma = 0.794163
+Correlation coefficient between theta_0 and gamma = 0.165024
+Correlation coefficient between N_0 and theta_0 = 0.134299
+
+Chi2/dof = -nan/142
