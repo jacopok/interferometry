@@ -1,6 +1,0 @@
-../Calibrate/ba1-a1_gamma_PDF.txt
-../Calibrate/ba1-a2_gamma_PDF.txt
-../Calibrate/ba1-a3_gamma_PDF.txt
-../Calibrate/ba2-a1_gamma_PDF.txt
-../Calibrate/ba2-a2_gamma_PDF.txt
-../Calibrate/ba2-a3_gamma_PDF.txt
