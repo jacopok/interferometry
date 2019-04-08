@@ -1,0 +1,7 @@
+Fit/fixed_alpha/bp1-p1_n_l_PDF.txt
+Fit/fixed_alpha/bp1-p2_n_l_PDF.txt
+Fit/fixed_alpha/bp1-p3_n_l_PDF.txt
+Fit/fixed_alpha/bp1-p4_n_l_PDF.txt
+Fit/fixed_alpha/bp3-p2_n_l_PDF.txt
+Fit/fixed_alpha/bp3-p3_n_l_PDF.txt
+Fit/fixed_alpha/bp3-p4_n_l_PDF.txt
