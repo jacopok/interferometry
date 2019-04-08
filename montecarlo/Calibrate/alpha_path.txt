@@ -1,1 +1,1 @@
-0 load ../alpha/alpha_PDF.txt 
+0 load ../Alpha/alpha_PDF.txt 

@@ -85,8 +85,10 @@ int main (int argc, char* argv[]){
   lf.add(&alphafile,pattume,couple);
   alpha = couple->at(0);
   alpha->rename("alpha");
+  alpha->optimize();
   if(alpha->getSteps() > 2*datastep)
     alpha->coarse(alpha->getSteps()/datastep);
+  cout << "alpha has " << alpha->getSteps() << " steps" << endl;
   
   
   cout << "How many steps should the data PDFs have? ";
@@ -111,13 +113,17 @@ int main (int argc, char* argv[]){
   unsigned int n_rep, seed;
   double min_value = 0;
   double param_min, param_max;
-  unsigned int n_l_step, gamma_step, theta_0_step, N_0_step;
+  unsigned int n_l_step, gamma_step, theta_0_step, N_0_step, max_rep;
   MultiPDF *total;
   
   if(argc==4){
     gamma = PDF::load(argv[3]);
-    gamma->modifying_routine();
+    cout << "How many steps should gamma have? ";
+    cin >> gamma_step;
+    gamma->optimize();
     gamma->rename("gamma");
+    if(gamma->getSteps() > 2*gamma_step)
+      gamma->coarse(gamma->getSteps()/gamma_step);
   }
   else{
     cout << "Would you like to load gamma? [y/n] ";
@@ -133,11 +139,13 @@ int main (int argc, char* argv[]){
       cout << "Insert filename (_PDF.txt)";
       cin >> ancora;
       gamma = PDF::load(ancora);
+      cout << "gamma has " << gamma->getSteps() << " steps" << endl;
       gamma->modifying_routine();
       gamma->rename("gamma");
     }
   }
   pf.add_fixed_parameter(gamma);
+  cout << "gamma has " << gamma->getSteps() << " steps" << endl;
   
   do{
     if(misses > 0){
@@ -196,6 +204,9 @@ int main (int argc, char* argv[]){
       pf.add_unknown_parameter(theta_0->getMin(),theta_0->getMax(),theta_0_step,"theta_0");
       pf.add_unknown_parameter(N_0->getMin(),N_0->getMax(),N_0_step,"N_0");
     }
+    
+    max_rep = alpha->getSteps()*gamma->getSteps()*n_l_step*theta_0_step*N_0_step;
+    cout << "If you use n = 0 there will be " << max_rep << " iterations" << endl;
     
     cout << "Insert maximum number of missable data: ";
     cin >> misses;
