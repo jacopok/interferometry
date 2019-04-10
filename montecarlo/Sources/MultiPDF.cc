@@ -209,6 +209,9 @@ void MultiPDF::normalize(){
   if(isnormalized())
     return;
   double sum = somma();
+  if(sum == 0)//skip empty MultiPDFs
+    return;
+  
   for(unsigned int b = 0; b < size; b++)
     values->at(b) /= sum;
   return;

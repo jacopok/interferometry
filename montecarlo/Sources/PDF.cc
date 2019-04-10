@@ -140,6 +140,9 @@ void PDF::normalize() {
   if(isnormalized()) return;
   
   double s = somma();
+  if(s == 0)//skip empty PDFs
+    return;
+  
   for(double& v : values)
     v /= s;
   CDF->clear();
