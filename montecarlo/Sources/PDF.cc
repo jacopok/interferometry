@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "Util.h"
+
 /*
 #include <TFile.h>
 #include <TH1F.h>
@@ -467,10 +469,16 @@ double PDF::inverted_CDF_value(double x) const{
   if(x <= 0) return min + 0.5*dx;
   if(CDF->size() == 0)
     build_CDF();
+  
+  /* old version
   for(unsigned int i = 0; i < steps; i++)
     if(CDF->at(1).at(i) >= x)//look for data in the CDF
       return CDF->at(0).at(i);
   return max + 0.5*dx;
+  */
+  
+  unsigned int i = Util::binary_search(&(CDF->at(1)),x,0,CDF->at(1).size() - 1);
+  return CDF->at(0).at(i);
 }
 
 void PDF::build_CDF() const{

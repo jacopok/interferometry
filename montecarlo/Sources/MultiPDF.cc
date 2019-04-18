@@ -8,6 +8,8 @@
 #include <iostream>
 #include <fstream>
 
+#include "Util.h"
+
 using namespace std;
 
 
@@ -259,11 +261,17 @@ unsigned int MultiPDF::CDF_bigindex(double x) const{
   if(CDF->size() == 0)
     build_CDF();
   if(x <= 0) return 0;
+  
+  /*old version
   for(unsigned int b = 0; b < size; b++){
     if(x < CDF->at(b))
       return b;
   }
   return size;
+  */
+  
+  unsigned int b = Util::binary_search(CDF,x,0,size - 1);
+  return b;
 }
 
 vector<unsigned int>* MultiPDF::bigindex2indexs(unsigned int b) const{
