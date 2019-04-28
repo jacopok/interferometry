@@ -51,6 +51,7 @@ class PDF {
     double mean() const;
     double mode() const;
     double median() const;
+    double FWHM() const;
     double var() const;//returns the variance
     vector<double>* central_ordering_IC(double CL) const;//returns the Confidence interval with central ordering rule
     

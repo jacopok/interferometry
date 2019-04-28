@@ -407,6 +407,31 @@ double PDF::median() const{
   return CDF->at(0).at(i);
 }
 
+double PDF::FWHM() const{
+  double max_value = 0, HM = 0;
+  for(unsigned int i = 0; i < steps; i++){
+    if(values[i] > max_value)
+      max_value = values[i];
+  }
+  
+  HM = max_value/2.0;
+  unsigned int first_j = 0, last_j = 0;
+  for(unsigned int i = 0; i < steps; i++){
+    if(values[i] > HM){
+      first_j = i;
+      break;
+    }
+  }
+  for(unsigned int i = steps - 1; i > 1; i--){
+    if(values[i] > HM){
+      last_j = i + 1;
+      break;
+    }
+  }
+  
+  return (last_j - first_j)*dx;
+}
+
 double PDF::var() const{
   double sum1 = 0., sum2 = 0., sum0 = somma();
   for(unsigned int i = 0; i < steps; i++){
