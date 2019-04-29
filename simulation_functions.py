@@ -11,6 +11,7 @@ import initialization as init
 from numpy.random import uniform
 from numpy.random import normal
 from numpy.random import triangular
+import numpy as np
 
 def theta_from_fringes_medium(N, index, gamma):
     """
