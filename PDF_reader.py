@@ -10,7 +10,6 @@ import csv
 import numpy as np
 
 def reader_pdf(filename):
-
     
     with open(filename) as file:
         csv_reader = csv.reader(file, delimiter='\t')
@@ -26,7 +25,7 @@ def reader_pdf(filename):
         names = pdfs[:,0]
         inf_limits = np.array(pdfs[:,1], dtype=np.double)
         sup_limits = np.array(pdfs[:,2], dtype=np.double)
-        shape = np.array(pdfs[:,3], dtype=np.int_)
+        shape = np.flip(np.array(pdfs[:,3], dtype=np.int_))
         
         long_pdf = []
         for row in csv_reader:
@@ -36,8 +35,10 @@ def reader_pdf(filename):
         
         pdf = np.reshape(long_pdf, shape)
         
-        x = {}
+        x = []
         for n, s, il, sl in zip(names, shape, inf_limits, sup_limits):
-            x[n] = np.arange(il, sl, np.abs((sl-il)/s))
-        
-        return(x, pdf)
+            dx = np.abs((sl-il)/s)
+            x.append(il + dx*(np.arange(s) + .5)) # Histogram bins should be centered
+                                #on the midpoints
+        x_coords = np.array(np.meshgrid(*x)).T.reshape(-1, len(x))
+        return(x_coords, pdf.flatten(), names)
