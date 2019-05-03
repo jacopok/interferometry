@@ -150,8 +150,11 @@ void ParametricFit::reject_missed_data(unsigned int i){
     new_data_x->push_back(data_x->at(h));
     new_data_y_PDF->push_back(new PDF(*(data_y_PDF->at(h))));
   }
+
+  unsigned int rejected_data = data_x->size() - new_data_x->size();
+  double perc = rejected_data*100.0/data_x->size();
   
-  cout << '\n' << data_x->size() - new_data_x->size() << " data have been rejected" << endl << endl;
+  cout << '\n' << rejected_data << " data have been rejected (" << perc << "%)" << endl << endl;
   
   delete_data();
   data_x = new_data_x;
