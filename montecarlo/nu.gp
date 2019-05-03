@@ -1,8 +1,9 @@
 #!/gnuplot
 
 p(x) = (gamma*(abs(x) - N0) + n - 1)
-f(x) = t0 + sgn(x)*acos((n*n - 1 - p(x)*p(x))/(2*p(x)))
+f(x) = (t0 + sgn(x)*acos((n*n - 1 - p(x)*p(x))/(2*p(x))))/alpha
 GNUTERM = "wxt"
+alpha = 51.1e-06
 gamma = 2.67e-05
 t0 = 0.005
 N0 = 0.1
