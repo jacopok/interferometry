@@ -9,12 +9,13 @@ Created on Wed May  1 21:12:17 2019
 import csv
 import numpy as np
 
-def reader_pdf(filename):
+def reader_mpdf(filename):
     
     with open(filename) as file:
         csv_reader = csv.reader(file, delimiter='\t')
         firstrow = next(csv_reader)
-        name = firstrow[0]
+        #name = firstrow[0]
+        # we do not need it but it is set
         number_of_pdfs = int(firstrow[1])
         pdfs = []
         for i in range(number_of_pdfs):
@@ -25,7 +26,12 @@ def reader_pdf(filename):
         names = pdfs[:,0]
         inf_limits = np.array(pdfs[:,1], dtype=np.double)
         sup_limits = np.array(pdfs[:,2], dtype=np.double)
-        shape = np.flip(np.array(pdfs[:,3], dtype=np.int_))
+        shape = np.array(pdfs[:,3], dtype=np.int_)
+
+        # the indices in a np.array work such that the first one is the one that changes the slowest
+        # while we want the first one to be the one that changes the fastest
+        names, inf_limits, sup_limits, shape = \
+            [np.flip(z) for z in (names, inf_limits, sup_limits, shape)]
         
         long_pdf = []
         for row in csv_reader:
