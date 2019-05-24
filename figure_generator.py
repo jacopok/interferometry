@@ -14,6 +14,8 @@ import numpy as np
 from os import remove
 from os.path import exists
 
+import pyqtgraph as pg
+
 """
 To do:
     
@@ -56,15 +58,15 @@ def normalize_pdf(pdf):
     pdf = pdf / np.max(pdf) /2
     return(pdf)
 
-paraffs = init.quick_measures('p')
-steps_bp3p3 = paraffs['bp3-p3'].signal.step_array
-fringes_bp3p3 = paraffs['bp3-p3'].signal.fringes_array
-
-params_bp3p3, pdf_bp3p3, names_params_bp3p3 = PDF_reader.reader_mpdf('montecarlo/Fit/pa/bp3p3_total_MPDF.txt')
+def get_dataset(dataset, mpdf_location):
+    steps = dataset.step_array
+    fringes = dataset.fringes_array
+    params, pdf, names_params = PDF_reader.reader_mpdf(mpdf_location)
+    pdf = normalize_pdf(pdf)
+    return (fringes, steps, params, pdf)
 
 #NB: the first to vary should be n_l, then theta_0, then N_0
 
-pdf_bp3p3 = normalize_pdf(pdf_bp3p3)
 
 #gamma_bp3p3 = 2.68895e-5
 #alpha_bp3p3 = 51.1928e-6
@@ -72,13 +74,14 @@ pdf_bp3p3 = normalize_pdf(pdf_bp3p3)
 @timeit
 def plot_cloud(fringes, steps, params, pdf, figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True):
     counter = 0
+    PlotWidget = pg.plot(title="Cloud plot")
     for par, pdf_par in zip(params, pdf):
-        if(pdf_par>1e-5):
+        if(pdf_par>1e-7):
             steps_fit = step_from_fringes(fringes, gamma, alpha, *par)
-            plt.plot(fringes, steps_fit, alpha=pdf_par, c='b')
+            pg.PlotWidget.plot(fringes, steps_fit, alpha=pdf_par, c='b')
             counter += 1
 
-    plt.scatter(fringes, steps, color = 'red')
+    pg.PlotWidget.scatter(fringes, steps)
 
     if(show==True):
         plt.show()
@@ -90,4 +93,7 @@ def plot_cloud(fringes, steps, params, pdf, figname=None, gamma=2.68895e-5, alph
         plt.savefig(figname, dpi=1000)
     return counter
 
-#plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3, figname =  'figs/fit_cloud_bp3p3.png')
+
+paraffs = init.quick_measures('p')
+bp3p3 = get_dataset(paraffs['bp3-p3'].signal, 'montecarlo/Fit/pa/bp3p3_total_MPDF.txt')
+plot_cloud(*bp3p3, figname =  'figs/fit_cloud_bp3p3.png')
