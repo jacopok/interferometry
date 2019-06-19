@@ -9,11 +9,11 @@
 int main(int argc, char* argv[]){
 		
 		string type = "qbic";
-		string filename = argv[2];
-		double a = double(argv[3]);
-		double b = double(argv[4]);
-		double c = double(argv[5]);
-		int steps = int(argv[6]);
+		string filename = "bp3p3_-10s50.txt";
+		double a = -825.2479112437524;
+		double b = 19.535982024711696;
+		double c = 20.87260966294067;
+		int steps = 50;
 		
 		QbicFactory* F = new QbicFactory(a,b,c);
 		
@@ -21,5 +21,5 @@ int main(int argc, char* argv[]){
 		
 		p->print(filename);
 		
-	return 0
+	return 0;
 }
