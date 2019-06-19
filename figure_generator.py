@@ -14,6 +14,9 @@ import numpy as np
 from os import remove
 from os.path import exists
 
+import warnings
+warnings.filterwarnings("ignore")
+
 from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Palatino']})
 rc('text', usetex=True)
@@ -69,6 +72,9 @@ paraffs = init.quick_measures('p')
 steps_bp3p3 = paraffs['bp3-p3'].signal.step_array
 fringes_bp3p3 = paraffs['bp3-p3'].signal.fringes_array
 
+paraffs['bp3-p3'].calculate_hw()
+errors_bp3p3 = paraffs['bp3-p3'].signal.hw_array / np.sqrt(6)
+
 params_bp3p3, pdf_bp3p3, names_params_bp3p3 = PDF_reader.reader_mpdf('montecarlo/Fit/pa/bp3p3_total_MPDF.txt')
 
 #NB: the first to vary should be n_l, then theta_0, then N_0
@@ -79,7 +85,8 @@ pdf_bp3p3 = normalize_pdf(pdf_bp3p3)
 #alpha_bp3p3 = 51.1928e-6
 
 @timeit
-def plot_cloud(fringes, steps, params, pdf, errors=None, radius=None, xlims=None,ylims=None, figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True):
+def plot_cloud(fringes, steps, params, pdf, errors=None, radius=None, xlims=None,ylims=None,
+    figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True, **kwargs):
 
     fig = plt.figure(1)
 
@@ -105,12 +112,15 @@ def plot_cloud(fringes, steps, params, pdf, errors=None, radius=None, xlims=None
             plt.plot(test_fringes, steps_fit, alpha=pdf_par, c='b')
             counter += 1
 
-    if(errors):
-        plt.errorbar(fringes[mask], steps[mask], yerr=errors, label='Data points')
+    if(errors is not None):
+        plt.errorbar(fringes[mask], steps[mask], yerr=errors[mask],**kwargs, label='Data points')
     else:
         plt.plot(fringes[mask], steps[mask], 'ro', label = 'Data points')
 
-    plt.legend()
+    if(kwargs['ms'] is not None):
+        plt.legend(markerscale= 5 / kwargs['ms'])
+    else:
+        plt.legend()
     if(show==True):
         plt.show()
     else:
@@ -124,14 +134,17 @@ def plot_cloud(fringes, steps, params, pdf, errors=None, radius=None, xlims=None
 
 if __name__ == '__main__':
 
-    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,
-        radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False)
+    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,errors = errors_bp3p3,
+        radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False,
+        fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
 
     xlims = [-10.04, -9.96]
     ylims = [-800, -750]
 
-    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,
-        xlims=xlims, ylims=ylims, figname = 'figs/fit_zoom_bp3p3.pdf', show=False)
+
+    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3, errors = errors_bp3p3,
+        xlims=xlims, ylims=ylims, figname = 'figs/fit_zoom_bp3p3.pdf', show=False,
+        fmt='ro', ms=10, capsize=5, elinewidth=2, markeredgewidth=2)
 
     fig = plt.figure(2)
     paraffs['bp3-p3'].plot(radius=0.09)
