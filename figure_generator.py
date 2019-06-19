@@ -174,17 +174,18 @@ def plot3d(fringe, step, params, pdf, pdf_steps, pdf_values,
     for par, pdf_par in zip(params, pdf):
         if(pdf_par>1e-5):
             steps_fit = step_from_fringes(test_fringes, gamma, alpha, *par)
-            plt.plot(test_fringes, steps_fit, alpha=pdf_par, c='b')
+            plt.plot(test_fringes, steps_fit, pdf_par/20, alpha=2*pdf_par, c='b')
 
     for s, p in zip(pdf_steps, pdf_values):
        ax.plot([fringe, fringe], [s, s], [0, p], color='green')
 
     # plt.tight_layout()
-    if(show==True):
-        plt.show()
     if(figname):
         fig.savefig(figname, format = 'pdf')
-    plt.close(fig=fig)
+    if(show==True):
+        plt.show()
+    else:
+        plt.close(fig=fig)
 
 if __name__ == '__main__':
 
@@ -205,4 +206,4 @@ if __name__ == '__main__':
     # plt.close('')
 
     find_point_plot([-10.02, -9.98], 'montecarlo/bp3p3_-10s50.txt', 'figs/3D_qbic_close.pdf', show=False)
-    find_point_plot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/3D_qbic_far.pdf', show=False)
+    find_point_plot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/3D_qbic_far.pdf', show=True)
