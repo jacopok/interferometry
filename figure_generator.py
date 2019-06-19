@@ -79,31 +79,36 @@ pdf_bp3p3 = normalize_pdf(pdf_bp3p3)
 #alpha_bp3p3 = 51.1928e-6
 
 @timeit
-def plot_cloud(fringes, steps, params, pdf, radius=None, xlims=None,ylims=None, figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True):
+def plot_cloud(fringes, steps, params, pdf, errors=None, radius=None, xlims=None,ylims=None, figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True):
 
     fig = plt.figure(1)
 
     if(radius):
         mask=np.abs(fringes)<radius
     else:
-        mask=np.ones(len(fringes), dtype=bool)
+        mask1 = fringes>xlims[0]
+        mask2 = fringes<xlims[1]
+        mask = mask1*mask2
 
     plt.ylabel('Angle [rad]')
     plt.xlabel('Fringe number [1]')
 
+    if(xlims):
+        test_fringes = np.linspace(xlims[0], xlims[1], num=200)
+    else:
+        test_fringes = fringes[mask]
 
     counter = 0
     for par, pdf_par in zip(params, pdf):
         if(pdf_par>1e-5):
-            steps_fit = step_from_fringes(fringes[mask], gamma, alpha, *par)
-            plt.plot(fringes[mask], steps_fit, alpha=pdf_par, c='b')
+            steps_fit = step_from_fringes(test_fringes, gamma, alpha, *par)
+            plt.plot(test_fringes, steps_fit, alpha=pdf_par, c='b')
             counter += 1
 
-    plt.plot(fringes[mask], steps[mask], 'ro', label = 'Data points')
-
-    if(xlims and ylims):
-        plt.xlim(xlims)
-        plt.ylim(ylims)
+    if(errors):
+        plt.errorbar(fringes[mask], steps[mask], yerr=errors, label='Data points')
+    else:
+        plt.plot(fringes[mask], steps[mask], 'ro', label = 'Data points')
 
     plt.legend()
     if(show==True):
@@ -116,8 +121,6 @@ def plot_cloud(fringes, steps, params, pdf, radius=None, xlims=None,ylims=None, 
         fig.savefig(figname, format='pdf')
         plt.close('all')
     return counter
-
-
 
 if __name__ == '__main__':
 
