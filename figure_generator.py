@@ -187,6 +187,42 @@ def plot3d(fringe, step, params, pdf, pdf_steps, pdf_values,
     else:
         plt.close(fig=fig)
 
+def correct_bins(bins):
+    diff = np.average(np.diff(bins))
+    b = np.array(bins)
+    return(b[:-1] + diff/2)
+
+@timeit
+def pdf_average_plot(Glist, **kwargs):
+
+    fig = plt.figure()
+
+    if(kwargs.get('xlabel')):
+        plt.xlabel(kwargs['xlabel'])
+    if(kwargs.get('ylabel')):
+        plt.ylabel(kwargs['ylabel'])
+
+    pdf_threshold = 1e-10
+
+    for n in Glist[1:]:
+        x, pdf = PDF_reader.reader_pdf(n)
+        mask = pdf>pdf_threshold
+        plt.hist(x[mask],weights=pdf[mask], bins=correct_bins(x[mask]), alpha=0.4)
+
+    average_x, average_pdf = PDF_reader.reader_pdf(Glist[0])
+    mask = average_pdf>pdf_threshold
+    plt.hist(average_x[mask], weights=average_pdf[mask],
+        bins=correct_bins(average_x[mask]), label='Average')
+
+    plt.legend()
+
+    if(kwargs.get('figname')):
+        fig.savefig(kwargs['figname'], format = 'pdf')
+
+    if(kwargs.get('show')):
+        plt.show()
+    plt.close(fig=fig)
+
 if __name__ == '__main__':
 
     # plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,errors = errors_bp3p3,
@@ -205,5 +241,28 @@ if __name__ == '__main__':
     # fig.savefig('figs/bp3p3_measure.pdf', format = 'pdf')
     # plt.close('')
 
-    find_point_plot([-10.02, -9.98], 'montecarlo/bp3p3_-10s50.txt', 'figs/3D_qbic_close.pdf', show=False)
-    find_point_plot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/3D_qbic_far.pdf', show=True)
+    # find_point_plot([-10.02, -9.98], 'montecarlo/bp3p3_-10s50.txt', 'figs/3D_qbic_close.pdf', show=False)
+    # find_point_plot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/3D_qbic_far.pdf', show=True)
+
+    gamma_list = ['montecarlo/Gamma/average_gamma_new_G.txt',
+        'montecarlo/Calibrate/qbic/ba1a1_gamma_G.txt',
+        'montecarlo/Calibrate/qbic/ba1a2_gamma_G.txt',
+        'montecarlo/Calibrate/qbic/ba1a3_gamma_G.txt',
+        'montecarlo/Calibrate/qbic/ba2a1_gamma_G.txt',
+        'montecarlo/Calibrate/qbic/ba2a2_gamma_G.txt',
+        'montecarlo/Calibrate/qbic/ba2a3_gamma_G.txt']
+
+    pdf_average_plot(gamma_list, xlabel='$\gamma$ [1]', ylabel='PDF [$1/\gamma$]',
+        figname='figs/gamma.pdf')
+
+    n_l_paraff_list = ['montecarlo/n_l_paraffin_average_G.txt',
+    'montecarlo/Fit/fixed_alpha/bp1-p1_n_l_G.txt',
+    'montecarlo/Fit/fixed_alpha/bp1-p2_n_l_G.txt',
+    'montecarlo/Fit/fixed_alpha/bp1-p3_n_l_G.txt',
+    'montecarlo/Fit/fixed_alpha/bp1-p4_n_l_G.txt',
+    'montecarlo/Fit/fixed_alpha/bp3-p2_n_l_G.txt',
+    'montecarlo/Fit/fixed_alpha/bp3-p3_n_l_G.txt',
+    'montecarlo/Fit/fixed_alpha/bp3-p4_n_l_G.txt']
+
+    pdf_average_plot(n_l_paraff_list, xlabel='$n_l$ [1]', ylabel='PDF [$1/n_l$]',
+        figname='figs/n_l.pdf')
