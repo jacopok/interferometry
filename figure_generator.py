@@ -14,12 +14,21 @@ import numpy as np
 from os import remove
 from os.path import exists
 
+from matplotlib import rc
+rc('font',**{'family':'serif','serif':['Palatino']})
+rc('text', usetex=True)
+rc('text.latex', preamble=r'''\usepackage{amsmath}
+          \usepackage{physics}
+          ''')
+
 """
 To do:
-    
-    Grafico calibrazione step/angolo (linearità)
-    Grafico pdf alpha
-    Grafico sinus con minimi segnati, in cui si veda la zona centrale e quella lontana, e i threshold, e parabola di fit
+
+    Grafico calibrazione step/angolo (linearità) (Leonardo)
+    Grafico pdf alpha (Leonardo)
+    Grafico sinus con minimi segnati, in cui si veda la zona centrale e quella lontana,
+        e i threshold, e parabola di fit (Leonardo (no parabola?))
+
     Grafico di una measure, fondo segnale sottrazione
     Schema errori triangolari -> Qbic
         Dataset con fit sovraimposto (riusciamo a farlo con la ‘nuvola’ di curve di fit, o confidence level region?)
@@ -50,10 +59,10 @@ def step_from_fringes(N, gamma, alpha, N0, theta0, index):
     theta = (np.sign(N) * np.arccos(cos_arg)) + theta0
     step = theta / alpha
     return step
-    
+
 def normalize_pdf(pdf):
     #pdf = np.log(1+pdf)
-    pdf = pdf / np.max(pdf) /2
+    pdf = pdf / np.max(pdf) /5
     return(pdf)
 
 paraffs = init.quick_measures('p')
@@ -70,16 +79,33 @@ pdf_bp3p3 = normalize_pdf(pdf_bp3p3)
 #alpha_bp3p3 = 51.1928e-6
 
 @timeit
-def plot_cloud(fringes, steps, params, pdf, figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True):
+def plot_cloud(fringes, steps, params, pdf, radius=None, xlims=None,ylims=None, figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True):
+
+    fig = plt.figure(1)
+
+    if(radius):
+        mask=np.abs(fringes)<radius
+    else:
+        mask=np.ones(len(fringes), dtype=bool)
+
+    plt.ylabel('Angle [rad]')
+    plt.xlabel('Fringe number [1]')
+
+
     counter = 0
     for par, pdf_par in zip(params, pdf):
         if(pdf_par>1e-5):
-            steps_fit = step_from_fringes(fringes, gamma, alpha, *par)
-            plt.plot(fringes, steps_fit, alpha=pdf_par, c='b')
+            steps_fit = step_from_fringes(fringes[mask], gamma, alpha, *par)
+            plt.plot(fringes[mask], steps_fit, alpha=pdf_par, c='b')
             counter += 1
 
-    plt.scatter(fringes, steps, color = 'red')
+    plt.plot(fringes[mask], steps[mask], 'ro', label = 'Data points')
 
+    if(xlims and ylims):
+        plt.xlim(xlims)
+        plt.ylim(ylims)
+
+    plt.legend()
     if(show==True):
         plt.show()
     else:
@@ -87,8 +113,24 @@ def plot_cloud(fringes, steps, params, pdf, figname=None, gamma=2.68895e-5, alph
             raise ValueError('Must provide name for figure!')
         if(exists(figname)):
             remove(figname)
-        plt.savefig(figname, dpi=1000)
+        fig.savefig(figname, format='pdf')
+        plt.close('all')
     return counter
 
-#plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3, figname =  'figs/fit_cloud_bp3p3.png')
 
+
+if __name__ == '__main__':
+
+    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,
+        radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False)
+
+    xlims = [-10.04, -9.96]
+    ylims = [-800, -750]
+
+    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,
+        xlims=xlims, ylims=ylims, figname = 'figs/fit_zoom_bp3p3.pdf', show=False)
+
+    fig = plt.figure(2)
+    paraffs['bp3-p3'].plot(radius=0.09)
+    fig.savefig('figs/bp3p3_measure.pdf', format = 'pdf')
+    plt.close('')

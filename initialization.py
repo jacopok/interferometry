@@ -15,7 +15,6 @@ proc_dir = './data/processed_qbic/'
 
 names = listdir(data_dir)
 names = [name for name in names if 'sinus' not in name]
-#keeps only the names which do not contain 'sinus'
 
 def initialize(name, data_dir=data_dir):
     """
@@ -25,12 +24,12 @@ def initialize(name, data_dir=data_dir):
     data.set_zero(0)
     data.analyze_fine()
     return(data)
-    
+
 def create_measures(sig_name_array, bkg_name_array, use_data=True):
     """
     Takes in input two arrays of strings, containing the names of the
     files from which to read the signal and background respectively.
-    
+
     Creates a dictionary of measures, one for each combination
     of signal and background, labelled by
     'bkg_name-sig_name'
@@ -77,9 +76,7 @@ def get_n(dataset, gamma = 2.66e-5, **kwargs):
     return(p, perr)
 
 def get_gamma(dataset, n, gamma=2.66e-5, **kwargs):
-    
+
     p, perr = dataset.fit(p0=(0,0,gamma, n), bounds=([-4000, 0, gamma/5, n-1e-10],
                               [4000, 1, 2*gamma, n+1e-10]) ,**kwargs)
     return(p, perr)
-
-    
