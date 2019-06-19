@@ -25,9 +25,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Palatino']})
 rc('text', usetex=True)
-rc('text.latex', preamble=r'''\usepackage{amsmath}
-          \usepackage{physics}
-          ''')
+rc('text.latex', preamble=r'''\usepackage{amsmath}''')
 from matplotlib import rcParams
 rcParams['axes.labelpad'] = 8
 
@@ -311,11 +309,7 @@ if __name__ == '__main__':
         'montecarlo/Calibrate/fixed_alpha/ba2-a2_gamma_G.txt',
         'montecarlo/Calibrate/fixed_alpha/ba2-a3_gamma_G.txt']
 
-<<<<<<< HEAD
     pdf_average_plot(gamma_list, xlabel='$\\gamma$ [1]', ylabel='PDF [$1/\\gamma$]',
-=======
-    pdf_average_plot(gamma_list, xlabel='$\gamma$ [1]', ylabel='PDF [$1/\gamma$]',
->>>>>>> aa32fc5c66bba04f112645d634698bbab8e79b38
         figname='figs/gamma.pdf')
 
     n_l_paraff_list = ['montecarlo/n_l_paraffin_average_G.txt',
