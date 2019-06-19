@@ -17,12 +17,14 @@ from os.path import exists
 import warnings
 warnings.filterwarnings("ignore")
 
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Palatino']})
 rc('text', usetex=True)
 rc('text.latex', preamble=r'''\usepackage{amsmath}
           \usepackage{physics}
           ''')
+
 
 """
 To do:
@@ -84,11 +86,13 @@ pdf_bp3p3 = normalize_pdf(pdf_bp3p3)
 #gamma_bp3p3 = 2.68895e-5
 #alpha_bp3p3 = 51.1928e-6
 
+
+
 @timeit
 def plot_cloud(fringes, steps, params, pdf, errors=None, radius=None, xlims=None,ylims=None,
     figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True, **kwargs):
 
-    fig = plt.figure(1)
+    fig = plt.figure()
 
     if(radius):
         mask=np.abs(fringes)<radius
@@ -132,21 +136,53 @@ def plot_cloud(fringes, steps, params, pdf, errors=None, radius=None, xlims=None
         plt.close('all')
     return counter
 
+def plot3d(fringe, step, params, pdf, pdf_steps, pdf_values,
+           figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True, **kwargs):
+
+    fig = plt.figure()
+    ax = Axes3D(fig)
+
+    ax.plot(fringe, step, 0, 'ro', label='Data points')
+
+    # to generalize
+    test_fringes = np.linspace(-10.04, -9.96)
+
+    for par, pdf_par in zip(params, pdf):
+        if(pdf_par>1e-5):
+            steps_fit = step_from_fringes(test_fringes, gamma, alpha, *par)
+            plt.plot(test_fringes, steps_fit, alpha=pdf_par, c='b')
+
+    for s, p in zip(pdf_steps, pdf_values):
+       ax.plot([fringe, fringe], [s, s], [0, p], color='blue')
+
+    if(show==True):
+        ax.show()
+
 if __name__ == '__main__':
 
-    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,errors = errors_bp3p3,
-        radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False,
-        fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
-
+    # plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,errors = errors_bp3p3,
+    #     radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False,
+    #     fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
+    #
     xlims = [-10.04, -9.96]
-    ylims = [-800, -750]
+    # ylims = [-800, -750]
+    #
+    #
+    # plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3, errors = errors_bp3p3,
+    #     xlims=xlims, ylims=ylims, figname = 'figs/fit_zoom_bp3p3.pdf', show=False,
+    #     fmt='ro', ms=10, capsize=5, elinewidth=2, markeredgewidth=2)
+    #
+    # fig = plt.figure()
+    # paraffs['bp3-p3'].plot(radius=0.09)
+    # fig.savefig('figs/bp3p3_measure.pdf', format = 'pdf')
+    # plt.close('')
 
+    mask1 = fringes_bp3p3 > xlims[0]
+    mask2 = fringes_bp3p3 < xlims[1]
+    mask = mask1 * mask2
+    fringe = fringes_bp3p3[mask]
+    step = steps_bp3p3[mask]
 
-    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3, errors = errors_bp3p3,
-        xlims=xlims, ylims=ylims, figname = 'figs/fit_zoom_bp3p3.pdf', show=False,
-        fmt='ro', ms=10, capsize=5, elinewidth=2, markeredgewidth=2)
+    pdf_steps, pdf_values = PDF_reader.reader_pdf('montecarlo/bp3p3_-10s50.txt')
 
-    fig = plt.figure(2)
-    paraffs['bp3-p3'].plot(radius=0.09)
-    fig.savefig('figs/bp3p3_measure.pdf', format = 'pdf')
-    plt.close('')
+    plot3d(frige, step, params_bp3p3, pdf_bp3p3,  pdf_steps, pdf_values, figname='3D_qbic.pdf')

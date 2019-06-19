@@ -48,3 +48,16 @@ def reader_mpdf(filename):
                                 #on the midpoints
         x_coords = np.array(np.meshgrid(*x)).T.reshape(-1, len(x))
         return(x_coords, pdf.flatten(), names)
+
+def reader_pdf(filename):
+
+    with open(filename) as file:
+        csv_reader = csv.reader(file, delimiter='\t')
+
+        x = []
+        pdf = []
+        for row in csv_reader:
+            x.append(row[0])
+            pdf.append(row[1])
+
+    return(np.array(x), np.array(pdf))
