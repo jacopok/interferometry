@@ -36,6 +36,7 @@ int main() {
 			int k = waitKey(0);
 			if( k == 81) ind--;
 			else if( k == 83) ind++;
+			else if( k == 115 ) imwrite(s+"_"+to_string(ind)+".png", img);
 			else c = false;
 		}
 	}
