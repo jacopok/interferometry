@@ -245,12 +245,12 @@ if __name__ == '__main__':
     # find_point_plot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/3D_qbic_far.pdf', show=True)
 
     gamma_list = ['montecarlo/Gamma/gamma_avg_fix_alpha_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba1a1_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba1a2_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba1a3_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba2a1_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba2a2_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba2a3_gamma_G.txt']
+        'montecarlo/Calibrate/fixed_alpha/ba1-a1_gamma_G.txt',
+        'montecarlo/Calibrate/fixed_alpha/ba1-a2_gamma_G.txt',
+        'montecarlo/Calibrate/fixed_alpha/ba1-a3_gamma_G.txt',
+        'montecarlo/Calibrate/fixed_alpha/ba2-a1_gamma_G.txt',
+        'montecarlo/Calibrate/fixed_alpha/ba2-a2_gamma_G.txt',
+        'montecarlo/Calibrate/fixed_alpha/ba2-a3_gamma_G.txt']
 
     pdf_average_plot(gamma_list, xlabel='$\gamma$ [1]', ylabel='PDF [$1/\gamma$]',
         figname='figs/gamma.pdf')
