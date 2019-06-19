@@ -91,3 +91,4 @@ def plot_cloud(fringes, steps, params, pdf, figname=None, gamma=2.68895e-5, alph
     return counter
 
 #plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3, figname =  'figs/fit_cloud_bp3p3.png')
+
