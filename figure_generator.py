@@ -17,6 +17,10 @@ from os.path import exists
 import warnings
 warnings.filterwarnings("ignore")
 
+# import matplotlib
+# matplotlib.use("TKAGG")
+
+#
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import rc
 rc('font',**{'family':'serif','serif':['Palatino']})
@@ -24,6 +28,8 @@ rc('text', usetex=True)
 rc('text.latex', preamble=r'''\usepackage{amsmath}
           \usepackage{physics}
           ''')
+from matplotlib import rcParams
+rcParams['axes.labelpad'] = 8
 
 
 """
@@ -136,16 +142,34 @@ def plot_cloud(fringes, steps, params, pdf, errors=None, radius=None, xlims=None
         plt.close('all')
     return counter
 
+#@timeit
+def find_point_plot(xlims, pdf_location, filename, **kwargs):
+    mask1 = fringes_bp3p3 > xlims[0]
+    mask2 = fringes_bp3p3 < xlims[1]
+    mask = mask1 * mask2
+    fringe = fringes_bp3p3[mask]
+    step = steps_bp3p3[mask]
+    pdf_steps, pdf_values = PDF_reader.reader_pdf(pdf_location)
+
+    plot3d(fringe, step, params_bp3p3, pdf_bp3p3, pdf_steps, pdf_values,
+        figname=filename, xlims=xlims, **kwargs)
+
+
 def plot3d(fringe, step, params, pdf, pdf_steps, pdf_values,
            figname=None, gamma=2.68895e-5, alpha=51.1928e-6, show=True, **kwargs):
 
     fig = plt.figure()
     ax = Axes3D(fig)
 
+    ax.set_xlabel('Fringes [1]', linespacing = 3)
+    ax.set_ylabel('Steps [1]', linespacing = 3)
+    ax.set_zlabel('Data point PDF [1/step]', linespacing = 3)
+
     ax.plot(fringe, step, 0, 'ro', label='Data points')
 
+    xlims = kwargs['xlims']
     # to generalize
-    test_fringes = np.linspace(-10.04, -9.96)
+    test_fringes = np.linspace(*xlims)
 
     for par, pdf_par in zip(params, pdf):
         if(pdf_par>1e-5):
@@ -153,10 +177,14 @@ def plot3d(fringe, step, params, pdf, pdf_steps, pdf_values,
             plt.plot(test_fringes, steps_fit, alpha=pdf_par, c='b')
 
     for s, p in zip(pdf_steps, pdf_values):
-       ax.plot([fringe, fringe], [s, s], [0, p], color='blue')
+       ax.plot([fringe, fringe], [s, s], [0, p], color='green')
 
+    # plt.tight_layout()
     if(show==True):
-        ax.show()
+        plt.show()
+    if(figname):
+        fig.savefig(figname, format = 'pdf')
+    plt.close(fig=fig)
 
 if __name__ == '__main__':
 
@@ -164,7 +192,6 @@ if __name__ == '__main__':
     #     radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False,
     #     fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
     #
-    xlims = [-10.04, -9.96]
     # ylims = [-800, -750]
     #
     #
@@ -177,12 +204,5 @@ if __name__ == '__main__':
     # fig.savefig('figs/bp3p3_measure.pdf', format = 'pdf')
     # plt.close('')
 
-    mask1 = fringes_bp3p3 > xlims[0]
-    mask2 = fringes_bp3p3 < xlims[1]
-    mask = mask1 * mask2
-    fringe = fringes_bp3p3[mask]
-    step = steps_bp3p3[mask]
-
-    pdf_steps, pdf_values = PDF_reader.reader_pdf('montecarlo/bp3p3_-10s50.txt')
-
-    plot3d(frige, step, params_bp3p3, pdf_bp3p3,  pdf_steps, pdf_values, figname='3D_qbic.pdf')
+    find_point_plot([-10.02, -9.98], 'montecarlo/bp3p3_-10s50.txt', 'figs/3D_qbic_close.pdf', show=False)
+    find_point_plot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/3D_qbic_far.pdf', show=False)

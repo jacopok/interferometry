@@ -10,7 +10,7 @@ import csv
 import numpy as np
 
 def reader_mpdf(filename):
-    
+
     with open(filename) as file:
         csv_reader = csv.reader(file, delimiter='\t')
         firstrow = next(csv_reader)
@@ -22,7 +22,7 @@ def reader_mpdf(filename):
             row = next(csv_reader)
             pdfs.append(row)
         pdfs = np.array(pdfs)
-        
+
         names = pdfs[:,0]
         inf_limits = np.array(pdfs[:,1], dtype=np.double)
         sup_limits = np.array(pdfs[:,2], dtype=np.double)
@@ -32,15 +32,15 @@ def reader_mpdf(filename):
         # while we want the first one to be the one that changes the fastest
         names, inf_limits, sup_limits, shape = \
             [np.flip(z) for z in (names, inf_limits, sup_limits, shape)]
-        
+
         long_pdf = []
         for row in csv_reader:
             for number in row:
                 if(number):
                     long_pdf.append(float(number))
-        
+
         pdf = np.reshape(long_pdf, shape)
-        
+
         x = []
         for n, s, il, sl in zip(names, shape, inf_limits, sup_limits):
             dx = np.abs((sl-il)/s)
@@ -48,6 +48,7 @@ def reader_mpdf(filename):
                                 #on the midpoints
         x_coords = np.array(np.meshgrid(*x)).T.reshape(-1, len(x))
         return(x_coords, pdf.flatten(), names)
+
 
 def reader_pdf(filename):
 
@@ -60,4 +61,4 @@ def reader_pdf(filename):
             x.append(row[0])
             pdf.append(row[1])
 
-    return(np.array(x), np.array(pdf))
+    return(np.array(x, dtype=np.float64), np.array(pdf, dtype=np.float64))

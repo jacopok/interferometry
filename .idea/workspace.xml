@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="64c4392c-7203-467c-b511-f8d6d5ac392c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PDF_reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/PDF_reader.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/figure_generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/figure_generator.py" afterDir="false" />
     </list>
@@ -28,20 +27,20 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/figure_generator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="574">
-              <caret line="186" lean-forward="true" selection-start-line="186" selection-end-line="186" />
+            <state relative-caret-position="506">
+              <caret line="182" column="32" lean-forward="true" selection-start-line="182" selection-start-column="32" selection-end-line="182" selection-end-column="32" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/PDF_reader.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="574">
-              <caret line="59" column="17" lean-forward="true" selection-start-line="59" selection-start-column="17" selection-end-line="59" selection-end-column="17" />
+            <state relative-caret-position="489">
+              <caret line="57" column="14" lean-forward="true" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="14" />
             </state>
           </provider>
         </entry>
@@ -71,8 +70,8 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/figure_generator.py" />
         <option value="$PROJECT_DIR$/PDF_reader.py" />
+        <option value="$PROJECT_DIR$/figure_generator.py" />
       </list>
     </option>
   </component>
@@ -203,7 +202,7 @@
       <workItem from="1558617882463" duration="2832000" />
       <workItem from="1558688068992" duration="9182000" />
       <workItem from="1558811216450" duration="1226000" />
-      <workItem from="1560949221421" duration="1510000" />
+      <workItem from="1560949221421" duration="1910000" />
     </task>
     <task id="LOCAL-00001" summary="Fixed wrong ordering of mpdf parameters, cleaned figure generation code.">
       <created>1558693510224</created>
@@ -219,15 +218,21 @@
       <option name="project" value="LOCAL" />
       <updated>1558713359355</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="First test of 3d plotting">
+      <created>1560950813631</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1560950813631</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="16127000" />
+    <option name="totallyTimeSpent" value="16527000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="25" width="1600" height="875" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.2003866" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -299,7 +304,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Fixed wrong ordering of mpdf parameters, cleaned figure generation code." />
     <MESSAGE value="Started testing pyqtgraph, still not working" />
-    <option name="LAST_COMMIT_MESSAGE" value="Started testing pyqtgraph, still not working" />
+    <MESSAGE value="First test of 3d plotting" />
+    <option name="LAST_COMMIT_MESSAGE" value="First test of 3d plotting" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/process_data.py">
@@ -315,17 +321,17 @@
     <entry file="file://$PROJECT_DIR$/plot3d.ipynb">
       <provider selected="true" editor-type-id="jupyter-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/figure_generator.py">
+    <entry file="file://$PROJECT_DIR$/PDF_reader.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="574">
-          <caret line="186" lean-forward="true" selection-start-line="186" selection-end-line="186" />
+        <state relative-caret-position="489">
+          <caret line="57" column="14" lean-forward="true" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="14" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/PDF_reader.py">
+    <entry file="file://$PROJECT_DIR$/figure_generator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="574">
-          <caret line="59" column="17" lean-forward="true" selection-start-line="59" selection-start-column="17" selection-end-line="59" selection-end-column="17" />
+        <state relative-caret-position="506">
+          <caret line="182" column="32" lean-forward="true" selection-start-line="182" selection-start-column="32" selection-end-line="182" selection-end-column="32" />
         </state>
       </provider>
     </entry>
