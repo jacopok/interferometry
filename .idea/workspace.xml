@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="64c4392c-7203-467c-b511-f8d6d5ac392c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/PDF_reader.py" beforeDir="false" afterPath="$PROJECT_DIR$/PDF_reader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/figure_generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/figure_generator.py" afterDir="false" />
-    </list>
+    <list default="true" id="64c4392c-7203-467c-b511-f8d6d5ac392c" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,8 +27,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/figure_generator.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="506">
-              <caret line="182" column="32" lean-forward="true" selection-start-line="182" selection-start-column="32" selection-end-line="182" selection-end-column="32" />
+            <state relative-caret-position="185">
+              <caret line="163" column="24" lean-forward="true" selection-start-line="163" selection-start-column="24" selection-end-line="163" selection-end-column="24" />
             </state>
           </provider>
         </entry>
@@ -39,8 +36,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/PDF_reader.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="489">
-              <caret line="57" column="14" lean-forward="true" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="14" />
+            <state relative-caret-position="952">
+              <caret line="57" column="14" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="14" />
             </state>
           </provider>
         </entry>
@@ -203,6 +200,7 @@
       <workItem from="1558688068992" duration="9182000" />
       <workItem from="1558811216450" duration="1226000" />
       <workItem from="1560949221421" duration="1910000" />
+      <workItem from="1561579017367" duration="10000" />
     </task>
     <task id="LOCAL-00001" summary="Fixed wrong ordering of mpdf parameters, cleaned figure generation code.">
       <created>1558693510224</created>
@@ -229,7 +227,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="16527000" />
+    <option name="totallyTimeSpent" value="16537000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="25" width="1600" height="875" extended-state="6" />
@@ -318,22 +316,22 @@
     <entry file="file://$PROJECT_DIR$/montecarlo/bp3p3_-10s50.txt">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/plot3d.ipynb">
-      <provider selected="true" editor-type-id="jupyter-editor" />
+    <entry file="file://$PROJECT_DIR$/figure_generator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="185">
+          <caret line="163" column="24" lean-forward="true" selection-start-line="163" selection-start-column="24" selection-end-line="163" selection-end-column="24" />
+        </state>
+      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/PDF_reader.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="489">
-          <caret line="57" column="14" lean-forward="true" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="14" />
+        <state relative-caret-position="952">
+          <caret line="57" column="14" selection-start-line="57" selection-start-column="14" selection-end-line="57" selection-end-column="14" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/figure_generator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="506">
-          <caret line="182" column="32" lean-forward="true" selection-start-line="182" selection-start-column="32" selection-end-line="182" selection-end-column="32" />
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/plot3d.ipynb">
+      <provider selected="true" editor-type-id="jupyter-editor" />
     </entry>
   </component>
 </project>
