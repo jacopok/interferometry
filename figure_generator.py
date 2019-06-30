@@ -309,6 +309,28 @@ def pdf_average_plot(Glist, **kwargs):
         plt.show()
     plt.close(fig=fig)
 
+# def plot_errorbars(x, y, y_errors, **kwargs):
+#
+#     figkeys = set(kwargs) - set(['figname', 'show'])
+#     figargs = {k:kwargs[k] for k in figkeys}
+#
+#     fig = plt.figure(1)
+#     plt.errorbar(x, y, y_errors, **figargs)
+#     if(kwargs.get('xlabel')):
+#         plt.xlabel(kwargs['xlabel'])
+#     if(kwargs.get('ylabel')):
+#         plt.ylabel(kwargs['ylabel'])
+#     plt.legend()
+#
+#     if(kwargs.get('figname')):
+#         fig.savefig(kwargs['figname'], format = 'pdf')
+#
+#     if(kwargs.get('show')):
+#         plt.show()
+#     plt.close(fig=fig)
+
+
+
 if __name__ == '__main__':
 
     gamma, pdf_gamma = PDF_reader.reader_pdf('montecarlo/Gamma/gamma_avg_fix_alpha_G.txt')
