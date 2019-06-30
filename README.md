@@ -2,25 +2,26 @@ Code for the analysis of the data from the GIMLI interferometer.
 
 -----------
 
-Rough analyses without much explaination can be found in `Interferometry.ipynb` and in `rough_calculations.ipynb`.
+Rough analysis without much explaination can be found in `Interferometry.ipynb` and in `rough_calculations.ipynb`.
 
 ------------
 
-To center the data in a tab-separated file, use:
+The figures are generated from `figure_generator.py`, which
+contains lots of hardcoded file paths and does not have lots of comments for now.
 
-`python center_fringes.py <filename.txt> <zero_fringe_order>`
-
-where `filename.txt` is the file where the data are stored,
-whose first line is ignored; `zero_fringe_order` is an integer
-corresponding to the order of the fringe which is manually identified 
-to be of order 0.
-
-This creates a file named `filename_centered.txt` with the same formatting.
-
-Also, the tab-separated file `filename_centered_mc.txt` is created, which is ready for MonteCarlo simulations.
+It saves the figures to `figs/`; it it is not generating some figure, check at
+the bottom of the file inside the `if __name__ == __main__` statement, and
+uncomment what's needed.
 
 -----------
 
+The data preprocessing is done by the python code in the main directory,
+the dataset classes are defined in `Fringes_dataset_manager.py`, which is called
+by other utility scripts like `initialization.py` and `process_data.py`.
+
+-----------
+
+The data fitting is done by the c++ code in `montecarlo/`.
 To compile the MonteCarlo sources, do:
 
 ```
