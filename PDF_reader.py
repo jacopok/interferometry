@@ -62,3 +62,24 @@ def reader_pdf(filename):
             pdf.append(row[1])
 
     return(np.array(x, dtype=np.float64), np.array(pdf, dtype=np.float64))
+
+def reader_data(filename):
+
+    with open(filename) as file:
+        csv_reader = csv.reader(file, delimiter='\t')
+
+        x=[]
+        y=[]
+        y_fw=[]
+        for row in csv_reader:
+            if(row[1]=='Triangular'):
+                x.append(row[0])
+                y.append(row[2])
+                y_fw.append(row[3])
+            else:
+                raise NotImplementedError('This PDF type is not supported')
+
+    return(np.array(x, dtype=np.float64),
+        np.array(y, dtype=np.float64), np.array(y_fw, dtype=np.float64)/ np.sqrt(24))
+        # sqrt(24) comes from the triangular distribution:
+        # the fw is sqrt(24) times the stdev
