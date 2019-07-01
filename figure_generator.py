@@ -364,6 +364,60 @@ def plot_linear_errorbars(x, y, y_errors, a, a_pdf, b, b_pdf, **kwargs):
         plt.show()
     plt.close(fig=fig)
 
+@timeit
+def plot_linear_residuals(x, y, y_errors, a, a_pdf, b, b_pdf, average_a, average_b, **kwargs):
+
+    figkeys = set(kwargs) - set(['figname', 'show', 'xlabel', 'ylabel'])
+    errargs = {k:kwargs[k] for k in figkeys}
+
+    model = lambda x, average_a, average_b, a, b : a * x + b - average_a * x - average_b
+
+    fig = plt.figure(1)
+    if(kwargs.get('xlabel')):
+        plt.xlabel(kwargs['xlabel'])
+    if(kwargs.get('ylabel')):
+        plt.ylabel(kwargs['ylabel'])
+
+    pdf = np.tensordot(a_pdf, b_pdf, axes = 0).flatten()
+
+    pdf = normalize_pdf(pdf)
+
+    params = a
+
+    test_par = np.array([])
+    for av in b:
+        if(test_par.size != 0):
+            test_par = np.concatenate((test_par, np.insert(params, 0, av, axis=1)), axis=0)
+        else:
+            if(len(np.shape(params))==1):
+                params = np.expand_dims(params, axis=1)
+            test_par = np.insert(params, 0, av, axis=1)
+    params=np.array(test_par)
+
+    d = max(x)- min(x)
+    test_x = np.linspace(min(x)-d/20, max(x)+d/20, num=100)
+
+    for par, pdf_par in zip(params, pdf):
+        if(pdf_par>1e-3):
+            y_fit = model(test_x, average_a, average_b, *par)
+            plt.plot(test_x, y_fit, alpha=pdf_par/10, c='royalblue', linewidth=1)
+
+    plt.errorbar(x, y-x*average_a-average_b, y_errors, **errargs)
+    plt.plot([],[], c='royalblue', label='Fit cloud')
+
+    # handles, labels = plt.gca().get_legend_handles_labels()
+    # labels, ids = np.unique(labels, return_index=True)
+    # handles = [handles[i] for i in ids]
+    # plt.legend(handles, labels, loc='best')
+    plt.legend()
+
+    if(kwargs.get('figname')):
+        fig.savefig(kwargs['figname'], format = 'pdf')
+
+    if(kwargs.get('show')):
+        plt.show()
+    plt.close(fig=fig)
+
 
 
 if __name__ == '__main__':
@@ -373,56 +427,61 @@ if __name__ == '__main__':
     b_calib , pdf_beta_calib = PDF_reader.reader_pdf('montecarlo/Alpha/b_G.txt')
     x_calib, y_calib, yerr_calib = PDF_reader.reader_data('montecarlo/Alpha/data.txt')
 
-    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,errors = errors_bp3p3,
-        radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False,
-        #gamma=gamma, pdf_gamma=pdf_gamma,
-        alpha_=alpha, pdf_alpha = pdf_alpha,
-        fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
-
-    plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3, errors = errors_bp3p3,
-        xlims=[-10.02, -9.98], ylims=[-800, -750], figname = 'figs/fit_zoom_bp3p3.pdf', show=False,
-        fmt='ro', ms=10, capsize=5, elinewidth=2, markeredgewidth=2)
-
-
-    plot_linear_errorbars(x_calib, y_calib, yerr_calib, alpha, pdf_alpha, b_calib, pdf_beta_calib,
-        figname='figs/alpha_calibration.pdf', ylabel='Step [1]', xlabel='Angle [rad]',
+    # plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,errors = errors_bp3p3,
+    #     radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False,
+    #     #gamma=gamma, pdf_gamma=pdf_gamma,
+    #     alpha_=alpha, pdf_alpha = pdf_alpha,
+    #     fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
+    #
+    # plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3, errors = errors_bp3p3,
+    #     xlims=[-10.02, -9.98], ylims=[-800, -750], figname = 'figs/fit_zoom_bp3p3.pdf', show=False,
+    #     fmt='ro', ms=10, capsize=5, elinewidth=2, markeredgewidth=2)
+    #
+    #
+    # plot_linear_errorbars(x_calib, y_calib, yerr_calib, alpha, pdf_alpha, b_calib, pdf_beta_calib,
+    #     figname='figs/alpha_calibration.pdf', ylabel='Step [1]', xlabel='Angle [rad]',
+    #     label = 'Data points',
+    #     fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
+    plot_linear_residuals(x_calib, y_calib, yerr_calib, alpha, pdf_alpha, b_calib, pdf_beta_calib,
+        average_a =19534.5 , average_b=-8.11813,
+        figname='figs/alpha_calibration_residuals.pdf', ylabel='Step residuals [1]', xlabel='Angle [rad]',
         label = 'Data points',
         fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
-
-    fig = plt.figure()
-    paraffs['bp3-p3'].plot(radius=0.09)
-    fig.savefig('figs/bp3p3_measure.pdf', format = 'pdf')
-    plt.close('')
-
-    find_point_3dplot([-10.02, -9.98], 'montecarlo/bp3p3_-10s50.txt', 'figs/3D_qbic_close.pdf', show=False)
-    find_point_3dplot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/3D_qbic_far.pdf', show=False)
-    find_point_2dplot([-10.02, -9.98], 'montecarlo/bp3p3_-10s50.txt', 'figs/2D_qbic_close.pdf', show=False)
-    find_point_2dplot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/2D_qbic_far.pdf', show=False)
-
-    gamma_list = ['montecarlo/Gamma/gamma_avg_fix_alpha_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba1-a1_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba1-a2_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba1-a3_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba2-a1_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba2-a2_gamma_G.txt',
-        'montecarlo/Calibrate/fixed_alpha/ba2-a3_gamma_G.txt']
-
-    pdf_average_plot(gamma_list, xlabel='$\\gamma$ [1]', ylabel='PDF [$1/\\gamma$]',
-        figname='figs/gamma.pdf')
-
-    n_l_paraff_list = ['montecarlo/n_l_paraffin_average_G.txt',
-    'montecarlo/Fit/fixed_alpha/bp1-p1_n_l_G.txt',
-    'montecarlo/Fit/fixed_alpha/bp1-p2_n_l_G.txt',
-    'montecarlo/Fit/fixed_alpha/bp1-p3_n_l_G.txt',
-    'montecarlo/Fit/fixed_alpha/bp1-p4_n_l_G.txt',
-    'montecarlo/Fit/fixed_alpha/bp3-p2_n_l_G.txt',
-    'montecarlo/Fit/fixed_alpha/bp3-p3_n_l_G.txt',
-    'montecarlo/Fit/fixed_alpha/bp3-p4_n_l_G.txt']
-
-    pdf_average_plot(n_l_paraff_list, xlabel='$n_l$ [1]', ylabel='PDF [$1/n_l$]',
-        figname='figs/n_l.pdf')
-
-    alpha_path = 'montecarlo/Alpha/alpha_G.txt'
-
-    pdf_average_plot([alpha_path], xlabel='$\\alpha$ [rad/step]', ylabel='PDF [$1/\\alpha$]',
-        figname='figs/alpha.pdf')
+    #
+    # fig = plt.figure()
+    # paraffs['bp3-p3'].plot(radius=0.09)
+    # fig.savefig('figs/bp3p3_measure.pdf', format = 'pdf')
+    # plt.close('')
+    #
+    # find_point_3dplot([-10.02, -9.98], 'montecarlo/bp3p3_-10s50.txt', 'figs/3D_qbic_close.pdf', show=False)
+    # find_point_3dplot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/3D_qbic_far.pdf', show=False)
+    # find_point_2dplot([-10.02, -9.98], 'montecarlo/bp3p3_-10s50.txt', 'figs/2D_qbic_close.pdf', show=False)
+    # find_point_2dplot([-13.80, -13.75], 'montecarlo/bp3p3_-13s50.txt', 'figs/2D_qbic_far.pdf', show=False)
+    #
+    # gamma_list = ['montecarlo/Gamma/gamma_avg_fix_alpha_G.txt',
+    #     'montecarlo/Calibrate/fixed_alpha/ba1-a1_gamma_G.txt',
+    #     'montecarlo/Calibrate/fixed_alpha/ba1-a2_gamma_G.txt',
+    #     'montecarlo/Calibrate/fixed_alpha/ba1-a3_gamma_G.txt',
+    #     'montecarlo/Calibrate/fixed_alpha/ba2-a1_gamma_G.txt',
+    #     'montecarlo/Calibrate/fixed_alpha/ba2-a2_gamma_G.txt',
+    #     'montecarlo/Calibrate/fixed_alpha/ba2-a3_gamma_G.txt']
+    #
+    # pdf_average_plot(gamma_list, xlabel='$\\gamma$ [1]', ylabel='PDF [$1/\\gamma$]',
+    #     figname='figs/gamma.pdf')
+    #
+    # n_l_paraff_list = ['montecarlo/n_l_paraffin_average_G.txt',
+    # 'montecarlo/Fit/fixed_alpha/bp1-p1_n_l_G.txt',
+    # 'montecarlo/Fit/fixed_alpha/bp1-p2_n_l_G.txt',
+    # 'montecarlo/Fit/fixed_alpha/bp1-p3_n_l_G.txt',
+    # 'montecarlo/Fit/fixed_alpha/bp1-p4_n_l_G.txt',
+    # 'montecarlo/Fit/fixed_alpha/bp3-p2_n_l_G.txt',
+    # 'montecarlo/Fit/fixed_alpha/bp3-p3_n_l_G.txt',
+    # 'montecarlo/Fit/fixed_alpha/bp3-p4_n_l_G.txt']
+    #
+    # pdf_average_plot(n_l_paraff_list, xlabel='$n_l$ [1]', ylabel='PDF [$1/n_l$]',
+    #     figname='figs/n_l.pdf')
+    #
+    # alpha_path = 'montecarlo/Alpha/alpha_G.txt'
+    #
+    # pdf_average_plot([alpha_path], xlabel='$\\alpha$ [rad/step]', ylabel='PDF [$1/\\alpha$]',
+    #     figname='figs/alpha.pdf')
