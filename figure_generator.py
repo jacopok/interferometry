@@ -364,6 +364,9 @@ def plot_linear_errorbars(x, y, y_errors, a, a_pdf, b, b_pdf, **kwargs):
         plt.show()
     plt.close(fig=fig)
 
+    return(params,pdf)
+
+
 @timeit
 def plot_linear_residuals(x, y, y_errors, a, a_pdf, b, b_pdf, average_a, average_b, **kwargs):
 
