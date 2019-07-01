@@ -10,9 +10,10 @@ import initialization as init
 import PDF_reader
 
 import matplotlib.pyplot as plt
-import numpy as np
+import numpy as npg
 from os import remove
 from os.path import exists
+import numpy as np
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -421,15 +422,99 @@ def plot_linear_residuals(x, y, y_errors, a, a_pdf, b, b_pdf, average_a, average
         plt.show()
     plt.close(fig=fig)
 
+@timeit
+def plot_linear_errorbars_mpdf(x, y, y_errors, params, pdf, **kwargs):
+
+    figkeys = set(kwargs) - set(['figname', 'show', 'xlabel', 'ylabel'])
+    errargs = {k:kwargs[k] for k in figkeys}
+
+    model = lambda x, a, b : a * x + b
+
+    fig = plt.figure(1)
+    if(kwargs.get('xlabel')):
+        plt.xlabel(kwargs['xlabel'])
+    if(kwargs.get('ylabel')):
+        plt.ylabel(kwargs['ylabel'])
+
+    d = max(x)- min(x)
+    test_x = np.linspace(min(x)-d/20, max(x)+d/20, num=100)
+
+    pdf = normalize_pdf(pdf)
+
+    for par, pdf_par in zip(params, pdf):
+        if(pdf_par>1e-2):
+            y_fit = model(test_x, *par)
+            plt.plot(test_x, y_fit, alpha=pdf_par, c='royalblue', linewidth=1)
+
+    plt.errorbar(x, y, y_errors, **errargs)
+    plt.plot([],[], c='royalblue', label='Fit cloud')
+
+    # handles, labels = plt.gca().get_legend_handles_labels()
+    # labels, ids = np.unique(labels, return_index=True)
+    # handles = [handles[i] for i in ids]
+    # plt.legend(handles, labels, loc='best')
+    plt.legend()
+
+    if(kwargs.get('figname')):
+        fig.savefig(kwargs['figname'], format = 'pdf')
+
+    if(kwargs.get('show')):
+        plt.show()
+    plt.close(fig=fig)
+
+    return(params,pdf)
+
+
+@timeit
+def plot_linear_residuals_mpdf(x, y, y_errors, params, pdf, average_a, average_b, **kwargs):
+
+    figkeys = set(kwargs) - set(['figname', 'show', 'xlabel', 'ylabel'])
+    errargs = {k:kwargs[k] for k in figkeys}
+
+    model = lambda x, average_a, average_b, a, b : a * x + b - average_a * x - average_b
+
+    fig = plt.figure(1)
+    if(kwargs.get('xlabel')):
+        plt.xlabel(kwargs['xlabel'])
+    if(kwargs.get('ylabel')):
+        plt.ylabel(kwargs['ylabel'])
+
+    pdf = normalize_pdf(pdf)
+
+    d = max(x)- min(x)
+    test_x = np.linspace(min(x)-d/20, max(x)+d/20, num=100)
+
+    for par, pdf_par in zip(params, pdf):
+        if(pdf_par>1e-3):
+            y_fit = model(test_x, average_a, average_b, *par)
+            plt.plot(test_x, y_fit, alpha=pdf_par, c='royalblue', linewidth=1)
+
+    plt.errorbar(x, y-x*average_a-average_b, y_errors, **errargs)
+    plt.plot([],[], c='royalblue', label='Fit cloud')
+
+    # handles, labels = plt.gca().get_legend_handles_labels()
+    # labels, ids = np.unique(labels, return_index=True)
+    # handles = [handles[i] for i in ids]
+    # plt.legend(handles, labels, loc='best')
+    plt.legend()
+
+    if(kwargs.get('figname')):
+        fig.savefig(kwargs['figname'], format = 'pdf')
+
+    if(kwargs.get('show')):
+        plt.show()
+    plt.close(fig=fig)
+
 
 
 if __name__ == '__main__':
 
     gamma, pdf_gamma = PDF_reader.reader_pdf('montecarlo/Gamma/gamma_avg_fix_alpha_G.txt')
-    alpha, pdf_alpha = PDF_reader.reader_pdf('montecarlo/Alpha/alpha_G.txt')
-    a_calib , pdf_a_calib = PDF_reader.reader_pdf('montecarlo/Alpha/a_G.txt')
-    b_calib , pdf_beta_calib = PDF_reader.reader_pdf('montecarlo/Alpha/b_G.txt')
+    alpha, pdf_alpha = PDF_reader.reader_pdf('montecarlo/Alpha/old_fit/alpha_G.txt')
+    a_calib , pdf_a_calib = PDF_reader.reader_pdf('montecarlo/Alpha/old_fit/a_G.txt')
+    b_calib , pdf_beta_calib = PDF_reader.reader_pdf('montecarlo/Alpha/old_fit/b_G.txt')
     x_calib, y_calib, yerr_calib = PDF_reader.reader_data('montecarlo/Alpha/data.txt')
+    ab, ab_pdf, ab_names = PDF_reader.reader_mpdf('montecarlo/Alpha/new_fit/ab_MPDF.txt')
 
     # plot_cloud(fringes_bp3p3, steps_bp3p3, params_bp3p3, pdf_bp3p3,errors = errors_bp3p3,
     #     radius = 20,  figname =  'figs/fit_cloud_bp3p3.pdf', show=False,
@@ -446,9 +531,18 @@ if __name__ == '__main__':
         figname='figs/alpha_calibration.pdf', ylabel='Step [1]', xlabel='Angle [rad]',
         label = 'Data points',
         fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
-    plot_linear_residuals(x_calib, y_calib, yerr_calib, a_calib, pdf_a_calib, b_calib, pdf_beta_calib,
+    # plot_linear_residuals(x_calib, y_calib, yerr_calib, a_calib, pdf_a_calib, b_calib, pdf_beta_calib,
+    #     average_a =19534.5 , average_b=-8.11813,
+    #     figname='figs/alpha_calibration_residuals.pdf', ylabel='Step residuals [1]', xlabel='Angle [rad]',
+    #     label = 'Data points',
+    #     fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
+    plot_linear_errorbars_mpdf(x_calib, y_calib, yerr_calib, ab, ab_pdf,
+        figname='figs/alpha_calibration_mpdf.pdf', ylabel='Step [1]', xlabel='Angle [rad]',
+        label = 'Data points',
+        fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
+    plot_linear_residuals_mpdf(x_calib, y_calib, yerr_calib, ab, ab_pdf,
         average_a =19534.5 , average_b=-8.11813,
-        figname='figs/alpha_calibration_residuals.pdf', ylabel='Step residuals [1]', xlabel='Angle [rad]',
+        figname='figs/alpha_calibration_residuals_mpdf.pdf', ylabel='Step residuals [1]', xlabel='Angle [rad]',
         label = 'Data points',
         fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
     #
