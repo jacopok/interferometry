@@ -346,7 +346,7 @@ def plot_linear_errorbars(x, y, y_errors, a, a_pdf, b, b_pdf, **kwargs):
     for par, pdf_par in zip(params, pdf):
         if(pdf_par>1e-2):
             y_fit = model(test_x, *par)
-            plt.plot(test_x, y_fit, alpha=pdf_par/20, c='royalblue', linewidth=1)
+            plt.plot(test_x, y_fit, alpha=pdf_par/5, c='royalblue', linewidth=1)
 
     plt.errorbar(x, y, y_errors, **errargs)
     plt.plot([],[], c='royalblue', label='Fit cloud')
@@ -400,7 +400,7 @@ def plot_linear_residuals(x, y, y_errors, a, a_pdf, b, b_pdf, average_a, average
     for par, pdf_par in zip(params, pdf):
         if(pdf_par>1e-3):
             y_fit = model(test_x, average_a, average_b, *par)
-            plt.plot(test_x, y_fit, alpha=pdf_par/10, c='royalblue', linewidth=1)
+            plt.plot(test_x, y_fit, alpha=pdf_par, c='royalblue', linewidth=1)
 
     plt.errorbar(x, y-x*average_a-average_b, y_errors, **errargs)
     plt.plot([],[], c='royalblue', label='Fit cloud')
@@ -424,6 +424,7 @@ if __name__ == '__main__':
 
     gamma, pdf_gamma = PDF_reader.reader_pdf('montecarlo/Gamma/gamma_avg_fix_alpha_G.txt')
     alpha, pdf_alpha = PDF_reader.reader_pdf('montecarlo/Alpha/alpha_G.txt')
+    a_calib , pdf_a_calib = PDF_reader.reader_pdf('montecarlo/Alpha/a_G.txt')
     b_calib , pdf_beta_calib = PDF_reader.reader_pdf('montecarlo/Alpha/b_G.txt')
     x_calib, y_calib, yerr_calib = PDF_reader.reader_data('montecarlo/Alpha/data.txt')
 
@@ -438,11 +439,11 @@ if __name__ == '__main__':
     #     fmt='ro', ms=10, capsize=5, elinewidth=2, markeredgewidth=2)
     #
     #
-    # plot_linear_errorbars(x_calib, y_calib, yerr_calib, alpha, pdf_alpha, b_calib, pdf_beta_calib,
-    #     figname='figs/alpha_calibration.pdf', ylabel='Step [1]', xlabel='Angle [rad]',
-    #     label = 'Data points',
-    #     fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
-    plot_linear_residuals(x_calib, y_calib, yerr_calib, alpha, pdf_alpha, b_calib, pdf_beta_calib,
+    plot_linear_errorbars(x_calib, y_calib, yerr_calib, a_calib, pdf_a_calib, b_calib, pdf_beta_calib,
+        figname='figs/alpha_calibration.pdf', ylabel='Step [1]', xlabel='Angle [rad]',
+        label = 'Data points',
+        fmt='ro', ms=2, capsize=1.5, elinewidth=1, markeredgewidth=0.5)
+    plot_linear_residuals(x_calib, y_calib, yerr_calib, a_calib, pdf_a_calib, b_calib, pdf_beta_calib,
         average_a =19534.5 , average_b=-8.11813,
         figname='figs/alpha_calibration_residuals.pdf', ylabel='Step residuals [1]', xlabel='Angle [rad]',
         label = 'Data points',
