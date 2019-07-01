@@ -28,7 +28,7 @@ class Alpha: public ErrorPropagator{
 int main (int argc, char* argv[]){
   string ancora;
   PDF *a, *b, *alpha;
-  double chi, dof;
+  double chi, dof, rho;
   unsigned int datastep;
 
   LinearFit lf;
@@ -44,6 +44,10 @@ int main (int argc, char* argv[]){
   
   //get the data
   lf.setPrecision(datastep);
+  
+  //enable MultiPDF
+  bool emp = true;
+  lf.enableMultiPDF(emp);
   
   while(lf.add(&in)){}
   
@@ -115,6 +119,13 @@ int main (int argc, char* argv[]){
     cin >> ancora;
   }while(ancora[0] == 'y');
   
+  if(emp){
+      MultiPDF* ab = lf.getAB();
+      rho = ab->correlation_index();
+      cout << "Correlation coefficient: " << rho << endl;
+      ab->save("ab_MPDF.txt");
+  }
+  
   do{
     b->modifying_routine();
     
@@ -150,6 +161,9 @@ int main (int argc, char* argv[]){
   out << "alpha = " << alpha->mean() << " +- " << sqrt(alpha->var()) << endl;
   
   out << "Chi2/dof = " << chi << '/' << dof << endl;
+  if(emp)
+      out << "rho = " << rho << endl;
+  
   
   cout << endl << endl;
   return 0;
