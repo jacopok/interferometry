@@ -10,7 +10,7 @@ import initialization as init
 import PDF_reader
 
 import matplotlib.pyplot as plt
-import numpy as npg
+import numpy as np
 from os import remove
 from os.path import exists
 import numpy as np
@@ -505,7 +505,11 @@ def plot_linear_residuals_mpdf(x, y, y_errors, params, pdf, average_a, average_b
         plt.show()
     plt.close(fig=fig)
 
+def get_stats(data, pdf):
 
+    average = np.average(data, weights=pdf)
+    var = np.average((data-average)**2, weights=pdf)
+    return(average, np.sqrt(var))
 
 if __name__ == '__main__':
 
@@ -576,6 +580,12 @@ if __name__ == '__main__':
     # 'montecarlo/Fit/fixed_alpha/bp3-p3_n_l_G.txt',
     # 'montecarlo/Fit/fixed_alpha/bp3-p4_n_l_G.txt']
     #
+
+    # n_l, n_l_pdf = PDF_reader.reader_pdf('montecarlo/n_l_paraffin_average_G.txt')
+    #
+    # print(get_stats(n_l, n_l_pdf))
+    # print(get_stats(gamma, pdf_gamma))
+
     # pdf_average_plot(n_l_paraff_list, xlabel='$n_l$ [1]', ylabel='PDF [$1/n_l$]',
     #     figname='figs/n_l.pdf')
     #
