@@ -30,17 +30,32 @@ one with the other on the CCD.
 
 \section{Theoretical Model}
 
-Using the Snell law of refraction and some basic geometrical rules, we deduce the relationship between the refractive coefficient, the angle and the intensity of the watched beam. In particular, we manage to write a formula for the number of fringes \(N\) between the zero angle and a generic angle \(\theta\). We observed that, thanks to the form of Snell’s law, in this formula we can split the contributions of the liquid and of the cuvette glass to the delay of the light, which is proportional to the fringe number:
+Using the Snell law of refraction and some basic geometrical rules, we deduce the relationship between the refractive coefficient, the angle and the intensity of the watched beam. In particular, we manage to write a formula for the number of fringes \(N\) between the zero angle and a generic angle \(\theta\). We observed that, thanks to the form of Snell’s law, in this formula we can split the contributions of the liquid (\emph{signal}) and of the cuvette glass to the delay of the light, which is proportional to the fringe number:
 
-EQUAZIONE SOMMA N
+\begin{equation}
+  N(\theta)_{\text{tot}}  =
+  N(\theta)_{\text{background}}  +
+  N(\theta)_{\text{signal}}
+\end{equation}
 
 Thanks to this relationship, we can simply subtract the background (empty cuvette) from the signal to isolate the contribution from the liquid. Then, the equation can be inverted and the data interpolated by a function of the following form:
 
-EQUAZIONE THETAN
+\begin{equation}
+\theta (N; \gamma, n_l, \theta_0, N_0 )
+=\theta_0  +
+\operatorname{sgn}(N) \operatorname{arccos}\qty(\frac{
+n_l^2-1-\qty(\gamma \qty(\abs{N}-N_0) + n_l - 1)^2
+}{
+2 \qty(\gamma \qty(\abs{N}-N_0)+n_l -1)
+})
+\end{equation}
 
-where \(N\) is the number of the fringe, \(n_l\) is the liquid refractive index and \(\gamma\) is a parameter depending on the cuvette width \(d\) and the laser wavelength \(\lambda\):
+where \(N\) is the number of the fringe, \(n_l\) is the liquid refractive index and \(\gamma\) is
+a parameter depending on the cuvette width \(d\) and the laser wavelength \(\lambda\):
 
-EQUAZIONE LAMBDA
+\begin{equation}
+  \gamma = \frac{\lambda}{2d}
+\end{equation}
 
 Since the zero positions are not well known neither for \(\theta\) nor for \(N\), two offset parameters must be added: \(\theta\) is replaced with \(\theta - \theta_0\) and \(N\) with \(N-N_0\). Finally, a module and a sign function are added in order to consider negative-order fringes.
 
@@ -53,7 +68,13 @@ We need a precise estimation of the conversion coefficient between the motor ste
   \alpha = \frac{\text{angle}}{\text{step number}}
 \end{equation}
 
-To achieve this goal, we attach a goniometer to the rotating base and the motor is started: every time a one-degree rotation is completed, the corresponding step value is registered. Then, data are plotted and a maximum-likelihood linear fit is performed, confirming the linear proportionality between step units and radians actually exists and finding the value of the coefficient \( \alpha =  \SI{5.12(1)e-5}{rad/step}\).
+To achieve this goal, we attach a goniometer to the rotating base and the motor is started: every time a one-degree rotation is completed, the corresponding step value is registered. Then, data are plotted and a maximum-likelihood linear fit is performed, confirming the linear proportionality between step units and radians actually exists and finding the value of the
+coefficient
+
+\begin{equation}
+  \alpha =  \SI{5.12(1)e-5}{rad/step}
+\end{equation}
+
 
 \section{Data acquisition}
 
@@ -88,13 +109,17 @@ This way, we obtain signal datasets with the background subtracted in the shape 
 
 In the \(\theta(N)\)  equation, the two parameters \(n\) and \(\gamma\) are strongly correlated, and can’t be both univocally determined from the same datasets. To solve this problem, a calibration of the system is done using distilled water, whose refractive index is well known. Three background scans, and then three scans with the cuvette filled with distilled water are done: this means we have 9 different signal datasets to fit. The fit is done keeping n=1.336 fixed and searching for the best value of \(\gamma\): the datasets are compatible with each other and this led us to find:
 
-EQUAZIONE GAMMA
+\begin{equation}
+  \gamma = \SI{2.689(6)e-5}{}
+\end{equation}
 
 \section{Paraffin}
 
 Once \(\gamma\) has been fixed, we can proceed with the determination of the paraffin’s refractive index, the final goal of the experiment. In this case, two background and four paraffin scans are done; this means, we have 8 different signal datasets. Keeping \(\gamma\) fixed at different values with the PDF computed before and leaving n free, the fit is done and we obtain a final value:
 
-EQUAZIONE N
+\begin{equation}
+  n_{\text{paraff}} = \SI{1.426(1)}{}
+\end{equation}
 
 \section{Fit notes}
 
