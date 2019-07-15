@@ -1,0 +1,103 @@
+\documentclass[a4paper, 12pt]{article}
+
+\input{header.tex}
+
+\title{Handbook}
+\author{SGSS Physics students}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Measuring the refractive index of a liquid can be extremely useful for a wide range of experiments: for this reason, we decided to investigate a new high-precision method to achieve this task.
+
+The idea is simple but powerful: building up the usual Michelson-Morley interferometer and placing a cuvette full of liquid between the beam splitter and one of the mirrors. By slowly rotating the cuvette and observing the movement of the interference fringes, we found a way to infer the value of the liquid’s refractive index.
+\end{abstract}
+
+\section{Apparatus}
+
+Measurement sets are taken both with and without the liquid, in order to subtract the background signal.
+
+The operation of filling the cuvette with liquid is done thanks to a pipette, so the system isn’t compromised. Instead, to empty the cuvette it is necessary to disassemble a part of the apparatus: the background measures are consistent only with the liquid measures taken just after them.
+So, before each liquid measure campaign, several background scans are done; then, the datasets considered for the signal computing and the fits are all the possible combinations between a background measure and a liquid measure.
+
+The experimental setting was that of a Michelson-Morley interferometer with the addition of a liquid cuvette. The LASER beam wavelength is around \SI{532}{nm}. All the
+mirrors are reasonably assumed to be perfectly reflective, while the beam splitter split the beam in two ones of similar intensity. The cuvette is built in flint glass and its walls
+are approximately \SI{0.448}{cm} thick (nominal value). It was placed between the beam splitter and one of the mirrors at the right height to have laser beam pass through the
+liquid. Furthermore it lied on a rotating support moved by a step motor. All the system is carefully aligned to have the two beams gathering on the beam splitter and interference
+one with the other on the CCD.
+
+\section{Theoretical Model}
+
+Using the Snell law of refraction and some basic geometrical rules, we deduce the relationship between the refractive coefficient, the angle and the intensity of the watched beam. In particular, we manage to write a formula for the number of fringes \(N\) between the zero angle and a generic angle \(\theta\). We observed that, thanks to the form of Snell’s law, in this formula we can split the contributions of the liquid and of the cuvette glass to the delay of the light, which is proportional to the fringe number:
+
+EQUAZIONE SOMMA N
+
+Thanks to this relationship, we can simply subtract the background (empty cuvette) from the signal to isolate the contribution from the liquid. Then, the equation can be inverted and the data interpolated by a function of the following form:
+
+EQUAZIONE THETAN
+
+where \(N\) is the number of the fringe, \(n_l\) is the liquid refractive index and \(\gamma\) is a parameter depending on the cuvette width \(d\) and the laser wavelength \(\lambda\):
+
+EQUAZIONE LAMBDA
+
+Since the zero positions are not well known neither for \(\theta\) nor for \(N\), two offset parameters must be added: \(\theta\) is replaced with \(\theta - \theta_0\) and \(N\) with \(N-N_0\). Finally, a module and a sign function are added in order to consider negative-order fringes.
+
+\section{Calibration}
+
+
+We need a precise estimation of the conversion coefficient between the motor step and the angular unit,
+
+\begin{equation}
+  \alpha = \frac{\text{angle}}{\text{step number}}
+\end{equation}
+
+To achieve this goal, we attach a goniometer to the rotating base and the motor is started: every time a one-degree rotation is completed, the corresponding step value is registered. Then, data are plotted and a maximum-likelihood linear fit is performed, confirming the linear proportionality between step units and radians actually exists and finding the value of the coefficient \( \alpha =  \SI{5.12(1)e-5}{rad/step}\).
+
+\section{Data acquisition}
+
+To acquire data, a ROOT-based PC interface is used. The software communicates both with an Arduino board and a CCD. The Arduino board, via a power amplifier and a voltage generator, can control the movement of the step motor. The CCD detects the interference pattern. For each measure set, the motor is moved to an initial position, a step number is set and the scan starts: for each motor step, the software reads and saves the image viewed by the CCD, and then focuses on the 9 central pixels (a 3x3 square), computing the mean intensity for each step number. By looking at the intensity versus the step number we can determine when we are seeing a minimum or a maximum in the centre of the CCD; a piece of analysis software searches for the minimums and determines the precise step positions of each of them as the axis of a parabola obtained by interpolating some points around it.
+
+Each item, henceforth “step”, in the array of the step positions of the minimums is then associated with an integer, henceforth “fringe”. The minimum corresponding to the number 0 is manually selected to be the one around the inversion point. If this inversion point corresponds to a maximum, no fringe is labelled 0 and the two closest ones are $\pm 1$.
+The error on the steps is estimated using a symmetric triangular distribution with support on an interval whose half-width is one quarter of the distance between two step values and whose mean value is the step value. The fringes are assumed to be exact.
+In the graph below, the intensity vs step relation can be seen, while the vertical lines refer to the minimums’ step positions. Only the central part of a wider scan is shown: we see a large plateau in the centre, corresponding to the inversion of fringes’ motion: \(\theta
+=0\). Further from the centre, the minimums become clearer and better defined.
+
+
+\section{Background removal}
+
+As theoretically shown, the background measure can be simply subtracted from the liquid measure (gross signal) to obtain the signal. This operation, however, must be done along vertical lines in an N(step) graph - that is, at the same step value -  and in such graphs data are not aligned since the step 0 is arbitrary.
+So, in order to compute the signal, background and gross signal need to be aligned ‘stepwise’ and then subtracted.
+To do this each dataset is preliminarily fitted neglecting the errors in order to find the \lstinline{zero_step} fit parameter.
+If we subtract \lstinline{zero_step} to all the steps, we obtain a centred dataset and we can proceed with the subtraction.
+
+For each step-fringe pair in the gross signal dataset, we do the following:
+
+\begin{enumerate}
+  \item linearize the background dataset, extracting an estimate for the background fractional fringe at that step value;
+  \item compute the fringe value difference between them;
+  \item   estimate the error on the fringe number at a fixed step value by multiplying the step error distribution by the local angular coefficient (estimated as an average of the derivative); the same is done for every background data point and the error distribution on the linearized background at the desired step is estimated as a triangular distribution with a half-width obtained with a linearization of the half-widths of the triangular distributions on the background fringes;
+  \item compute the convolution between these two error distributions;
+  \item project this distribution on the step axis using the average local derivative of the signal dataset to get the error distribution of the difference.
+\end{enumerate}
+
+This way, we obtain signal datasets with the background subtracted in the shape step(N) with error distributions on the step.
+
+\section{Water calibration}
+
+In the \(\theta(N)\)  equation, the two parameters \(n\) and \(\gamma\) are strongly correlated, and can’t be both univocally determined from the same datasets. To solve this problem, a calibration of the system is done using distilled water, whose refractive index is well known. Three background scans, and then three scans with the cuvette filled with distilled water are done: this means we have 9 different signal datasets to fit. The fit is done keeping n=1.336 fixed and searching for the best value of \(\gamma\): the datasets are compatible with each other and this led us to find:
+
+EQUAZIONE GAMMA
+
+\section{Paraffin}
+
+Once \(\gamma\) has been fixed, we can proceed with the determination of the paraffin’s refractive index, the final goal of the experiment. In this case, two background and four paraffin scans are done; this means, we have 8 different signal datasets. Keeping \(\gamma\) fixed at different values with the PDF computed before and leaving n free, the fit is done and we obtain a final value:
+
+EQUAZIONE N
+
+\section{Fit notes}
+
+Particular attention is paid to the fit method. The way we fit the data is a likelihood-Montecarlo simulation: the implemented code tests all the possible values for the parameters, and, for each combination, it computes the likelihood of the data points assuming the fitted function as a model. After a renormalization, the likelihood corresponds to the multidimensional PDF of the parameters: this results in a fit cloud, i.e. a set of possible fit curves with their probability. Finally, projecting this multidimensional PDF on a specific axis, the PDF of every parameter can be found.
+
+\end{document}
