@@ -480,8 +480,10 @@ class measure():
             hw_gsig = self.gross_signal.hw_from_step(step)
                 #should be the same as the corresponding value of hw_array
 
+            # This is not used!
             hw = (np.sqrt((grad_bkg*hw_bkg)**2 + (grad_gsig*hw_gsig)**2))/grad_sig
             hw_array.append(hw)
+            # These are actually passed on to montecarlo
             nhw_bkg.append(hw_bkg*grad_bkg/grad_sig)
             nhw_sig.append(hw_gsig*grad_gsig/grad_sig)
         self.background.normalized_hw = np.array(nhw_bkg)
