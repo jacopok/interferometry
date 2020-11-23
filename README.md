@@ -1,32 +1,8 @@
-Code for the analysis of the data from the GIMLI interferometer.
+Code and resources for the Galileian Interferometer for the Measurement of Light Index (GIMLI),
+a project for the measurement of the index of refraction of a liquid
+with interferometric techniques.
 
------------
+A summary of the results and methods can be found in the [poster](https://github.com/jacopok/interferometry/blob/master/poster_GIMLI.pdf),
+while a more detailed explanation of the experimental process is given in the [handbook](https://github.com/jacopok/interferometry/blob/master/Handbook/handbook.pdf).
 
-Rough analysis without much explaination can be found in `Interferometry.ipynb` and in `rough_calculations.ipynb`.
-
-------------
-
-The figures are generated from `figure_generator.py`, which
-contains lots of hardcoded file paths and does not have lots of comments for now.
-
-It saves the figures to `figs/`; it it is not generating some figure, check at
-the bottom of the file inside the `if __name__ == __main__` statement, and
-uncomment what's needed.
-
------------
-
-The data preprocessing is done by the python code in the main directory,
-the dataset classes are defined in `Fringes_dataset_manager.py`, which is called
-by other utility scripts like `initialization.py` and `process_data.py`.
-
------------
-
-The data fitting is done by the c++ code in `montecarlo/`.
-To compile the MonteCarlo sources, do:
-
-```
-cd montecarlo
-source compileSources
-```
-
------------
+The project was performed in spring 2019 by Alberto Facheris, Francesco Gentile, [Alessandro Lovo](https://github.com/AlessandroLovo), [Giorgio Mentasti](https://github.com/Mentasti24), [Jacopo Tissino](https://github.com/jacopok), [Leonardo Zampieri](https://github.com/lzampieri); and supervised by [Marco Zanetti](https://github.com/mzanetti79).
